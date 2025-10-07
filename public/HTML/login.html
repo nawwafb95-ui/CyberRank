@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CyberRank — Login</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/css/styles.css" />
+  </head>
+  <body data-theme="colors" data-page="login">
+    <header class="topbar">
+      <a href="#" class="brand-mini" id="go-home">
+        <span class="brand-dot"></span>
+        CyberRank
+      </a>
+      <div></div>
+      <div class="nav">
+        <button class="link-btn" id="nav-login">Login</button>
+        <button class="link-btn" id="nav-signup">Sign Up</button>
+
+        <div class="dropdown" id="lang-dd">
+          <button class="icon-btn" id="lang-btn" title="Languages">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5"></circle>
+              <path d="M3 12h18M12 3c2.5 2.8 2.5 14.2 0 18M5 7c4 2.5 10 2.5 14 0M5 17c4-2.5 10-2.5 14 0" stroke="currentColor" stroke-width="1.2" opacity=".7"></path>
+            </svg>
+            Languages
+          </button>
+          <div class="dropdown-panel">
+            <div class="translate">
+              <label for="lang-top" style="color:var(--muted);font-size:13px;">Translate:</label>
+              <select id="lang-top" aria-label="Select language">
+                <option value="en-US" selected>English (US)</option>
+                <option value="en-GB">English (UK)</option>
+                <option value="ar">العربية</option>
+                <option value="fr">Français</option>
+              </select>
+              <button id="apply-lang-top" class="btn">Apply</button>
+            </div>
+            <small style="display:block;color:var(--muted);margin-top:8px;">Default: English (US).</small>
+          </div>
+        </div>
+
+        <div class="dropdown" id="theme-dd">
+          <button class="icon-btn" id="theme-btn" title="Theme">
+            <span style="display:inline-block;width:14px;height:14px;border-radius:50%;background:linear-gradient(135deg,var(--brand-blue),var(--brand-cyan));box-shadow:0 0 10px rgba(0,194,255,.6)"></span>
+            Theme
+          </button>
+          <div class="dropdown-panel">
+            <div class="translate" style="flex-direction:column;align-items:flex-start;gap:10px;">
+              <label style="color:var(--muted);font-size:13px;">Select Mode:</label>
+              <div style="display:grid;gap:8px;">
+                <button class="btn" data-theme-choice="night">Night (Dark)</button>
+                <button class="btn" data-theme-choice="day">Day (Light)</button>
+                <button class="btn" data-theme-choice="calm">Calm</button>
+                <button class="btn" data-theme-choice="colors">Colors</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div class="background">
+      <div class="bg-gradient"></div>
+      <div class="bg-blobs">
+        <span class="blob b1"></span>
+        <span class="blob b2"></span>
+        <span class="blob b3"></span>
+      </div>
+      <div class="bg-grid"></div>
+    </div>
+
+    <main id="auth" class="auth-layout">
+      <div class="brand">
+        <h1 class="brand-title">CyberRank</h1>
+        <p class="brand-subtitle">Welcome to CyberRank</p>
+      </div>
+
+      <section class="card">
+        <div class="tabs" role="tablist" aria-label="Authentication tabs">
+          <button class="tab active" role="tab" aria-selected="true">Login</button>
+          <button class="tab" role="tab" aria-selected="false" onclick="window.location.href='/public/HTML/signup.html'">Sign Up</button>
+        </div>
+
+        <div class="panel" role="tabpanel">
+          <form id="login-form" novalidate>
+            <div class="field">
+              <label for="login-username">Username</label>
+              <input id="login-username" name="username" type="text" placeholder="e.g., CyberNinja1" autocomplete="username" required>
+              <p class="error" data-error-for="login-username"></p>
+            </div>
+            <div class="field">
+              <label for="login-password">Password</label>
+              <input id="login-password" name="password" type="password" placeholder="********" autocomplete="current-password" required>
+              <p class="error" data-error-for="login-password"></p>
+            </div>
+            <button type="submit" class="btn primary">Login</button>
+          </form>
+        </div>
+
+        <p class="switch-note">
+          <span>Want to <a class="linklike" href="/public/HTML/signup.html">create an account</a>?</span>
+        </p>
+      </section>
+    </main>
+
+    <script src="/js/app.js"></script>
+  </body>
+  </html>
+
+
