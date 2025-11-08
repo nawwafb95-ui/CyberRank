@@ -1,17 +1,18 @@
+/* ========== المتغيرات الأساسية للألوان (الوضع الليلي الداكن) ========== */
 :root {
-  --bg: #0a0f1f;
-  --card: #111733;
-  --text: #e7eaf6;
-  --muted: #aab1c9;
-  --accent: #6ea8fe;
-  --accent-strong: #4f8dff;
-  --danger: #ff667a;
-  --ring: #263059;
-  --input: #17204a;
-  --brand-blue: #00c2ff;
-  --brand-cyan: #00ffd5;
-  --glass: rgba(17, 23, 51, 0.65);
-  --success: #47e39e;
+  --bg: #0a0f1f; /* لون الخلفية الأساسي - أسود داكن */
+  --card: #111733; /* لون البطاقات - أزرق داكن */
+  --text: #e7eaf6; /* لون النص الرئيسي - أبيض فاتح */
+  --muted: #aab1c9; /* لون النص الثانوي - رمادي فاتح */
+  --accent: #6ea8fe; /* لون التمييز - أزرق */
+  --accent-strong: #4f8dff; /* لون التمييز القوي - أزرق داكن */
+  --danger: #ff667a; /* لون الخطأ - أحمر */
+  --ring: #263059; /* لون الحدود - أزرق داكن */
+  --input: #17204a; /* لون حقول الإدخال - أزرق داكن */
+  --brand-blue: #00c2ff; /* اللون الأزرق للعلامة التجارية */
+  --brand-cyan: #00ffd5; /* اللون الأخضر النيون للعلامة التجارية */
+  --glass: rgba(17, 23, 51, 0.65); /* لون الخلفية الشفافة */
+  --success: #47e39e; /* لون النجاح - أخضر */
 }
 [data-theme="day"] {
   --bg: #f6f7fb; --card: #ffffff; --text: #121433; --muted: #5f6a86; --accent: #2b6bff; --accent-strong: #1a52df;
@@ -26,23 +27,39 @@
   --danger: #ff5d73; --ring: #3a2a58; --input: #1a2140; --brand-blue: #00c2ff; --brand-cyan: #ffcf00; --glass: rgba(30, 16, 52, 0.6);
 }
 
+/* ========== إعدادات CSS الأساسية ========== */
+
+/* تطبيق box-sizing على جميع العناصر */
 * { box-sizing: border-box; }
+
+/* جعل HTML و body يأخذان كامل الارتفاع */
 html, body { height: 100%; }
+
+/* إعدادات body الرئيسية */
 body {
   margin: 0;
+  /* استخدام خط Inter الحديث مع بدائل */
   font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  /* خلفية متدرجة داكنة */
   background: radial-gradient(1200px 1200px at 10% 10%, #0e1636 0%, var(--bg) 60%);
   color: var(--text);
-  overflow-x: hidden;
+  overflow-x: hidden; /* إخفاء التمرير الأفقي */
 }
 
+/* ========== شريط التنقل العلوي (Top Bar) ========== */
 .topbar {
-  position: sticky; top: 0; z-index: 5;
-  display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 12px;
+  position: sticky; /* ثابت في الأعلى عند التمرير */
+  top: 0; 
+  z-index: 5; /* فوق العناصر الأخرى */
+  display: grid; 
+  grid-template-columns: auto 1fr auto; /* توزيع العناصر: اسم المشروع | مسافة | أزرار التنقل */
+  align-items: center; 
+  gap: 12px;
   padding: 10px 16px;
+  /* خلفية شفافة مع تأثير الضبابية */
   background: linear-gradient(180deg, rgba(10,15,31,0.85), rgba(10,15,31,0.5));
-  backdrop-filter: blur(6px);
-  border-bottom: 1px solid var(--ring);
+  backdrop-filter: blur(6px); /* تأثير الضبابية */
+  border-bottom: 1px solid var(--ring); /* خط سفلي */
 }
 .brand-mini { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; color: var(--text); font-weight: 800; letter-spacing: .3px; }
 .brand-dot { width: 10px; height: 10px; border-radius: 50%;
@@ -71,29 +88,99 @@ body {
 .translate { display: inline-flex; gap: 8px; align-items: center; }
 .translate select { background: var(--input); color: var(--text); border: 1px solid var(--ring); border-radius: 10px; padding: 8px 10px; }
 
-.background { position: fixed; inset: 0; z-index: -1; pointer-events: none; }
-.bg-gradient { position: absolute; inset: -20%;
-  background: conic-gradient(from 180deg at 50% 50%, #0b1230, #0a1f5a, #072b78, #083b8e, #0b1230);
-  filter: blur(60px) saturate(1.2); animation: gradientShift 18s linear infinite; opacity: 0.55;
+/* ========== خلفية الصفحة مع التأثيرات المتحركة ========== */
+
+/* الحاوية الرئيسية للخلفية */
+.background { 
+  position: fixed; /* ثابتة في الخلفية */
+  inset: 0; /* تغطي كامل الشاشة */
+  z-index: -1; /* خلف جميع العناصر */
+  pointer-events: none; /* لا تستجيب للنقرات */
 }
-@keyframes gradientShift { 0% { transform: rotate(0deg) scale(1.05); } 100% { transform: rotate(360deg) scale(1.05); } }
-.bg-blobs { position: absolute; inset: 0; overflow: hidden; mix-blend-mode: screen; }
-.blob { position: absolute; width: 42vmax; height: 42vmax; border-radius: 50%; filter: blur(60px); opacity: 0.22; animation: float 12s ease-in-out infinite alternate; }
-.blob.b1 { background: radial-gradient(circle at 30% 30%, var(--brand-blue), transparent 60%); top: -10%; left: -10%; animation-duration: 14s; }
-.blob.b2 { background: radial-gradient(circle at 70% 40%, var(--brand-cyan), transparent 60%); bottom: -15%; right: -10%; animation-duration: 16s; }
-.blob.b3 { background: radial-gradient(circle at 50% 60%, #4f8dff, transparent 60%); top: 30%; right: 20%; animation-duration: 18s; }
-@keyframes float { 0% { transform: translateY(0) translateX(0) rotate(0deg); } 100% { transform: translateY(-40px) translateX(20px) rotate(6deg); } }
+
+/* تدرج دائري متحرك */
+.bg-gradient { 
+  position: absolute; 
+  inset: -20%;
+  background: conic-gradient(from 180deg at 50% 50%, #0b1230, #0a1f5a, #072b78, #083b8e, #0b1230);
+  filter: blur(60px) saturate(1.2); /* تأثير الضبابية والإشباع */
+  animation: gradientShift 18s linear infinite; /* حركة دائرية مستمرة */
+  opacity: 0.55;
+}
+
+/* حركة التدرج الدائري */
+@keyframes gradientShift { 
+  0% { transform: rotate(0deg) scale(1.05); } 
+  100% { transform: rotate(360deg) scale(1.05); } 
+}
+
+/* البقع المضيئة المتحركة */
+.bg-blobs { 
+  position: absolute; 
+  inset: 0; 
+  overflow: hidden; 
+  mix-blend-mode: screen; /* وضع المزج */
+}
+
+/* بقع فردية */
+.blob { 
+  position: absolute; 
+  width: 42vmax; 
+  height: 42vmax; 
+  border-radius: 50%; /* دائري */
+  filter: blur(60px); /* ضبابية */
+  opacity: 0.22; 
+  animation: float 12s ease-in-out infinite alternate; /* حركة تطفو */
+}
+
+/* البقعة الأولى - أزرق */
+.blob.b1 { 
+  background: radial-gradient(circle at 30% 30%, var(--brand-blue), transparent 60%); 
+  top: -10%; 
+  left: -10%; 
+  animation-duration: 14s; 
+}
+
+/* البقعة الثانية - أخضر نيون */
+.blob.b2 { 
+  background: radial-gradient(circle at 70% 40%, var(--brand-cyan), transparent 60%); 
+  bottom: -15%; 
+  right: -10%; 
+  animation-duration: 16s; 
+}
+
+/* البقعة الثالثة - أزرق */
+.blob.b3 { 
+  background: radial-gradient(circle at 50% 60%, #4f8dff, transparent 60%); 
+  top: 30%; 
+  right: 20%; 
+  animation-duration: 18s; 
+}
+
+/* حركة التطفو للبقع */
+@keyframes float { 
+  0% { transform: translateY(0) translateX(0) rotate(0deg); } 
+  100% { transform: translateY(-40px) translateX(20px) rotate(6deg); } 
+}
+
+/* شبكة الخلفية المتحركة */
 .bg-grid {
-  position: absolute; inset: 0;
+  position: absolute; 
+  inset: 0;
   background:
     radial-gradient(600px 400px at 20% 10%, rgba(0, 213, 255, 0.06), transparent 70%),
     radial-gradient(600px 400px at 80% 90%, rgba(0, 170, 255, 0.05), transparent 70%),
     repeating-linear-gradient(to right, rgba(255,255,255,0.04) 0 1px, transparent 1px 64px),
     repeating-linear-gradient(to bottom, rgba(255,255,255,0.035) 0 1px, transparent 1px 64px);
   mask-image: radial-gradient(ellipse at center, rgba(255,255,255,0.9), rgba(255,255,255,0.1) 60%, transparent 80%);
-  animation: gridPan 30s linear infinite;
+  animation: gridPan 30s linear infinite; /* حركة الشبكة */
 }
-@keyframes gridPan { 0% { transform: translate3d(0, 0, 0); } 100% { transform: translate3d(-128px, -128px, 0); } }
+
+/* حركة الشبكة */
+@keyframes gridPan { 
+  0% { transform: translate3d(0, 0, 0); } 
+  100% { transform: translate3d(-128px, -128px, 0); } 
+}
 
 .hero { display: grid; place-items: center; text-align: center; padding: 48px 18px; }
 .hero-card {
@@ -126,6 +213,61 @@ body {
 }
 .cta:hover, .ghost:hover { transform: translateY(-1px); box-shadow: 0 10px 30px rgba(0,0,0,0.25); }
 .ghost { background: rgba(255,255,255,0.03); color: var(--text); }
+
+/* زر Quizzes الكبير - تصميم كبير وحديث */
+.quizzes-btn {
+  padding: 20px 60px !important;
+  font-size: clamp(24px, 4vw, 36px) !important;
+  font-weight: 800 !important;
+  letter-spacing: 1px;
+  background: linear-gradient(135deg, #00ff41, #00c2ff) !important;
+  color: #0a0f1f !important;
+  border: none !important;
+  border-radius: 16px !important;
+  box-shadow: 0 0 40px rgba(0, 255, 65, 0.4), 0 10px 30px rgba(0,0,0,0.3) !important;
+  text-transform: uppercase;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.quizzes-btn::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.quizzes-btn:hover::before {
+  width: 300px;
+  height: 300px;
+}
+
+.quizzes-btn:hover {
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 0 60px rgba(0, 255, 65, 0.6), 0 15px 40px rgba(0,0,0,0.4) !important;
+}
+
+.quizzes-btn:active {
+  transform: translateY(-1px) scale(1.02);
+}
+
+/* قائمة معلومات المستخدم */
+.user-info-dropdown {
+  position: relative;
+}
+
+.info-email {
+  font-weight: 600;
+  color: var(--brand-blue);
+  text-shadow: 0 0 12px rgba(0,194,255,.3);
+}
 
 .auth-layout { min-height: 100%; display: grid; place-items: center; padding: 24px; }
 .brand { display: grid; place-items: center; gap: 8px; margin-bottom: 18px; text-align: center; }
@@ -228,4 +370,231 @@ input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in sr
 .about-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
 .about-title { margin: 0; font-weight: 800; }
 .logo { display: inline-flex; align-items: center; justify-content: center; }
+
+/* ========== أنماط صفحة الاختبارات ========== */
+
+/* الحاوية الرئيسية لصفحة الاختبارات */
+.quizzes-container {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 48px 18px;
+}
+
+/* قسم الاختبارات */
+.quizzes-section {
+  width: 100%;
+  max-width: 1200px;
+}
+
+/* بطاقة الاختبارات الرئيسية */
+.quizzes-card {
+  width: 100%;
+  background: var(--glass);
+  border: 1px solid var(--ring);
+  border-radius: 16px;
+  padding: 32px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.45);
+  backdrop-filter: blur(6px);
+}
+
+/* عنوان صفحة الاختبارات */
+.quizzes-title {
+  margin: 0 0 8px 0;
+  font-size: clamp(32px, 5vw, 48px);
+  font-weight: 800;
+  background: linear-gradient(90deg, var(--brand-blue), var(--brand-cyan));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-align: center;
+  text-shadow: 0 0 18px rgba(0, 194, 255, 0.35);
+}
+
+/* نص فرعي لصفحة الاختبارات */
+.quizzes-subtitle {
+  margin: 0 0 32px 0;
+  color: var(--muted);
+  text-align: center;
+  font-size: clamp(14px, 3vw, 18px);
+}
+
+/* شبكة أزرار الاختبارات */
+.quizzes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+  margin-top: 24px;
+}
+
+/* بطاقة اختبار فردية */
+.quiz-card {
+  background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+  border: 2px solid var(--ring);
+  border-radius: 16px;
+  padding: 32px 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+/* تأثير hover على بطاقة الاختبار */
+.quiz-card::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(0, 255, 65, 0.2);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.quiz-card:hover::before {
+  width: 300px;
+  height: 300px;
+}
+
+.quiz-card:hover {
+  transform: translateY(-5px);
+  border-color: var(--brand-cyan);
+  box-shadow: 0 10px 40px rgba(0, 255, 65, 0.3);
+}
+
+.quiz-card:active {
+  transform: translateY(-2px);
+}
+
+/* أيقونة الاختبار */
+.quiz-icon {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 16px;
+  color: var(--brand-cyan);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* عنوان الاختبار */
+.quiz-title {
+  margin: 0 0 8px 0;
+  font-size: clamp(20px, 4vw, 28px);
+  font-weight: 700;
+  color: var(--text);
+}
+
+/* وصف الاختبار */
+.quiz-description {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+/* ========== أنماط صفحة السؤال ========== */
+
+/* الحاوية الرئيسية لصفحة السؤال */
+.question-container {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 48px 18px;
+  position: relative;
+}
+
+/* قسم السؤال */
+.question-section {
+  width: 100%;
+  max-width: 900px;
+  position: relative;
+}
+
+/* رأس صفحة السؤال (يحتوي على المؤقت) */
+.question-header {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 24px;
+}
+
+/* صندوق المؤقت */
+.timer-box {
+  background: linear-gradient(135deg, rgba(255, 65, 65, 0.2), rgba(255, 100, 100, 0.1));
+  border: 2px solid #ff4141;
+  border-radius: 12px;
+  padding: 12px 24px;
+  font-size: 24px;
+  font-weight: 700;
+  color: #ff6b6b;
+  text-shadow: 0 0 10px rgba(255, 107, 107, 0.5);
+  box-shadow: 0 0 20px rgba(255, 65, 65, 0.3);
+  font-family: 'Inter', monospace;
+  letter-spacing: 2px;
+}
+
+/* بطاقة السؤال */
+.question-card {
+  background: var(--glass);
+  border: 1px solid var(--ring);
+  border-radius: 16px;
+  padding: 40px 32px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.45);
+  backdrop-filter: blur(6px);
+  text-align: center;
+}
+
+/* عنوان السؤال */
+.question-title {
+  margin: 0 0 24px 0;
+  font-size: clamp(24px, 4vw, 32px);
+  font-weight: 700;
+  color: var(--text);
+}
+
+/* نص السؤال */
+.question-text {
+  margin: 0 0 32px 0;
+  font-size: clamp(18px, 3vw, 24px);
+  color: var(--text);
+  line-height: 1.6;
+  min-height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* خيارات الإجابة */
+.question-options {
+  display: grid;
+  gap: 16px;
+  margin-bottom: 32px;
+  text-align: right;
+}
+
+/* أزرار التحكم في السؤال */
+.question-actions {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* زر Next كبير */
+.question-actions .btn.primary {
+  padding: 14px 32px;
+  font-size: 16px;
+  font-weight: 700;
+  min-width: 120px;
+}
+
+/* زر Skip */
+.question-actions .btn.ghost {
+  padding: 14px 32px;
+  font-size: 16px;
+  font-weight: 600;
+  min-width: 120px;
+}
 

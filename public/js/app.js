@@ -16,8 +16,12 @@
   }
 
   function initThemeControls() {
+    // تهيئة القوائم المنسدلة للغة والثيم
     wireDropdown('#lang-dd', '#lang-btn');
     wireDropdown('#theme-dd', '#theme-btn');
+    // تهيئة قائمة معلومات المستخدم
+    wireDropdown('#user-info-dropdown', '#user-info-btn');
+    // إضافة مستمعات الأحداث لاختيار الثيم
     $$('[data-theme-choice]').forEach(btn => {
       btn.addEventListener('click', () => {
         const choice = btn.getAttribute('data-theme-choice');
@@ -26,17 +30,51 @@
     });
   }
 
-  // Local storage helpers
-  function getUsers() { try { return JSON.parse(localStorage.getItem('users') || '{}'); } catch { return {}; } }
-  function saveUsers(users) { localStorage.setItem('users', JSON.stringify(users)); }
+  // ========== دوال إدارة البيانات المحلية (Local Storage) ==========
+  
+  // الحصول على جميع المستخدمين من التخزين المحلي
+  function getUsers() { 
+    try { 
+      return JSON.parse(localStorage.getItem('users') || '{}'); 
+    } catch { 
+      return {}; 
+    } 
+  }
+  
+  // حفظ المستخدمين في التخزين المحلي
+  function saveUsers(users) { 
+    localStorage.setItem('users', JSON.stringify(users)); 
+  }
+  
+  // البحث عن مستخدم بواسطة اسم المستخدم
   function findUserByUsername(username) {
     const users = getUsers();
     for (const email in users) {
-      const u = users[email]; if (!u) continue;
+      const u = users[email]; 
+      if (!u) continue;
       const uname = u.username || (email.split('@')[0]);
       if (uname.toLowerCase() === username.toLowerCase()) return u;
     }
     return null;
+  }
+  
+  // الحصول على المستخدم الحالي المسجل دخوله
+  function getCurrentUser() {
+    const username = localStorage.getItem('currentUser');
+    if (!username) return null;
+    return findUserByUsername(username);
+  }
+  
+  // التحقق من حالة تسجيل الدخول
+  function isLoggedIn() {
+    return !!localStorage.getItem('currentUser');
+  }
+  
+  // تسجيل الخروج
+  function logout() {
+    localStorage.removeItem('currentUser');
+    updateNavigationState();
+    go('/HTML/index.html');
   }
 
   // Shared About translations
@@ -63,21 +101,91 @@
   // Page routers
   function go(href) { window.location.href = href; }
 
+  // ========== إدارة شريط التنقل العلوي ==========
+  
+  // تحديث حالة شريط التنقل حسب حالة تسجيل الدخول
+  function updateNavigationState() {
+    const navLogin = document.getElementById('nav-login');
+    const navSignup = document.getElementById('nav-signup');
+    const userInfoDropdown = document.getElementById('user-info-dropdown');
+    const infoUsername = document.getElementById('info-username');
+    const infoEmail = document.getElementById('info-email');
+    
+    if (isLoggedIn()) {
+      // إذا كان المستخدم مسجل دخول: تغيير زر Login إلى Logout وإظهار معلومات المستخدم
+      if (navLogin) {
+        navLogin.textContent = 'Logout';
+        navLogin.onclick = () => logout();
+      }
+      if (navSignup) navSignup.style.display = 'none'; // إخفاء زر Sign Up
+      if (userInfoDropdown) userInfoDropdown.style.display = 'block'; // إظهار معلومات المستخدم
+      
+      // تحديث معلومات المستخدم
+      const user = getCurrentUser();
+      if (user) {
+        if (infoUsername) infoUsername.textContent = user.username || user.email.split('@')[0];
+        if (infoEmail) infoEmail.textContent = user.email;
+      }
+    } else {
+      // إذا لم يكن المستخدم مسجل دخول: إظهار زر Login وSign Up وإخفاء معلومات المستخدم
+      if (navLogin) {
+        navLogin.textContent = 'Login';
+        navLogin.onclick = () => go('/HTML/login.html');
+      }
+      if (navSignup) navSignup.style.display = 'inline-block'; // إظهار زر Sign Up
+      if (userInfoDropdown) userInfoDropdown.style.display = 'none'; // إخفاء معلومات المستخدم
+    }
+  }
+  
+  // تهيئة شريط التنقل
   function initTopNav() {
     const homeBtn = document.getElementById('go-home');
-    if (homeBtn) homeBtn.addEventListener('click', (e)=>{ e.preventDefault(); go('/HTML/index.html'); });
-    const navLogin = document.getElementById('nav-login');
-    if (navLogin) navLogin.addEventListener('click', ()=> go('/HTML/login.html'));
-    const navSignup = document.getElementById('nav-signup');
-    if (navSignup) navSignup.addEventListener('click', ()=> go('/HTML/signup.html'));
+    if (homeBtn) {
+      homeBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        go('/HTML/index.html');
+      });
+    }
+    
+    const navAbout = document.getElementById('nav-about');
+    if (navAbout) {
+      // التمرير إلى قسم About عند النقر على الزر
+      navAbout.addEventListener('click', () => {
+        const aboutSection = document.getElementById('about');
+        if (aboutSection) {
+          // إذا كان القسم موجوداً في الصفحة الحالية: التمرير إليه
+          aboutSection.scrollIntoView({ behavior: 'smooth' });
+        } else {
+          // إذا لم يكن موجوداً: الانتقال إلى الصفحة الرئيسية
+          go('/HTML/index.html');
+        }
+      });
+    }
+    
+    // تحديث حالة شريط التنقل
+    updateNavigationState();
   }
 
-  // Home page
+  // ========== تهيئة الصفحة الرئيسية ==========
+  
   function initHome() {
-    const login = document.getElementById('home-go-login');
-    const signup = document.getElementById('home-go-signup');
-    if (login) login.addEventListener('click', ()=> go('/HTML/login.html'));
-    if (signup) signup.addEventListener('click', ()=> go('/HTML/signup.html'));
+    // تهيئة زر Quizzes الكبير
+    const quizzesBtn = document.getElementById('home-quizzes');
+    if (quizzesBtn) {
+      quizzesBtn.addEventListener('click', () => {
+        // التحقق من حالة تسجيل الدخول
+        if (isLoggedIn()) {
+          // إذا كان المستخدم مسجل دخول: الانتقال إلى صفحة الاختبارات
+          go('/HTML/quizzes.html');
+        } else {
+          // إذا لم يكن مسجل دخول: الانتقال إلى صفحة تسجيل الدخول
+          go('/HTML/login.html');
+        }
+      });
+    }
+    
+    // تحديث حالة شريط التنقل عند تحميل الصفحة
+    updateNavigationState();
   }
 
   // Auth shared
@@ -161,18 +269,30 @@
     });
   }
 
+  // ========== تهيئة صفحة تسجيل الدخول ==========
+  
   function initLogin() {
     const loginForm = document.getElementById('login-form');
     if (!loginForm) return;
+    
     loginForm.addEventListener('submit', (e) => {
       e.preventDefault();
       const { ok, values } = validateLogin(loginForm);
       if (!ok) return;
+      
+      // البحث عن المستخدم
       const user = findUserByUsername(values.username);
-      if (!user || user.password !== values.password) { setError('login-password', 'Invalid username or password.'); return; }
+      if (!user || user.password !== values.password) {
+        setError('login-password', 'Invalid username or password.');
+        return;
+      }
+      
+      // حفظ المستخدم الحالي وتسجيل الدخول
       const username = user.username || (user.email.split('@')[0]);
       localStorage.setItem('currentUser', username);
-      window.location.href = '/HTML/success.html';
+      
+      // بعد تسجيل الدخول الناجح: الانتقال إلى الصفحة الرئيسية
+      window.location.href = '/HTML/index.html';
     });
   }
 
@@ -200,17 +320,117 @@
     if (toLogin) toLogin.addEventListener('click', ()=> go('/HTML/login.html'));
   }
 
+  // ========== تهيئة صفحة الاختبارات ==========
+  
+  function initQuizzes() {
+    // إضافة مستمعات الأحداث لأزرار الاختبارات
+    const quiz1Btn = document.getElementById('quiz-1');
+    const quiz2Btn = document.getElementById('quiz-2');
+    const quiz3Btn = document.getElementById('quiz-3');
+    
+    if (quiz1Btn) {
+      quiz1Btn.addEventListener('click', () => {
+        // الانتقال إلى صفحة السؤال الأول من الاختبار الأول
+        go('/HTML/question.html?quiz=1&question=1');
+      });
+    }
+    
+    if (quiz2Btn) {
+      quiz2Btn.addEventListener('click', () => {
+        // الانتقال إلى صفحة السؤال الأول من الاختبار الثاني
+        go('/HTML/question.html?quiz=2&question=1');
+      });
+    }
+    
+    if (quiz3Btn) {
+      quiz3Btn.addEventListener('click', () => {
+        // الانتقال إلى صفحة السؤال الأول من الاختبار الثالث
+        go('/HTML/question.html?quiz=3&question=1');
+      });
+    }
+    
+    // تحديث حالة شريط التنقل
+    updateNavigationState();
+  }
+  
+  // ========== تهيئة صفحة السؤال ==========
+  
+  function initQuestion() {
+    // الحصول على رقم الاختبار ورقم السؤال من URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const quizNum = urlParams.get('quiz') || '1';
+    const questionNum = parseInt(urlParams.get('question') || '1');
+    
+    // تهيئة المؤقت
+    let timeLeft = 60; // 60 ثانية
+    const timerElement = document.getElementById('question-timer');
+    const questionText = document.getElementById('question-text');
+    const nextBtn = document.getElementById('question-next');
+    const skipBtn = document.getElementById('question-skip');
+    
+    // تحديث نص السؤال (يمكن استبداله بأسئلة حقيقية من قاعدة بيانات)
+    if (questionText) {
+      questionText.textContent = `السؤال ${questionNum} من الاختبار ${quizNum}: ما هو أفضل ممارسة لأمان كلمة المرور؟`;
+    }
+    
+    // تحديث المؤقت كل ثانية
+    const timerInterval = setInterval(() => {
+      timeLeft--;
+      if (timerElement) {
+        const minutes = Math.floor(timeLeft / 60);
+        const seconds = timeLeft % 60;
+        timerElement.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+      }
+      
+      // إذا انتهى الوقت
+      if (timeLeft <= 0) {
+        clearInterval(timerInterval);
+        if (timerElement) timerElement.textContent = 'انتهى الوقت!';
+        // يمكن إضافة منطق للانتقال إلى السؤال التالي أو إنهاء الاختبار
+      }
+    }, 1000);
+    
+    // زر Next: الانتقال إلى السؤال التالي
+    if (nextBtn) {
+      nextBtn.addEventListener('click', () => {
+        clearInterval(timerInterval);
+        const nextQuestion = questionNum + 1;
+        go(`/HTML/question.html?quiz=${quizNum}&question=${nextQuestion}`);
+      });
+    }
+    
+    // زر Skip: تخطي السؤال الحالي
+    if (skipBtn) {
+      skipBtn.addEventListener('click', () => {
+        clearInterval(timerInterval);
+        const nextQuestion = questionNum + 1;
+        go(`/HTML/question.html?quiz=${quizNum}&question=${nextQuestion}`);
+      });
+    }
+    
+    // تحديث حالة شريط التنقل
+    updateNavigationState();
+  }
+  
+  // ========== دالة التهيئة الرئيسية ==========
+  
   function boot() {
+    // تهيئة جميع المكونات الأساسية
     initThemeControls();
     initTranslateControls();
     initTopNav();
+    
+    // تهيئة الصفحات حسب نوع الصفحة الحالية
     const page = document.body.getAttribute('data-page');
     if (page === 'home') initHome();
     if (page === 'login') initLogin();
     if (page === 'signup') initSignup();
     if (page === 'success') initSuccess();
+    if (page === 'quizzes') initQuizzes();
+    if (page === 'question') initQuestion();
   }
 
+  // بدء التطبيق عند تحميل الصفحة
   document.addEventListener('DOMContentLoaded', boot);
 })();
 
