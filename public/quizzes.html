@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CyberRank — Quizzes</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="./css/styles.css" />
+  </head>
+  <body data-page="quizzes">
+    <header class="topbar">
+      <a href="./index.html" class="brand-mini"><span class="brand-dot"></span>CyberRank</a>
+      <div></div>
+      <div class="nav">
+        <div class="dropdown" id="about-dd">
+          <button class="link-btn" id="about-btn">About</button>
+          <div class="dropdown-panel" style="max-width:360px;">
+            <div class="info-box">
+              <strong>About CyberRank</strong>
+              <div class="muted">
+                CyberRank is an interactive cybersecurity training platform designed to help SOC analysts
+                practice and improve their skills.
+              </div>
+            </div>
+          </div>
+        </div>
+        <button class="link-btn" id="nav-quizzes">Quizzes</button>
+        <button class="link-btn" id="nav-login">Login</button>
+        <button class="link-btn" id="nav-signup">Sign Up</button>
+        
+      </div>
+    </header>
+
+    <main class="auth-layout">
+      <section class="quiz-grid card">
+        <h2 style="margin:0 0 10px 0;">Choose a Quiz</h2>
+        <div class="quiz-buttons">
+          <button class="btn primary" data-quiz="1">Quiz 1</button>
+          <button class="btn primary" data-quiz="2">Quiz 2</button>
+          <button class="btn primary" data-quiz="3">Quiz 3</button>
+        </div>
+      </section>
+    </main>
+
+    <script src="./js/app.js"></script>
+    <script>
+      (function(){
+        const btns = document.querySelectorAll('[data-quiz]');
+        btns.forEach(b => b.addEventListener('click', () => {
+          const quiz = b.getAttribute('data-quiz');
+          const base = location.pathname.replace(/[^/]+$/, '');
+          // Start at question 1
+          location.href = base + 'question.html?quiz=' + encodeURIComponent(quiz) + '&q=1';
+        }));
+      })();
+    </script>
+  </body>
+</html>
+
+

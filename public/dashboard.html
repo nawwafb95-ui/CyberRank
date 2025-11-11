@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CyberRank — Dashboard</title>
+  <link rel="stylesheet" href="./css/styles.css"/>
+</head>
+<body data-theme="colors">
+  <header class="topbar">
+    <a class="brand-mini" href="./index.html"><span class="brand-dot"></span>CyberRank</a>
+    <button id="btn-logout" class="link-btn" style="margin-left:auto">Log out</button>
+  </header>
+
+  <main class="dash">
+    <h2>Your Scores</h2>
+
+    <div class="add-score">
+      <input id="score" type="number" placeholder="Enter score"/>
+      <button id="btn-add-score" class="btn">Add</button>
+    </div>
+
+    <ul id="scores"></ul>
+  </main>
+
+  <script type="module">
+    // Firebase SDKs
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+    import { getFirestore } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+
+    // Project files
+    import { firebaseConfig } from "./js/firebaseConfig.js";
+    import * as Auth from "./js/auth.js"; // login/logout helpers (redirects)
+    import * as DB   from "./js/db.js";   // Firestore helpers (addScore, listenUserScores)
+
+    // Init
+    const app  = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db   = getFirestore(app);
+
+    // Require auth: if not signed-in → back to login
+    onAuthStateChanged(auth, (user) => {
+      if (!user) return location.replace("./login.html");
+      // Live list of this user's scores
+      DB.listenUserScores(db, user.uid, document.getElementById("scores"));
+    });
+
+    // Add score
+    document.getElementById("btn-add-score").onclick = async () => {
+      const val  = document.getElementById("score").value;
+      const user = auth.currentUser;
+      if (!user) return alert("Not signed in");
+      try {
+        await DB.addScore(db, user.uid, val);
+        document.getElementById("score").value = "";
+      } catch (e) {
+        alert(e?.message || e);
+      }
+    };
+
+    // Logout
+    document.getElementById("btn-logout").onclick = () => Auth.logout(auth);
+  </script>
+</body>
+</html>

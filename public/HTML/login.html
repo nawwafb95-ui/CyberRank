@@ -4,14 +4,19 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>CyberRank — Login</title>
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="/css/styles.css" />
+
+    <!-- كان /css/... صارت نسبية لأن root هو مجلد public -->
+    <link rel="stylesheet" href="./css/styles.css" />
   </head>
+
+  <!-- data-page="login" عشان app.js يفعّل منطق صفحة اللوجن -->
   <body data-theme="colors" data-page="login">
     <header class="topbar">
-      <a href="#" class="brand-mini" id="go-home">
+      <a href="./index.html" class="brand-mini" id="go-home">
         <span class="brand-dot"></span>
         CyberRank
       </a>
@@ -103,7 +108,8 @@
       <section class="card">
         <div class="tabs" role="tablist" aria-label="Authentication tabs">
           <button class="tab active" role="tab" aria-selected="true">Login</button>
-          <button class="tab" role="tab" aria-selected="false" onclick="window.location.href='/public/HTML/signup.html'">Sign Up</button>
+          <!-- كان /public/HTML/signup.html صارت ./signup.html -->
+          <button class="tab" role="tab" aria-selected="false" onclick="window.location.href='./signup.html'">Sign Up</button>
         </div>
 
         <div class="panel" role="tabpanel">
@@ -123,13 +129,35 @@
         </div>
 
         <p class="switch-note">
-          <span>Want to <a class="linklike" href="/public/HTML/signup.html">create an account</a>?</span>
+          <!-- كان href="/public/HTML/signup.html" صارت ./signup.html -->
+          <span>Want to <a class="linklike" href="./signup.html">create an account</a>?</span>
         </p>
       </section>
     </main>
 
-    <script src="/js/app.js"></script>
+    <!-- كان src="/js/app.js" صارت Module + مسار نسبي -->
+    <script type="module" src="./js/app.js"></script>
+
+    <!-- ملاحظة: لو بدك تستخدم Firebase Auth الحقيقي بدل username المحلي،
+         حوّل الحقول إلى Email/Password أو أضف حقل Email.
+         بعدها فعّل الكود التالي كبديل: 
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+      import { getAuth } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+      import { firebaseConfig } from "./js/firebaseConfig.js";
+      import * as Auth from "./js/auth.js";
+
+      const app = initializeApp(firebaseConfig);
+      const auth = getAuth(app);
+
+      document.getElementById('login-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const email = prompt('Enter your email (Firebase login)'); // أو غيّر النموذج لإيميل/باسورد
+        const pass  = (document.getElementById('login-password')||{}).value;
+        if (!email || !pass) return;
+        Auth.login(auth, email, pass); // يحوّل إلى dashboard.html عند النجاح
+      });
+    </script>
+    -->
   </body>
-  </html>
-
-
+</html>

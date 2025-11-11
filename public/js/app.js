@@ -1,17 +1,25 @@
 (function () {
-  const $ = (sel) => document.querySelector(sel);
+  const $  = (sel) => document.querySelector(sel);
   const $$ = (sel) => Array.from(document.querySelectorAll(sel));
 
-  // Theme dropdowns
-  function wireDropdown(rootId, btnId) {
-    const root = $(rootId);
-    const btn = $(btnId);
+  // ⛔️ نعطّل الديمو المحلي (login/signup/success) ونترك Firebase يتولّى كل شيء
+  const USE_LOCAL_DEMO = false;
+
+  /* -----------------------------
+   * Dropdowns (open on button, close on outside)
+   * ----------------------------- */
+  function wireDropdown(rootSel, btnSel) {
+    const root = $(rootSel);
+    const btn  = $(btnSel);
     if (!root || !btn) return;
+
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      root.classList.toggle('open');
+    });
+
     document.addEventListener('click', (e) => {
-      const inside = root.contains(e.target);
-      const onBtn = (e.target === btn) || btn.contains(e.target);
-      root.classList.toggle('open', inside && onBtn);
-      if (!inside) root.classList.remove('open');
+      if (!root.contains(e.target)) root.classList.remove('open');
     });
   }
 
@@ -77,7 +85,9 @@
     go('/HTML/index.html');
   }
 
-  // Shared About translations
+  /* -----------------------------
+   * About translations (+ persist)
+   * ----------------------------- */
   const ABOUT_COPY = {
     'en-US': 'CyberRank helps you test yourself with cybersecurity questions, track your level by age group, and earn points as you progress. Practice real-world scenarios, review explanations, and discover your strengths. Designed for learners at any stage—whether you’re an employee, school student, or university student—CyberRank adapts to your journey.',
     'en-GB': 'CyberRank helps you test yourself with cyber security questions, track your level by age group, and earn points as you progress. Practise real-world scenarios, review explanations, and discover your strengths. Designed for learners at any stage—whether you’re an employee, school pupil, or university student—CyberRank adapts to your journey.',
@@ -89,17 +99,40 @@
     const aboutText = document.getElementById('about-text');
     if (!aboutText) return;
     aboutText.textContent = ABOUT_COPY[code] || ABOUT_COPY['en-US'];
+    try { localStorage.setItem('lang', code); } catch {}
   }
 
   function initTranslateControls() {
-    const btnTop = document.getElementById('apply-lang-top');
+    // restore saved language
+    try {
+      const saved = localStorage.getItem('lang');
+      if (saved) applyAbout(saved);
+    } catch {}
+
+    const btnTop   = document.getElementById('apply-lang-top');
     const btnAbout = document.getElementById('apply-lang-about');
-    if (btnTop) btnTop.addEventListener('click', () => { const code = (document.getElementById('lang-top')||{}).value; if (code==='he'||code==='iw') return; applyAbout(code); });
-    if (btnAbout) btnAbout.addEventListener('click', () => { const code = (document.getElementById('lang-about')||{}).value; if (code==='he'||code==='iw') return; applyAbout(code); });
+
+    if (btnTop) btnTop.addEventListener('click', () => {
+      const code = (document.getElementById('lang-top') || {}).value;
+      if (code === 'he' || code === 'iw') return; // ignore RTL not supported here
+      applyAbout(code);
+    });
+
+    if (btnAbout) btnAbout.addEventListener('click', () => {
+      const code = (document.getElementById('lang-about') || {}).value;
+      if (code === 'he' || code === 'iw') return;
+      applyAbout(code);
+    });
   }
 
-  // Page routers
-  function go(href) { window.location.href = href; }
+  /* -----------------------------
+   * Simple router (robust relative paths)
+   * ----------------------------- */
+  function go(target) {
+    const page = String(target || 'index.html').replace(/^\.?\//, '');
+    const base = location.pathname.replace(/[^/]+$/, ''); // current folder
+    window.location.href = base + page;
+  }
 
   // ========== إدارة شريط التنقل العلوي ==========
   
@@ -130,7 +163,7 @@
       // إذا لم يكن المستخدم مسجل دخول: إظهار زر Login وSign Up وإخفاء معلومات المستخدم
       if (navLogin) {
         navLogin.textContent = 'Login';
-        navLogin.onclick = () => go('/HTML/login.html');
+        navLogin.onclick = () => go('/login.html');
       }
       if (navSignup) navSignup.style.display = 'inline-block'; // إظهار زر Sign Up
       if (userInfoDropdown) userInfoDropdown.style.display = 'none'; // إخفاء معلومات المستخدم
@@ -143,7 +176,7 @@
     if (homeBtn) {
       homeBtn.addEventListener('click', (e) => {
         e.preventDefault();
-        go('/HTML/index.html');
+        go('/index.html');
       });
     }
     
@@ -157,7 +190,7 @@
           aboutSection.scrollIntoView({ behavior: 'smooth' });
         } else {
           // إذا لم يكن موجوداً: الانتقال إلى الصفحة الرئيسية
-          go('/HTML/index.html');
+          go('/index.html');
         }
       });
     }
@@ -176,10 +209,10 @@
         // التحقق من حالة تسجيل الدخول
         if (isLoggedIn()) {
           // إذا كان المستخدم مسجل دخول: الانتقال إلى صفحة الاختبارات
-          go('/HTML/quizzes.html');
+          go('/quizzes.html');
         } else {
           // إذا لم يكن مسجل دخول: الانتقال إلى صفحة تسجيل الدخول
-          go('/HTML/login.html');
+          go('/login.html');
         }
       });
     }
@@ -188,7 +221,9 @@
     updateNavigationState();
   }
 
-  // Auth shared
+  /* -----------------------------
+   * Local demo auth (مُعطّل الآن)
+   * ----------------------------- */
   function setError(inputId, message) {
     const p = document.querySelector(`[data-error-for="${inputId}"]`);
     if (p) p.textContent = message || '';
@@ -196,41 +231,47 @@
   function clearErrors(form) { form.querySelectorAll('.error').forEach(e => (e.textContent = '')); }
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i;
+
   function validateSignup(form) {
     clearErrors(form);
     let ok = true;
-    const username = form.username.value.trim();
-    const email = form.email.value.trim();
-    const password = form.password.value;
-    const confirmPassword = form.confirmPassword.value;
-    const ageRaw = form.age.value.trim();
-    const stage = form.stage.value.trim();
-    const userType = (form.userType.value || '').trim();
+    const username = form.username?.value.trim();
+    const email    = form.email?.value.trim();
+    const password = form.password?.value;
+    const confirm  = form.confirmPassword?.value;
+    const ageRaw   = form.age?.value.trim();
+    const stage    = form.stage?.value.trim();
+    const userType = (form.userType?.value || '').trim();
+
     const usernameRegex = /^(?=.*[A-Z])(?=.*\d)[A-Za-z\d]{5,}$/;
     if (!username || !usernameRegex.test(username)) { setError('signup-username', 'Username must be 5+ chars, include 1 capital and 1 number, letters/digits only.'); ok = false; }
+
     const usersNow = getUsers();
     for (const emailKey in usersNow) {
       const u = usersNow[emailKey]; if (!u) continue;
       const uname = (u.username || emailKey.split('@')[0]).toLowerCase();
-      if (uname === username.toLowerCase()) { setError('signup-username', 'This username is already taken.'); ok = false; break; }
+      if (uname === (username || '').toLowerCase()) { setError('signup-username', 'This username is already taken.'); ok = false; break; }
     }
+
     if (!email || !emailRegex.test(email)) { setError('signup-email', 'Enter a valid email.'); ok = false; }
-    if (!password || password.length < 8) { setError('signup-password', 'Password must be at least 8 characters.'); ok = false; }
-    if (confirmPassword !== password) { setError('signup-confirm', 'Passwords do not match.'); ok = false; }
+    if (!password || password.length < 8)  { setError('signup-password', 'Password must be at least 8 characters.'); ok = false; }
+    if (confirm !== password)              { setError('signup-confirm', 'Passwords do not match.'); ok = false; }
+
     const age = Number(ageRaw);
     if (!ageRaw || Number.isNaN(age) || age < 1 || age > 120) { setError('signup-age', 'Enter a valid age (1-120).'); ok = false; }
-    if (!stage) { setError('signup-stage', 'This field is required.'); ok = false; }
-    if (!userType) { setError('userType', 'Select a user type.'); ok = false; }
+    if (!stage)    { setError('signup-stage', 'This field is required.'); ok = false; }
+    if (!userType) { setError('userType',      'Select a user type.');   ok = false; }
+
     return { ok, values: { username, email, password, userType, age, stage } };
   }
 
   function validateLogin(form) {
     clearErrors(form);
     let ok = true;
-    const username = form.username.value.trim();
-    const password = form.password.value;
+    const username = form.username?.value.trim();
+    const password = form.password?.value;
     if (!username) { setError('login-username', 'Enter a valid username.'); ok = false; }
-    if (!password) { setError('login-password', 'Password is required.'); ok = false; }
+    if (!password) { setError('login-password', 'Password is required.');  ok = false; }
     return { ok, values: { username, password } };
   }
 
@@ -239,16 +280,19 @@
     const stageInput = document.getElementById('signup-stage');
     function updateStageLabel() {
       const selected = ($$("input[name='userType']").find(r => r.checked) || {}).value;
-      if (selected === 'school') { stageLabel.textContent = 'Grade Level'; stageInput.placeholder = 'e.g., Grade 10'; }
+      if (selected === 'school')      { stageLabel.textContent = 'Grade Level';     stageInput.placeholder = 'e.g., Grade 10'; }
       else if (selected === 'university') { stageLabel.textContent = 'University Year'; stageInput.placeholder = 'e.g., Year 2'; }
-      else { stageLabel.textContent = 'Stage/Level'; stageInput.placeholder = 'e.g., Junior'; }
+      else                            { stageLabel.textContent = 'Stage/Level';     stageInput.placeholder = 'e.g., Junior'; }
     }
     $$("input[name='userType']").forEach(r => r.addEventListener('change', updateStageLabel));
-    updateStageLabel();
+    if (stageLabel && stageInput) updateStageLabel();
 
-    const usernameInput = document.getElementById('signup-username');
+    const usernameInput   = document.getElementById('signup-username');
     const usernamePreview = document.getElementById('username-preview');
-    const previewUpdate = () => { const v = (usernameInput.value || '').trim(); usernamePreview.textContent = v ? v : '—'; };
+    const previewUpdate = () => {
+      const v = (usernameInput?.value || '').trim();
+      if (usernamePreview) usernamePreview.textContent = v ? v : '—';
+    };
     if (usernameInput && usernamePreview) {
       usernameInput.addEventListener('input', previewUpdate);
       previewUpdate();
@@ -260,12 +304,15 @@
       e.preventDefault();
       const { ok, values } = validateSignup(signupForm);
       if (!ok) return;
+
+      // كان ديمو محلي — مُعطّل الآن لصالح Firebase
       const users = getUsers();
       if (users[values.email]) { setError('signup-email', 'An account with this email already exists.'); return; }
       users[values.email] = { email: values.email, password: values.password, userType: values.userType, age: values.age, stage: values.stage, username: values.username, createdAt: new Date().toISOString() };
       saveUsers(users);
-      localStorage.setItem('currentUser', values.username);
-      window.location.href = '/HTML/login.html';
+
+      try { localStorage.setItem('currentUser', values.username); } catch {}
+      go('login.html');
     });
   }
 
@@ -298,26 +345,28 @@
 
   function initSuccess() {
     const user = localStorage.getItem('currentUser');
-    const el = document.getElementById('success-user');
+    const el   = document.getElementById('success-user');
     if (el && user) el.innerHTML = `Welcome, <strong>${user}</strong> — your journey starts now.`;
+
     const confettiBox = document.getElementById('confetti');
     if (confettiBox) {
       confettiBox.innerHTML = '';
       const count = 60;
-      for (let i=0;i<count;i++) {
+      for (let i = 0; i < count; i++) {
         const s = document.createElement('span');
-        s.style.left = Math.random()*100 + '%';
-        s.style.animationDelay = (Math.random()*1.2)+'s';
+        s.style.left = Math.random() * 100 + '%';
+        s.style.animationDelay = (Math.random() * 1.2) + 's';
         s.style.background = Math.random() > .5
           ? 'linear-gradient(180deg, var(--brand-blue), var(--brand-cyan))'
           : 'linear-gradient(180deg, #ff8cc6, #ffc46b)';
         confettiBox.appendChild(s);
       }
     }
-    const toHome = document.getElementById('success-home');
+
+    const toHome  = document.getElementById('success-home');
     const toLogin = document.getElementById('success-login');
-    if (toHome) toHome.addEventListener('click', ()=> go('/HTML/index.html'));
-    if (toLogin) toLogin.addEventListener('click', ()=> go('/HTML/login.html'));
+    if (toHome)  toHome.addEventListener('click',  () => go('index.html'));
+    if (toLogin) toLogin.addEventListener('click', () => go('login.html'));
   }
 
   // ========== تهيئة صفحة الاختبارات ==========
@@ -331,21 +380,21 @@
     if (quiz1Btn) {
       quiz1Btn.addEventListener('click', () => {
         // الانتقال إلى صفحة السؤال الأول من الاختبار الأول
-        go('/HTML/question.html?quiz=1&question=1');
+        go('/question.html?quiz=1&question=1');
       });
     }
     
     if (quiz2Btn) {
       quiz2Btn.addEventListener('click', () => {
         // الانتقال إلى صفحة السؤال الأول من الاختبار الثاني
-        go('/HTML/question.html?quiz=2&question=1');
+        go('/question.html?quiz=2&question=1');
       });
     }
     
     if (quiz3Btn) {
       quiz3Btn.addEventListener('click', () => {
         // الانتقال إلى صفحة السؤال الأول من الاختبار الثالث
-        go('/HTML/question.html?quiz=3&question=1');
+        go('/question.html?quiz=3&question=1');
       });
     }
     
@@ -395,7 +444,7 @@
       nextBtn.addEventListener('click', () => {
         clearInterval(timerInterval);
         const nextQuestion = questionNum + 1;
-        go(`/HTML/question.html?quiz=${quizNum}&question=${nextQuestion}`);
+        go(`/question.html?quiz=${quizNum}&question=${nextQuestion}`);
       });
     }
     
@@ -404,7 +453,7 @@
       skipBtn.addEventListener('click', () => {
         clearInterval(timerInterval);
         const nextQuestion = questionNum + 1;
-        go(`/HTML/question.html?quiz=${quizNum}&question=${nextQuestion}`);
+        go(`/question.html?quiz=${quizNum}&question=${nextQuestion}`);
       });
     }
     
@@ -428,10 +477,24 @@
     if (page === 'success') initSuccess();
     if (page === 'quizzes') initQuizzes();
     if (page === 'question') initQuestion();
+
+    // Password toggles
+    try {
+      document.querySelectorAll('.pw-toggle').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const targetId = btn.getAttribute('data-target');
+          const input = targetId ? document.getElementById(targetId) : btn.previousElementSibling;
+          if (input && input.tagName === 'INPUT') {
+            const isPassword = input.getAttribute('type') === 'password';
+            input.setAttribute('type', isPassword ? 'text' : 'password');
+            btn.textContent = isPassword ? '🙈' : '👁️';
+            btn.setAttribute('aria-label', isPassword ? 'Hide password' : 'Show password');
+          }
+        });
+      });
+    } catch {}
   }
 
   // بدء التطبيق عند تحميل الصفحة
   document.addEventListener('DOMContentLoaded', boot);
 })();
-
-
