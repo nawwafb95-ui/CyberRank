@@ -1,20 +1,16 @@
 <!doctype html>
 <html lang="en" dir="ltr">
   <head>
-    <!-- إعدادات الصفحة الأساسية -->
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>CyberRank — الصفحة الرئيسية</title>
-    <!-- تحميل خط Inter الحديث -->
+    <title>CyberRank — Profile</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-    <!-- ملف الأنماط الرئيسي -->
     <link rel="stylesheet" href="/css/styles.css" />
     <link rel="icon" type="image/png" href="https://chat.openai.com/sandbox/mnt/data/favicon_32x32.png" />
   </head>
-  <body data-theme="night" data-page="home">
-    <!-- شريط التنقل العلوي -->
+  <body data-theme="night" data-page="profile">
     <header class="topbar">
       <a href="/index.html" class="brand-mini" id="go-home">
         <span class="brand-dot"></span>
@@ -33,7 +29,8 @@
                   id="info-photo"
                   class="avatar"
                   alt="User avatar"
-                  src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='96' height='96' viewBox='0 0 24 24' fill='none'><circle cx='12' cy='8' r='4' stroke='%23aab1c9' stroke-width='1.5'/><path d='M4 20c2.2-3 5-4.5 8-4.5s5.8 1.5 8 4.5' stroke='%23aab1c9' stroke-width='1.5' stroke-linecap='round'/></svg>'
+                  src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='96' height='96' viewBox='0 0 24 24' fill='none'><circle cx='12' cy='8' r='4' stroke='%23aab1c9' stroke-width='1.5'/><path د='M4 20c2.2-3 5-4.5 8-4.5s5.8 1.5 8 4.5' stroke='%23aab1c9' stroke-width='1.5' stroke-linecap='round'/></svg>'
+                  data-default="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='96' height='96' viewBox='0 0 24 24' fill='none'><circle cx='12' cy='8' r='4' stroke='%23aab1c9' stroke-width='1.5'/><path د='M4 20c2.2-3 5-4.5 8-4.5s5.8 1.5 8 4.5' stroke='%23aab1c9' stroke-width='1.5' stroke-linecap='round'/></svg>'"
                 />
               </div>
               <div class="info-box">
@@ -65,7 +62,6 @@
       </div>
     </header>
 
-    <!-- خلفية متحركة مع تأثيرات بصرية -->
     <div class="background">
       <div class="bg-gradient"></div>
       <div class="bg-blobs">
@@ -76,22 +72,57 @@
       <div class="bg-grid"></div>
     </div>
 
-    <!-- قسم البطل الرئيسي (Hero Section) -->
-    <section id="home" class="hero">
-      <div class="hero-card">
-        <h1 class="hero-title">Welcome to CyberRank</h1>
-        <p class="hero-sub">Test your cybersecurity skills, track your level, and grow with tailored challenges.</p>
-        <div class="hero-actions">
-          <!-- زر Quizzes الكبير - النقر عليه يوجه المستخدم حسب حالة تسجيل الدخول -->
-          <button class="cta quizzes-btn" id="home-quizzes">Quizzes</button>
+    <main class="container" style="padding-top:24px;">
+      <div class="card profile-card" id="profile-card">
+        <div class="profile-header">
+          <div class="avatar-wrap info">
+            <img
+              id="profile-photo"
+              class="avatar-lg"
+              alt="Profile photo"
+              src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 24 24' fill='none'><circle cx='12' cy='8' r='4' stroke='%23aab1c9' stroke-width='1.5'/><path د='M4 20c2.2-3 5-4.5 8-4.5s5.8 1.5 8 4.5' stroke='%23aab1c9' stroke-width='1.5' stroke-linecap='round'/></svg>'
+              data-default="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 24 24' fill='none'><circle cx='12' cy='8' r='4' stroke='%23aab1c9' stroke-width='1.5'/><path د='M4 20c2.2-3 5-4.5 8-4.5s5.8 1.5 8 4.5' stroke='%23aab1c9' stroke-width='1.5' stroke-linecap='round'/></svg>'"
+            />
+          </div>
+          <div>
+            <h2 id="profile-fullname">—</h2>
+            <p class="muted" id="profile-email">—</p>
+          </div>
+        </div>
+        <div class="profile-details">
+          <div class="profile-detail">
+            <span class="label">Username</span>
+            <span id="profile-username">—</span>
+          </div>
+          <div class="profile-detail">
+            <span class="label">User Type</span>
+            <span id="profile-usertype">—</span>
+          </div>
+          <div class="profile-detail">
+            <span class="label">Age</span>
+            <span id="profile-age">—</span>
+          </div>
+          <div class="profile-detail">
+            <span class="label">Major</span>
+            <span id="profile-major">—</span>
+          </div>
+          <div class="profile-detail">
+            <span class="label">Stage / Level</span>
+            <span id="profile-stage">—</span>
+          </div>
+          <div class="profile-detail">
+            <span class="label">University</span>
+            <span id="profile-university">—</span>
+          </div>
+          <div class="profile-detail">
+            <span class="label">Country</span>
+            <span id="profile-country">—</span>
+          </div>
         </div>
       </div>
-    </section>
+    </main>
 
-    <!-- ملف JavaScript الرئيسي - يحتوي على جميع الوظائف التفاعلية -->
     <script src="/js/app.js"></script>
     <script type="module" src="/js/navAuth.js"></script>
   </body>
-  </html>
-
-
+</html>

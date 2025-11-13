@@ -6,57 +6,85 @@
     <title>CyberRank — Quizzes</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="./css/styles.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="icon" type="image/png" href="https://chat.openai.com/sandbox/mnt/data/favicon_32x32.png" />
   </head>
-  <body data-page="quizzes">
+  <body data-theme="night" data-page="quizzes">
     <header class="topbar">
-      <a href="./index.html" class="brand-mini"><span class="brand-dot"></span>CyberRank</a>
+      <a href="/index.html" class="brand-mini" id="go-home">
+        <span class="brand-dot"></span>
+        CyberRank
+      </a>
       <div></div>
       <div class="nav">
-        <div class="dropdown" id="about-dd">
-          <button class="link-btn" id="about-btn">About</button>
-          <div class="dropdown-panel" style="max-width:360px;">
-            <div class="info-box">
-              <strong>About CyberRank</strong>
-              <div class="muted">
-                CyberRank is an interactive cybersecurity training platform designed to help SOC analysts
-                practice and improve their skills.
+        <button class="link-btn" id="nav-login">Login</button>
+        <button class="link-btn" id="nav-signup">Sign Up</button>
+        <div class="dropdown user-info-dropdown" id="user-info-dropdown" style="display:none;">
+          <button class="link-btn" id="user-info-btn" type="button">Info</button>
+          <div class="dropdown-panel" id="user-info-panel">
+            <div class="user-info-card">
+              <div class="avatar-wrap info">
+                <img
+                  id="info-photo"
+                  class="avatar"
+                  alt="User avatar"
+                  src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='96' height='96' viewBox='0 0 24 24' fill='none'><circle cx='12' cy='8' r='4' stroke='%23aab1c9' stroke-width='1.5'/><path d='M4 20c2.2-3 5-4.5 8-4.5s5.8 1.5 8 4.5' stroke='%23aab1c9' stroke-width='1.5' stroke-linecap='round'/></svg>'
+                  data-default="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='96' height='96' viewBox='0 0 24 24' fill='none'><circle cx='12' cy='8' r='4' stroke='%23aab1c9' stroke-width='1.5'/><path d='M4 20c2.2-3 5-4.5 8-4.5s5.8 1.5 8 4.5' stroke='%23aab1c9' stroke-width='1.5' stroke-linecap='round'/></svg>'"
+                />
+              </div>
+              <div class="info-box">
+                <div class="info-title">Full Name:</div>
+                <div class="info-value" id="info-fullname">—</div>
+                <div class="info-title">Email:</div>
+                <div class="info-value" id="info-email">—</div>
+              </div>
+              <div class="info-links">
+                <a class="link-btn" href="/profile.html">Profile</a>
               </div>
             </div>
           </div>
         </div>
-        <button class="link-btn" id="nav-quizzes">Quizzes</button>
-        <button class="link-btn" id="nav-login">Login</button>
-        <button class="link-btn" id="nav-signup">Sign Up</button>
-        
+        <div class="dropdown" id="settings-dd">
+          <button class="link-btn" id="settings-btn" type="button">Settings</button>
+          <div class="dropdown-panel" style="max-width: 320px;">
+            <div style="display:flex; flex-direction:column; align-items:flex-start; gap:10px;">
+              <label style="color:var(--muted);font-size:13px;">Theme:</label>
+              <div style="display:grid;gap:8px; grid-template-columns:1fr 1fr; width:100%;">
+                <button class="btn" data-theme-choice="night" id="dark-mode-btn-settings">Dark Mode</button>
+                <button class="btn" data-theme-choice="day" id="light-mode-btn-settings">Light Mode</button>
+              </div>
+            </div>
+            <div style="height:12px;"></div>
+            <a class="link-btn" href="/about.html" id="nav-about-link">About</a>
+          </div>
+        </div>
       </div>
     </header>
 
-    <main class="auth-layout">
-      <section class="quiz-grid card">
-        <h2 style="margin:0 0 10px 0;">Choose a Quiz</h2>
+    <div class="background">
+      <div class="bg-gradient"></div>
+      <div class="bg-blobs">
+        <span class="blob b1"></span>
+        <span class="blob b2"></span>
+        <span class="blob b3"></span>
+      </div>
+      <div class="bg-grid"></div>
+    </div>
+
+    <main class="container" style="padding:24px 16px; display:flex; justify-content:center;">
+      <div class="card" style="max-width:640px; width:100%; text-align:center;">
+        <h2 style="margin-top:0;">Choose a Quiz</h2>
         <div class="quiz-buttons">
-          <button class="btn primary" data-quiz="1">Quiz 1</button>
-          <button class="btn primary" data-quiz="2">Quiz 2</button>
-          <button class="btn primary" data-quiz="3">Quiz 3</button>
+          <a class="btn primary" href="/question.html?quiz=1">Quiz 1</a>
+          <a class="btn primary" href="/question.html?quiz=2">Quiz 2</a>
+          <a class="btn primary" href="/question.html?quiz=3">Quiz 3</a>
         </div>
-      </section>
+      </div>
     </main>
 
-    <script src="./js/app.js"></script>
-    <script>
-      (function(){
-        const btns = document.querySelectorAll('[data-quiz]');
-        btns.forEach(b => b.addEventListener('click', () => {
-          const quiz = b.getAttribute('data-quiz');
-          const base = location.pathname.replace(/[^/]+$/, '');
-          // Start at question 1
-          location.href = base + 'question.html?quiz=' + encodeURIComponent(quiz) + '&q=1';
-        }));
-      })();
-    </script>
+    <script src="/js/app.js"></script>
+    <script type="module" src="/js/navAuth.js"></script>
   </body>
-</html>
-
+  </html>
 

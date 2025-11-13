@@ -29,7 +29,7 @@ const router = createBrowserRouter([
     element: <AppShell />,
     children: [
       { index: true, element: <HomePage /> },
-      // About is a navbar dropdown now; no route
+      { path: 'about', element: <AboutPage /> },
       { path: 'login', loader: () => (isAuthenticated() ? redirect('/') : null), element: <LoginPage /> },
       { path: 'signup', loader: () => (isAuthenticated() ? redirect('/') : null), element: <SignupPage /> },
       { path: 'profile', loader: () => guard('/profile'), element: <ProfilePage /> },

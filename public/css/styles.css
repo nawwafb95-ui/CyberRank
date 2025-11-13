@@ -14,6 +14,21 @@
   --glass: rgba(17, 23, 51, 0.65); /* لون الخلفية الشفافة */
   --success: #47e39e; /* لون النجاح - أخضر */
 }
+[data-theme="night"] {
+  --bg: #0a0f1f; /* لون الخلفية الأساسي - أسود داكن */
+  --card: #111733; /* لون البطاقات - أزرق داكن */
+  --text: #e7eaf6; /* لون النص الرئيسي - أبيض فاتح */
+  --muted: #aab1c9; /* لون النص الثانوي - رمادي فاتح */
+  --accent: #6ea8fe; /* لون التمييز - أزرق */
+  --accent-strong: #4f8dff; /* لون التمييز القوي - أزرق داكن */
+  --danger: #ff667a; /* لون الخطأ - أحمر */
+  --ring: #263059; /* لون الحدود - أزرق داكن */
+  --input: #17204a; /* لون حقول الإدخال - أزرق داكن */
+  --brand-blue: #00c2ff; /* اللون الأزرق للعلامة التجارية */
+  --brand-cyan: #00ffd5; /* اللون الأخضر النيون للعلامة التجارية */
+  --glass: rgba(17, 23, 51, 0.65); /* لون الخلفية الشفافة */
+  --success: #47e39e; /* لون النجاح - أخضر */
+}
 [data-theme="day"] {
   --bg: #f6f7fb; --card: #ffffff; --text: #121433; --muted: #5f6a86; --accent: #2b6bff; --accent-strong: #1a52df;
   --danger: #e04560; --ring: #dfe3f0; --input: #f1f3fb; --brand-blue: #1fb6ff; --brand-cyan: #7bdff2; --glass: rgba(255,255,255,0.75);
@@ -62,9 +77,11 @@ body {
   border-bottom: 1px solid var(--ring); /* خط سفلي */
 }
 .brand-mini { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; color: var(--text); font-weight: 800; letter-spacing: .3px; }
-.brand-dot { width: 10px; height: 10px; border-radius: 50%;
-  background: radial-gradient(circle at 30% 30%, var(--brand-blue), transparent 60%);
-  box-shadow: 0 0 12px rgba(0,194,255,0.8);
+.brand-dot { width: 28px; height: 28px; border-radius: 8px;
+  background: url('https://chat.openai.com/sandbox/mnt/data/favicon_32x32.png') center/cover no-repeat;
+  box-shadow: none;
+  border: 1px solid rgba(255,255,255,0.12);
+  flex-shrink: 0;
 }
 .nav { display: inline-flex; align-items: center; gap: 10px; }
 .icon-btn {
@@ -75,6 +92,13 @@ body {
 .link-btn { border: 1px solid var(--ring); background: rgba(255,255,255,0.03); color: var(--text);
   border-radius: 10px; padding: 8px 12px; cursor: pointer;
 }
+/* إخفاء/إظهار أزرار الوضع المظلم/الفاتح بناءً على الوضع الحالي */
+#dark-mode-btn { display: none; }
+#light-mode-btn { display: inline-block; }
+body[data-theme="night"] #dark-mode-btn { display: none; }
+body[data-theme="night"] #light-mode-btn { display: inline-block; }
+body[data-theme="day"] #dark-mode-btn { display: inline-block; }
+body[data-theme="day"] #light-mode-btn { display: none; }
 .dropdown { position: relative; }
 .dropdown-panel {
   position: absolute; right: 0; top: calc(100% + 8px);
@@ -268,6 +292,11 @@ body {
   color: var(--brand-blue);
   text-shadow: 0 0 12px rgba(0,194,255,.3);
 }
+.info-value {
+  font-weight: 600;
+  color: var(--text);
+  text-shadow: 0 0 8px rgba(0, 194, 255, 0.15);
+}
 
 .auth-layout { min-height: 100%; display: grid; place-items: center; padding: 24px; }
 .brand { display: grid; place-items: center; gap: 8px; margin-bottom: 18px; text-align: center; }
@@ -369,6 +398,17 @@ input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in sr
   transition: transform .2s ease, box-shadow .2s ease;
   text-align: center;
   color: #e8f3ff;
+}
+.info-links {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.link-btn.muted {
+  opacity: 0.55;
+  cursor: default;
+  pointer-events: none;
 }
 .user-info-card:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(0,0,0,.35); }
 .avatar-wrap.info {
@@ -691,4 +731,47 @@ input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in sr
   z-index: 6;
 }
 .ai-feedback { min-height: 18px; color: var(--muted); }
+
+.profile-card {
+  max-width: 760px;
+  margin: 0 auto;
+  display: grid;
+  gap: 20px;
+}
+.profile-header {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+.profile-header h2 {
+  margin: 0;
+  font-size: clamp(24px, 4vw, 32px);
+}
+.profile-header .muted {
+  margin: 4px 0 0 0;
+}
+.profile-details {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+.profile-detail {
+  padding: 14px;
+  border-radius: 14px;
+  border: 1px solid var(--ring);
+  background: rgba(255,255,255,0.04);
+  display: grid;
+  gap: 6px;
+}
+.profile-detail .label {
+  font-size: 13px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+.profile-empty {
+  text-align: center;
+  color: var(--muted);
+}
 
