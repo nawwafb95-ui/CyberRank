@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="stylesheet" href="/css/base.css" />
+    <link rel="stylesheet" href="/css/auth.css" />
+    <title>Login</title>
+  </head>
+
+  <body class="auth-page" data-page="login">
+    <div class="auth-container reverse">
+      <div class="auth-image">
+        <!-- الصور داخل public/images -->
+        <img src="../images/login.jpeg" alt="Login Image" />
+      </div>
+
+      <div class="auth-form">
+        <h2>Welcome Back</h2>
+        <p>Login to continue your cybersecurity journey</p>
+
+        <!-- مهم جداً: id + name مطابقين لكود login.js -->
+        <form id="login-form">
+          <div class="form-group">
+            <div class="field">
+              <input
+                type="text"
+                id="login-username"
+                name="username"
+                class="floating-input"
+                placeholder=" "
+                required
+              />
+              <label for="login-username" class="floating-label">
+                Username
+              </label>
+            </div>
+            <p class="error" data-error-for="login-username"></p>
+          </div>
+
+          <div class="form-group">
+            <div class="field password-wrapper">
+              <input
+                type="password"
+                id="login-password"
+                name="password"
+                class="floating-input"
+                placeholder=" "
+                required
+              />
+              <label for="login-password" class="floating-label">
+                Password
+              </label>
+            </div>
+            <p class="error" data-error-for="login-password"></p>
+          </div>
+
+          <button type="submit">Login</button>
+        </form>
+
+        <p class="switch">
+          Don't have an account?
+          <a href="./signup.html">Sign up</a>
+        </p>
+      </div>
+    </div>
+
+    <!-- سكربتات المشروع الجديدة -->
+    <script src="../js/core.js"></script>
+    <script src="../js/main.js"></script>
+    <script src="../js/login.js"></script>
+    <!-- لو بدك تربط دخول Firebase في النافبار -->
+    <script type="module" src="../js/navAuth.js"></script>
+  </body>
+</html>

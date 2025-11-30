@@ -1,0 +1,247 @@
+/* ============ Global Reset ============ */
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+/* الروابط + البوتون */
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font-family: inherit;
+}
+
+/* ===========================
+   CSS Variables (Themes)
+   =========================== */
+
+:root {
+  /* Night theme (default) */
+  --bg-night: #020617;
+  --bg-night-soft: #020617;
+  --fg-night: #e5e7eb;
+  --muted-night: #9ca3af;
+  --accent-night: #38bdf8;
+  --accent-strong-night: #0ea5e9;
+  --card-bg-night: rgba(15, 23, 42, 0.92);
+  --border-subtle-night: rgba(148, 163, 184, 0.28);
+
+  /* Day theme */
+  --bg-day: #f9fafb;
+  --fg-day: #020617;
+  --muted-day: #6b7280;
+  --accent-day: #2563eb;
+  --accent-strong-day: #1d4ed8;
+  --card-bg-day: rgba(255, 255, 255, 0.92);
+  --border-subtle-day: rgba(148, 163, 184, 0.2);
+
+  /* Calm theme */
+  --bg-calm: #020617;
+  --fg-calm: #e5e7eb;
+  --muted-calm: #a5b4fc;
+  --accent-calm: #6366f1;
+  --accent-strong-calm: #4f46e5;
+  --card-bg-calm: rgba(15, 23, 42, 0.95);
+  --border-subtle-calm: rgba(129, 140, 248, 0.45);
+
+  /* Colors theme */
+  --bg-colors: #020617;
+  --fg-colors: #e5e7eb;
+  --muted-colors: #cbd5f5;
+  --accent-colors: #f97316;
+  --accent-strong-colors: #22d3ee;
+  --card-bg-colors: rgba(15, 23, 42, 0.96);
+  --border-subtle-colors: rgba(248, 250, 252, 0.28);
+
+  /* shared */
+  --radius-lg: 20px;
+  --radius-pill: 999px;
+  --shadow-soft: 0 24px 60px rgba(15, 23, 42, 0.65);
+}
+
+/* نستخدم data-theme على الـ body */
+
+body[data-theme="night"],
+body:not([data-theme]) {
+  --bg: var(--bg-night);
+  --bg-soft: var(--bg-night-soft);
+  --fg-main: var(--fg-night);
+  --muted: var(--muted-night);
+  --accent: var(--accent-night);
+  --accent-strong: var(--accent-strong-night);
+  --card-bg: var(--card-bg-night);
+  --border-subtle: var(--border-subtle-night);
+}
+
+body[data-theme="day"] {
+  --bg: var(--bg-day);
+  --bg-soft: #eff3ff;
+  --fg-main: var(--fg-day);
+  --muted: var(--muted-day);
+  --accent: var(--accent-day);
+  --accent-strong: var(--accent-strong-day);
+  --card-bg: var(--card-bg-day);
+  --border-subtle: var(--border-subtle-day);
+}
+
+/* calm */
+body[data-theme="calm"] {
+  --bg: var(--bg-calm);
+  --bg-soft: #020617;
+  --fg-main: var(--fg-calm);
+  --muted: var(--muted-calm);
+  --accent: var(--accent-calm);
+  --accent-strong: var(--accent-strong-calm);
+  --card-bg: var(--card-bg-calm);
+  --border-subtle: var(--border-subtle-calm);
+}
+
+/* colors */
+body[data-theme="colors"] {
+  --bg: var(--bg-colors);
+  --bg-soft: #020617;
+  --fg-main: var(--fg-colors);
+  --muted: var(--muted-colors);
+  --accent: var(--accent-colors);
+  --accent-strong: var(--accent-strong-colors);
+  --card-bg: var(--card-bg-colors);
+  --border-subtle: var(--border-subtle-colors);
+}
+
+/* body الأساسي */
+body {
+  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Arial, sans-serif;
+  line-height: 1.5;
+  background-color: var(--bg, #020617);
+  color: var(--fg-main, #e5e7eb);
+}
+
+/* ===========================
+   Layout Base
+   =========================== */
+
+body[data-page="home"],
+body[data-page="quizzes"],
+body[data-page="question"],
+body[data-page="profile"],
+body[data-page="about"],
+body[data-page="settings"],
+body[data-page="success"],
+body[data-page="dashboard"] {
+  background: var(--bg);
+  color: var(--fg-main);
+  overflow-x: hidden;
+}
+
+/* padding علشان الـ navbar الثابت */
+main {
+  padding-top: 80px;
+}
+
+/* حاوية عامة وبطاقة عامة */
+.container {
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 24px 16px;
+}
+
+.card {
+  background: var(--card-bg);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-soft);
+  padding: 24px;
+}
+
+/* ===========================
+   Background FX
+   =========================== */
+
+.background {
+  position: fixed;
+  inset: 0;
+  z-index: -5;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.bg-gradient {
+  position: absolute;
+  inset: -20%;
+  background:
+    radial-gradient(circle at 0% 0%, #0f172a, transparent 55%),
+    radial-gradient(circle at 100% 0%, rgba(59, 130, 246, 0.6), transparent 55%),
+    radial-gradient(circle at 10% 100%, rgba(56, 189, 248, 0.55), transparent 55%),
+    radial-gradient(circle at 90% 100%, rgba(129, 140, 248, 0.45), transparent 55%),
+    radial-gradient(circle at 50% 50%, #020617, #020617 50%, #000 100%);
+  opacity: 0.9;
+}
+
+.bg-blobs {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.blob {
+  position: absolute;
+  border-radius: 999px;
+  filter: blur(40px);
+  opacity: 0.45;
+}
+
+.blob.b1 {
+  width: 280px;
+  height: 280px;
+  top: -40px;
+  left: 10%;
+  background: #0ea5e9;
+}
+
+.blob.b2 {
+  width: 320px;
+  height: 320px;
+  bottom: -80px;
+  right: 8%;
+  background: #6366f1;
+}
+
+.blob.b3 {
+  width: 220px;
+  height: 220px;
+  bottom: 10%;
+  left: -40px;
+  background: #22c55e;
+}
+
+.bg-grid {
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(
+      transparent 0,
+      rgba(148, 163, 184, 0.15) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      90deg,
+      transparent 0,
+      rgba(148, 163, 184, 0.16) 1px,
+      transparent 1px
+    );
+  background-size: 32px 32px;
+  opacity: 0.16;
+  mix-blend-mode: soft-light;
+}

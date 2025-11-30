@@ -1,0 +1,374 @@
+/* ===========================
+   Hero Section (Home)
+   =========================== */
+
+   .hero {
+    position: relative;
+    min-height: 100vh;
+    padding: 96px 24px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .hero-card {
+    position: relative;
+    max-width: 640px;
+    width: 100%;
+    padding: 32px 32px 30px;
+    border-radius: 26px;
+    background: radial-gradient(circle at top left, rgba(56, 189, 248, 0.14), transparent 55%),
+      radial-gradient(circle at bottom right, rgba(129, 140, 248, 0.18), transparent 60%),
+      var(--card-bg);
+    border: 1px solid rgba(148, 163, 184, 0.32);
+    box-shadow: var(--shadow-soft);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+  }
+  
+  /* خط صغير أعلى العنوان (اختياري) */
+  .hero-card::before {
+    content: "Cybersecurity skill lab";
+    position: absolute;
+    top: 18px;
+    left: 32px;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  
+  /* عنوان كبير */
+  .hero-title {
+    font-size: 40px;
+    line-height: 1.05;
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    margin-top: 18px;
+    margin-bottom: 10px;
+    color: #f9fafb;
+  }
+  
+  /* نص الوصف */
+  .hero-sub {
+    font-size: 15px;
+    color: var(--muted);
+    max-width: 480px;
+    margin-bottom: 22px;
+  }
+  
+  /* الأزرار داخل الهيرو */
+  .hero-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  
+  /* زر ثانوي */
+  .hero-actions .secondary {
+    padding-inline: 18px;
+    background: transparent;
+    border-radius: 999px;
+    border: 1px solid rgba(148, 163, 184, 0.5);
+    color: var(--muted);
+    font-size: 13px;
+  }
+  
+  /* ===========================
+     Simple Sections (About, Settings)
+     =========================== */
+  
+  .section {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 96px 24px 40px;
+  }
+  
+  .section h1,
+  .section h2 {
+    font-weight: 700;
+    margin-bottom: 12px;
+  }
+  
+  .section p {
+    color: var(--muted);
+    font-size: 14px;
+  }
+  
+  /* ===========================
+     Quizzes Page
+     =========================== */
+  
+  .quiz-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: center;
+    margin-top: 16px;
+  }
+  
+  /* ===========================
+     Question Page
+     =========================== */
+  
+  .question-layout {
+    min-height: calc(100vh - 72px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 32px 16px;
+    gap: 16px;
+  }
+  
+  .question-timer,
+  #timer,
+  #question-timer {
+    font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco,
+      Consolas, "Liberation Mono", "Courier New", monospace;
+    font-size: 16px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid rgba(148, 163, 184, 0.5);
+    background: rgba(15, 23, 42, 0.9);
+    color: #e5e7eb;
+  }
+  
+  .question-card {
+    max-width: 700px;
+    width: 100%;
+  }
+  
+  .question-text,
+  #question-text {
+    font-size: 18px;
+    margin-bottom: 18px;
+  }
+  
+  .question-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  
+  .ai-feedback,
+  #ai-feedback {
+    font-size: 14px;
+    color: var(--muted);
+    font-style: italic;
+  }
+  
+  /* ===========================
+     Profile Page
+     =========================== */
+  
+  .profile-card {
+    max-width: 720px;
+    margin: 0 auto;
+  }
+  
+  .profile-header {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    margin-bottom: 18px;
+  }
+  
+  .profile-header h2 {
+    font-size: 24px;
+  }
+  
+  .profile-header .muted {
+    font-size: 14px;
+  }
+  
+  .profile-details {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    margin-top: 8px;
+  }
+  
+  .profile-detail {
+    padding: 10px 12px;
+    border-radius: 12px;
+    background: rgba(15, 23, 42, 0.95);
+    border: 1px solid rgba(148, 163, 184, 0.35);
+    font-size: 14px;
+  }
+  
+  .profile-detail .label {
+    display: block;
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 2px;
+  }
+  
+  /* ===========================
+     Success Page
+     =========================== */
+  
+  .success {
+    min-height: calc(100vh - 72px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 30px 16px;
+  }
+  
+  .success-card {
+    position: relative;
+    max-width: 640px;
+    width: 100%;
+    padding: 26px 24px;
+    border-radius: 22px;
+    background: radial-gradient(circle at top left, rgba(56, 189, 248, 0.15), transparent 55%),
+      radial-gradient(circle at bottom right, rgba(251, 191, 36, 0.15), transparent 50%),
+      rgba(15, 23, 42, 0.96);
+    border: 1px solid rgba(148, 163, 184, 0.4);
+    box-shadow: 0 28px 60px rgba(15, 23, 42, 0.9);
+    text-align: center;
+  }
+  
+  .success-title {
+    font-size: 26px;
+    margin-bottom: 8px;
+  }
+  
+  .success-sub {
+    color: var(--muted);
+    margin-bottom: 18px;
+  }
+  
+  .confetti {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+    border-radius: inherit;
+    z-index: -1;
+  }
+  
+  .confetti span {
+    position: absolute;
+    width: 6px;
+    height: 14px;
+    border-radius: 999px;
+    animation: confettiFall 2s linear infinite;
+  }
+  
+  @keyframes confettiFall {
+    from {
+      transform: translateY(-40px) rotate(0deg);
+      opacity: 0;
+    }
+    30% {
+      opacity: 1;
+    }
+    to {
+      transform: translateY(260px) rotate(360deg);
+      opacity: 0;
+    }
+  }
+  
+  /* ===========================
+     Dashboard Page
+     =========================== */
+  
+  .dash {
+    min-height: calc(100vh - 72px);
+    padding: 30px 16px;
+    max-width: 700px;
+    margin: 0 auto;
+  }
+  
+  .dash h2 {
+    font-size: 24px;
+    margin-bottom: 16px;
+  }
+  
+  .add-score {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  
+  .add-score input {
+    flex: 1;
+    padding: 8px 10px;
+    border-radius: 999px;
+    border: 1px solid rgba(148, 163, 184, 0.6);
+    background: rgba(15, 23, 42, 0.95);
+    color: var(--fg-main);
+    outline: none;
+    font-size: 14px;
+  }
+  
+  .add-score input::placeholder {
+    color: var(--muted);
+  }
+  
+  #scores {
+    list-style: none;
+    margin-top: 10px;
+    border-radius: 16px;
+    border: 1px solid rgba(148, 163, 184, 0.3);
+    background: rgba(15, 23, 42, 0.9);
+    overflow: hidden;
+  }
+  
+  #scores li {
+    padding: 8px 12px;
+    font-size: 14px;
+    border-bottom: 1px solid rgba(15, 23, 42, 0.9);
+  }
+  
+  /* ===========================
+     Responsive (Pages)
+     =========================== */
+  
+  @media (max-width: 900px) {
+    .hero {
+      padding-top: 90px;
+      align-items: flex-start;
+    }
+  
+    .hero-card {
+      padding: 24px 20px 22px;
+      border-radius: 22px;
+    }
+  
+    .hero-card::before {
+      left: 20px;
+      top: 16px;
+    }
+  
+    .hero-title {
+      font-size: 30px;
+    }
+  
+    .hero-sub {
+      font-size: 14px;
+    }
+  
+    .hero-actions {
+      flex-direction: column;
+      align-items: stretch;
+    }
+  
+    .cta,
+    .hero-actions .secondary {
+      width: 100%;
+      justify-content: center;
+    }
+  
+    .profile-header {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+  
+    .success-card {
+      padding: 22px 18px;
+    }
+  }
+  

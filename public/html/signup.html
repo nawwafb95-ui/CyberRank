@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="/css/base.css" />
+    <link rel="stylesheet" href="/css/auth.css" />
+    <title>Sign Up</title>
+  </head>
+
+  <body class="auth-page" data-page="signup">
+    <div class="auth-container">
+      <!-- الفورم على اليسار -->
+      <div class="auth-form">
+        <h2>Create Account</h2>
+        <p>Join CyberRank and start learning securely</p>
+
+        <form id="signup-form">
+          <!-- User Name -->
+          <div class="form-group">
+            <div class="field">
+              <input
+                id="signup-username"
+                name="username"
+                type="text"
+                class="floating-input"
+                placeholder=" "
+                autocomplete="username"
+                required
+              />
+              <label for="signup-username" class="floating-label">
+                User Name
+              </label>
+            </div>
+            <small id="username-hint" class="field-hint">
+              Ex: <strong>Cyber_123</strong>
+            </small>
+            <p class="error" data-error-for="signup-username"></p>
+          </div>
+
+          <!-- Email -->
+          <div class="form-group">
+            <div class="field">
+              <input
+                id="signup-email"
+                name="email"
+                type="email"
+                class="floating-input"
+                placeholder=" "
+                autocomplete="email"
+                required
+              />
+              <label for="signup-email" class="floating-label">
+                Email
+              </label>
+            </div>
+            <small class="field-hint">
+              Ex: <strong>Cyber@gmail.com</strong>
+            </small>
+            <p class="error" data-error-for="signup-email"></p>
+          </div>
+
+          <!-- Password -->
+          <div class="form-group">
+            <div class="field password-wrapper">
+              <input
+                id="signup-password"
+                name="password"
+                type="password"
+                class="floating-input"
+                placeholder=" "
+                autocomplete="new-password"
+                required
+              />
+              <label for="signup-password" class="floating-label">
+                Password
+              </label>
+              <button
+                type="button"
+                class="toggle-visibility"
+                data-target="signup-password"
+                aria-label="Show password"
+              >
+                👁️
+              </button>
+            </div>
+            <small id="password-hint" class="field-hint">
+              Ex: <strong>Cyber@123</strong> 
+            </small>
+            <p class="error" data-error-for="signup-password"></p>
+          </div>
+
+          <!-- Confirm Password (بدون مثال) -->
+          <div class="form-group">
+            <div class="field password-wrapper">
+              <input
+                id="signup-confirm"
+                name="confirmPassword"
+                type="password"
+                class="floating-input"
+                placeholder=" "
+                autocomplete="new-password"
+                required
+              />
+              <label for="signup-confirm" class="floating-label">
+                Confirm Password
+              </label>
+              <button
+                type="button"
+                class="toggle-visibility"
+                data-target="signup-confirm"
+                aria-label="Show password"
+              >
+                👁️
+              </button>
+            </div>
+            <p class="error" data-error-for="signup-confirm"></p>
+          </div>
+
+          <button type="submit">Sign Up</button>
+        </form>
+
+        <p class="switch">
+          Already have an account?
+          <a href="./login.html">Login</a>
+        </p>
+      </div>
+
+      <!-- الصورة على اليمين -->
+      <div class="auth-image">
+        <img src="../images/signup.jpeg" alt="Signup Image" />
+      </div>
+    </div>
+
+    <!-- Success Popup -->
+    <div id="successPopup" class="popup-overlay">
+      <div class="popup-box">
+        <h3>Account Created ✔️</h3>
+        <p>Your account has been created successfully. Please log in to continue.</p>
+        <button id="popupOkBtn">OK</button>
+      </div>
+    </div>
+
+    <script src="../js/core.js"></script>
+    <script src="../js/main.js"></script>
+    <script src="../js/signup.js"></script>
+    <script type="module" src="../js/navAuth.js"></script>
+  </body>
+</html>
