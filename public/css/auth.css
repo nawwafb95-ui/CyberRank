@@ -1,0 +1,326 @@
+/* ============ Body for Auth Pages ============ */
+body.auth-page {
+  font-family: "Inter", Arial, sans-serif;
+  background: #020617;
+  color: #fff;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* ============ Main Container ============ */
+.auth-container {
+  width: 85%;
+  max-width: 1100px;
+  min-height: 75vh;
+  display: flex;
+  align-items: stretch;
+  overflow: hidden;
+  border-radius: 20px;
+  background: #0f172a;
+}
+
+/* لصفحة تسجيل الدخول */
+.auth-container.reverse {
+  flex-direction: row-reverse;
+}
+
+/* ============ Image Section ============ */
+.auth-image {
+  width: 50%;
+  height: 100%;
+  display: flex;
+}
+
+.auth-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* ============ Form Section ============ */
+.auth-form {
+  width: 50%;
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background: #0f172a;
+}
+
+.auth-form form {
+  width: 100%;
+  max-width: 380px;
+}
+
+.auth-form h2 {
+  font-size: 32px;
+  margin-bottom: 8px;
+  text-align: center;
+}
+
+.auth-form > p {
+  color: #94a3b8;
+  margin-bottom: 18px;
+  text-align: center;
+}
+
+/* ============ Form Groups ============ */
+.form-group {
+  width: 100%;
+  margin-bottom: 14px;
+}
+
+/* حقل داخلي للفلووتينغ لابل */
+.form-group .field {
+  position: relative;
+  width: 100%;
+}
+
+/* حقول الإدخال العامة في صفحات Auth */
+.auth-form form input {
+  width: 100%;
+  padding: 12px 14px;
+  border: none;
+  border-radius: 10px;
+  background: #1e293b;
+  color: #fff;
+  font-size: 15px;
+  outline: none;
+}
+
+/* placeholder راح نخليه فراغ فـ لونه مش مهم كثير */
+.auth-form form input::placeholder {
+  color: #cbd5f5;
+}
+
+/* اللابل العادي (لباقي الصفحات لو استُخدم) */
+.form-group label {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 14px;
+  color: #e5e7eb;
+}
+/* ===== Floating Label Style (border top style) ===== */
+.floating-label {
+  position: absolute;
+  left: 18px;                 /* شوية يمين */
+  top: 0;                     /* عند حافة البوردر العلوية */
+  transform: translateY(-50%);/* نصه فوق البوردر ونصه تحت */
+  font-size: 14px;
+  color: #94a3b8;
+  pointer-events: none;
+  transition: 0.18s ease;
+  margin-bottom: 0;
+  padding: 0 6px;             /* خلفية صغيرة حوالين النص */
+  background: #0f172a;        /* نفس لون خلفية الفورم عشان يقطع البوردر */
+}
+
+/* عشان placeholder ما يبان داخل الحقل */
+.floating-input::placeholder {
+  color: transparent;
+}
+
+/* لما يكون في focus أو في قيمة داخل الحقل تطلع اللابل لفوق شوي وتصغر */
+.floating-input:focus + .floating-label,
+.floating-input:not(:placeholder-shown) + .floating-label {
+  top: -8px;                  /* تطلع فوق البوردر */
+  transform: translateY(0);   /* ما نرجع ننصّه */
+  font-size: 11px;
+  color: #38bdf8;
+}
+
+/* لمسة بسيطة على الفوكس */
+.floating-input:focus {
+  box-shadow: 0 0 0 1px #38bdf8;
+}
+
+/* Hint يظهر فقط مع focus داخل الـ group */
+.field-hint {
+  opacity: 0;
+  max-height: 0;
+  overflow: hidden;
+  transform: translateY(-4px);
+  transition: 0.2s ease;
+  display: block;
+  font-size: 12px;
+  color: #94a3b8;
+  margin-top: 2px;
+}
+
+/* أي عنصر داخل form-group عليه focus يخلي الهِنت يطلع */
+.form-group:focus-within .field-hint {
+  opacity: 1;
+  max-height: 60px;
+  transform: translateY(0);
+}
+
+/* رسائل الخطأ */
+.error {
+  min-height: 12px;
+  font-size: 12px;
+  color: #f97373;
+  margin-top: 2px;
+}
+
+/* ============ Password Eye (Show/Hide) ============ */
+.password-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+/* نخلي مساحة كافية للعين من اليمين */
+.password-wrapper .floating-input {
+  padding-right: 48px; /* مساحة للعين من داخل الحقل */
+}
+
+/* 👁️ داخل الحقل - يمين - ثابتة */
+.toggle-visibility {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 22px;
+  height: 22px;
+  background: transparent !important;
+  border: none;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  cursor: pointer;
+  color: #d7dcec;
+  line-height: 1;
+  outline: none;
+  transition: color 0.15s ease;
+}
+
+/* نفس المكان في كل الحالات، بس نغيّر اللون */
+.toggle-visibility:hover,
+.toggle-visibility:focus,
+.toggle-visibility:active {
+  color: #ffffff;
+}
+
+/* ============ Buttons ============ */
+/* نخلي ستايل الزر بس لزر الـ Submit */
+.auth-form button[type="submit"] {
+  width: 100%;
+  padding: 12px;
+  border-radius: 10px;
+  background: linear-gradient(90deg, #2563eb, #0ea5e9);
+  border: none;
+  color: #fff;
+  font-size: 18px;
+  cursor: pointer;
+  margin-top: 10px;
+  transition: filter 0.15s ease, transform 0.1s ease;
+}
+
+.auth-form button[type="submit"]:hover {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+}
+
+/* Switch (Login/Sign Up Link) */
+.switch {
+  margin-top: 12px;
+  font-size: 14px;
+  text-align: center;
+}
+
+.switch a {
+  color: #38bdf8;
+}
+
+.switch a:hover {
+  text-decoration: underline;
+}
+
+/* ============ Responsive for Auth ============ */
+@media (max-width: 900px) {
+  body.auth-page {
+    align-items: flex-start;
+    padding: 20px 0;
+    height: auto;
+  }
+
+  .auth-container {
+    flex-direction: column;
+    width: 95%;
+  }
+
+  .auth-form,
+  .auth-image {
+    width: 100%;
+  }
+
+  .auth-image {
+    max-height: 260px;
+  }
+
+  .auth-form {
+    padding: 30px 20px 40px;
+  }
+}
+
+/* ===== Success Popup (Auth) ===== */
+.popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(6px);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.popup-box {
+  background: #0f172a;
+  border-radius: 16px;
+  padding: 30px 25px;
+  width: 90%;
+  max-width: 420px;
+  text-align: center;
+  box-shadow: 0 0 30px rgba(0,0,0,0.3);
+  animation: popupFade 0.35s ease-out;
+}
+
+.popup-box h3 {
+  margin-bottom: 10px;
+  color: #38bdf8;
+  font-size: 24px;
+}
+
+.popup-box p {
+  color: #cbd5e1;
+  margin-bottom: 22px;
+  font-size: 15px;
+}
+
+.popup-box button {
+  padding: 12px 20px;
+  border: none;
+  background: linear-gradient(90deg, #2563eb, #0ea5e9);
+  color: white;
+  border-radius: 10px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.popup-box button:hover {
+  filter: brightness(1.15);
+}
+
+@keyframes popupFade {
+  from { opacity: 0; transform: scale(0.9); }
+  to   { opacity: 1; transform: scale(1); }
+}

@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CyberRank — Profile</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+
+    <link rel="stylesheet" href="/css/base.css" />
+    <link rel="stylesheet" href="/css/components.css" />
+    <link rel="stylesheet" href="/css/pages.css" />
+
+    <!-- Favicon داخل public/images -->
+    <link rel="icon" type="image/png" href="../images/favicon.png" />
+  </head>
+
+  <body data-theme="night" data-page="profile">
+    <header class="topbar">
+      <!-- index.html داخل نفس فولدر html -->
+      <a href="./index.html" class="brand-mini" id="go-home">
+        <span class="brand-dot"></span>
+        CyberRank
+      </a>
+
+      <div></div>
+
+      <div class="nav">
+        <button class="link-btn" id="nav-login">Login</button>
+        <button class="link-btn" id="nav-signup">Sign Up</button>
+
+        <div class="dropdown user-info-dropdown" id="user-info-dropdown" style="display:none;">
+          <button class="link-btn" id="user-info-btn" type="button">Info</button>
+          <div class="dropdown-panel" id="user-info-panel">
+            <div class="user-info-card">
+              <div class="avatar-wrap info">
+                <img
+                  id="info-photo"
+                  class="avatar"
+                  alt="User avatar"
+                  src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='96' height='96' viewBox='0 0 24 24' fill='none'><circle cx='12' cy='8' r='4' stroke='%23aab1c9' stroke-width='1.5'/><path d='M4 20c2.2-3 5-4.5 8-4.5s5.8 1.5 8 4.5' stroke='%23aab1c9' stroke-width='1.5' stroke-linecap='round'/></svg>'"
+                  data-default="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='96' height='96' viewBox='0 0 24 24' fill='none'><circle cx='12' cy='8' r='4' stroke='%23aab1c9' stroke-width='1.5'/><path d='M4 20c2.2-3 5-4.5 8-4.5s5.8 1.5 8 4.5' stroke='%23aab1c9' stroke-width='1.5' stroke-linecap='round'/></svg>'"
+                />
+              </div>
+
+              <div class="info-box">
+                <div class="info-title">Full Name:</div>
+                <div class="info-value" id="info-fullname">—</div>
+
+                <div class="info-title">Email:</div>
+                <div class="info-value" id="info-email">—</div>
+              </div>
+
+              <div class="info-links">
+                <!-- نفس الصفحة -->
+                <a class="link-btn" href="./profile.html">Profile</a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="dropdown" id="settings-dd">
+          <button class="link-btn" id="settings-btn" type="button">Settings</button>
+          <div class="dropdown-panel" style="max-width: 320px;">
+            <div style="display:flex; flex-direction:column; align-items:flex-start; gap:10px;">
+              <label style="color:var(--muted);font-size:13px;">Theme:</label>
+              <div style="display:grid;gap:8px; grid-template-columns:1fr 1fr; width:100%;">
+                <button class="btn" data-theme-choice="night" id="dark-mode-btn-settings">
+                  Dark Mode
+                </button>
+                <button class="btn" data-theme-choice="day" id="light-mode-btn-settings">
+                  Light Mode
+                </button>
+              </div>
+            </div>
+
+            <div style="height:12px;"></div>
+
+            <!-- about.html داخل نفس فولدر html -->
+            <a class="link-btn" href="./about.html" id="nav-about-link">About</a>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div class="background">
+      <div class="bg-gradient"></div>
+      <div class="bg-blobs">
+        <span class="blob b1"></span>
+        <span class="blob b2"></span>
+        <span class="blob b3"></span>
+      </div>
+      <div class="bg-grid"></div>
+    </div>
+
+    <main class="container" style="padding-top:24px;">
+      <div class="card profile-card" id="profile-card">
+        <div class="profile-header">
+          <div class="avatar-wrap info">
+            <img
+              id="profile-photo"
+              class="avatar-lg"
+              alt="Profile photo"
+              src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 24 24' fill='none'><circle cx='12' cy='8' r='4' stroke='%23aab1c9' stroke-width='1.5'/><path d='M4 20c2.2-3 5-4.5 8-4.5s5.8 1.5 8 4.5' stroke='%23aab1c9' stroke-width='1.5' stroke-linecap='round'/></svg>'"
+              data-default="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 24 24' fill='none'><circle cx='12' cy='8' r='4' stroke='%23aab1c9' stroke-width='1.5'/><path d='M4 20c2.2-3 5-4.5 8-4.5s5.8 1.5 8 4.5' stroke='%23aab1c9' stroke-width='1.5' stroke-linecap='round'/></svg>'"
+            />
+          </div>
+
+          <div>
+            <h2 id="profile-fullname">—</h2>
+            <p class="muted" id="profile-email">—</p>
+          </div>
+        </div>
+
+        <div class="profile-details">
+          <div class="profile-detail">
+            <span class="label">Username</span>
+            <span id="profile-username">—</span>
+          </div>
+
+          <div class="profile-detail">
+            <span class="label">User Type</span>
+            <span id="profile-usertype">—</span>
+          </div>
+
+          <div class="profile-detail">
+            <span class="label">Age</span>
+            <span id="profile-age">—</span>
+          </div>
+
+          <div class="profile-detail">
+            <span class="label">Major</span>
+            <span id="profile-major">—</span>
+          </div>
+
+          <div class="profile-detail">
+            <span class="label">Stage / Level</span>
+            <span id="profile-stage">—</span>
+          </div>
+
+          <div class="profile-detail">
+            <span class="label">University</span>
+            <span id="profile-university">—</span>
+          </div>
+
+          <div class="profile-detail">
+            <span class="label">Country</span>
+            <span id="profile-country">—</span>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Scripts -->
+    <script src="../js/core.js"></script>
+    <script src="../js/main.js"></script>
+    <script src="../js/profile.js"></script>
+    <script type="module" src="../js/navAuth.js"></script>
+  </body>
+</html>
