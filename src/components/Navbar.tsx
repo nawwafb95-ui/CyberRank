@@ -25,7 +25,7 @@ export function Navbar() {
 
   return (
     <header className="topbar">
-      <Link to="/" className="brand"><span className="brand-dot" />CyberRank</Link>
+      <Link to="/" className="brand"><span className="brand-dot" />SOCyberX</Link>
       <div />
       <nav className="nav">
         {!authed && (

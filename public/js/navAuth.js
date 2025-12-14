@@ -84,4 +84,8 @@ onAuthStateChanged(auth, (user) => {
   updateAuthButton(user);
 });
 
+// Export auth instance for use in other modules
+window.auth = auth;
+window.firebaseApp = app;
+
 

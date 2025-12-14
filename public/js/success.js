@@ -4,7 +4,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const el   = document.getElementById('success-user');
 
   if (el && user) {
-    el.innerHTML = `Welcome, <strong>${user}</strong> — your journey starts now.`;
+    // Security: Use textContent to prevent XSS, then add safe HTML via DOM
+    el.textContent = '';
+    const strong = document.createElement('strong');
+    strong.textContent = user;
+    el.appendChild(document.createTextNode('Welcome, '));
+    el.appendChild(strong);
+    el.appendChild(document.createTextNode(' — your journey starts now.'));
   }
 
   const confettiBox = document.getElementById('confetti');
@@ -27,7 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (toHome) {
     toHome.addEventListener('click', () => {
-      // go() متوفرة من core.js
+      // go() available from core.js
       if (typeof go === 'function') {
         go('index.html');
       } else {

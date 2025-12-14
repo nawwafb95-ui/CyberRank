@@ -11,7 +11,7 @@ export function HomePage() {
   return (
     <section className="hero">
       <div className="hero-card">
-        <h1 className="hero-title">Welcome to CyberRank</h1>
+        <h1 className="hero-title">Welcome to SOCyberX</h1>
         <p className="hero-sub">Practice cybersecurity skills with guided quizzes and AI feedback.</p>
         <div className="row" style={{ justifyContent: 'center' }}>
           <button className="btn primary" onClick={onQuizzes}>Quizzes</button>

@@ -22,22 +22,7 @@
     function initThemeControls() {
       wireDropdown('#settings-dd', '#settings-btn');
       wireDropdown('#user-info-dropdown', '#user-info-btn');
-  
-      try {
-        const savedTheme = localStorage.getItem('theme');
-        if (savedTheme === 'day' || savedTheme === 'night') {
-          document.body.setAttribute('data-theme', savedTheme);
-        }
-      } catch (e) {}
-  
-      $$('[data-theme-choice]').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const choice = btn.getAttribute('data-theme-choice');
-          if (!choice) return;
-          document.body.setAttribute('data-theme', choice);
-          try { localStorage.setItem('theme', choice); } catch (e) {}
-        });
-      });
+      // Theme switching removed
     }
   
     // ===== Local Users Storage =====
@@ -157,49 +142,7 @@
       go('/index.html');
     }
   
-    // ===== About translations =====
-    const ABOUT_COPY = {
-      'en-US': 'CyberRank helps you test yourself with cybersecurity questions, track your level by age group, and earn points as you progress. Practice real-world scenarios, review explanations, and discover your strengths. Designed for learners at any stage—whether you’re an employee, school student, or university student—CyberRank adapts to your journey.',
-      'en-GB': 'CyberRank helps you test yourself with cyber security questions, track your level by age group, and earn points as you progress. Practise real-world scenarios, review explanations, and discover your strengths. Designed for learners at any stage—whether you’re an employee, school pupil, or university student—CyberRank adapts to your journey.',
-      'ar': 'يساعدك CyberRank على اختبار نفسك بأسئلة في الأمن السيبراني، وتتبع مستواك حسب فئتك العمرية، وكسب النقاط أثناء التقدم. تدرب على سيناريوهات واقعية، واطّلع على الشروحات، واكتشف نقاط قوتك. صُمم لأي مرحلة تعليمية — سواء كنت موظفاً أو طالبَ مدرسة أو طالبَ جامعة — ليتكيف مع رحلتك.',
-      'fr': 'CyberRank vous aide à vous tester avec des questions de cybersécurité, à suivre votre niveau par tranche d’âge et à gagner des points en progressant. Entraînez-vous sur des scénarios réels, consultez les explications et découvrez vos points forts. Conçu pour tous les niveaux — employé, élève ou étudiant — CyberRank s’adapte à votre parcours.'
-    };
-  
-    function applyAbout(code) {
-      const aboutText = document.getElementById('about-text');
-      if (!aboutText) return;
-      aboutText.textContent = ABOUT_COPY[code] || ABOUT_COPY['en-US'];
-      try { localStorage.setItem('lang', code); } catch {}
-    }
-  
-    function initTranslateControls() {
-      try {
-        const saved = localStorage.getItem('lang');
-        if (saved) applyAbout(saved);
-      } catch {}
-  
-      const btnTop      = document.getElementById('apply-lang-top');
-      const btnAbout    = document.getElementById('apply-lang-about');
-      const btnSettings = document.getElementById('apply-lang-settings');
-  
-      if (btnTop) btnTop.addEventListener('click', () => {
-        const code = (document.getElementById('lang-top') || {}).value;
-        if (code === 'he' || code === 'iw') return;
-        applyAbout(code);
-      });
-  
-      if (btnAbout) btnAbout.addEventListener('click', () => {
-        const code = (document.getElementById('lang-about') || {}).value;
-        if (code === 'he' || code === 'iw') return;
-        applyAbout(code);
-      });
-  
-      if (btnSettings) btnSettings.addEventListener('click', () => {
-        const code = (document.getElementById('lang-settings') || {}).value;
-        if (code === 'he' || code === 'iw') return;
-        applyAbout(code);
-      });
-    }
+    // Translation functionality removed
   
     // ===== Router =====
     function go(target) {
@@ -320,7 +263,6 @@
     window.getProfile = getProfile;
     window.getUser = getUser;
     window.initThemeControls = initThemeControls;
-    window.initTranslateControls = initTranslateControls;
     window.initTopNav = initTopNav;
     window.updateNavigationState = updateNavigationState;
     window.setError = setError;

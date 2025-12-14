@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const usernameHint         = document.getElementById('username-hint');
   const passwordHint         = document.getElementById('password-hint');
 
-  // ================== Username Hint (يظهر عند التركيز) ==================
+  // ================== Username Hint (shows on focus) ==================
   if (usernameInput && usernameHint) {
     usernameInput.addEventListener('focus', () => {
       usernameHint.classList.add('visible');
@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // ================== Password Hint (نفس فكرة اليوزرنيم) ==================
+  // ================== Password Hint (same as username) ==================
   if (passwordInput && passwordHint) {
     passwordInput.addEventListener('focus', () => {
       passwordHint.classList.add('visible');
@@ -39,12 +39,12 @@ document.addEventListener('DOMContentLoaded', () => {
   // ================== Helpers from core.js ==================
   // clearErrors(form), setError(inputId, message),
   // getUsers(), saveUsers(), emailRegex
-  // موجودين في core.js.
+  // Available in core.js
 
   // ================== Username Validation ==================
   function validateUsername(username) {
-    // أول حرف Capital، الباقي small أو أرقام أو - أو _
-    // طول 4 حروف أو أكثر
+    // First letter must be Capital, rest lowercase, numbers, -, or _
+    // Minimum 4 characters
     const usernameRegex = /^[A-Z][a-z0-9_-]{3,}$/;
 
     if (!username) {
@@ -60,7 +60,7 @@ document.addEventListener('DOMContentLoaded', () => {
       return false;
     }
 
-    // فحص عدم التكرار (حسب users المخزّنين محلياً)
+    // Check for duplicate username (from locally stored users)
     const usersNow = getUsers();
     const lower = username.toLowerCase();
     for (const emailKey in usersNow) {
@@ -83,8 +83,8 @@ document.addEventListener('DOMContentLoaded', () => {
       return false;
     }
 
-    // على الأقل:
-    // 1 Uppercase, 1 Digit, 1 Symbol, طول 8+
+    // At minimum:
+    // 1 Uppercase, 1 Digit, 1 Symbol, length 8+
     const passwordRegex =
       /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()[\]{};:,.?/~_+\-=|<>]).{8,}$/;
 
@@ -120,7 +120,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const input = document.getElementById(targetId);
       if (!input) return;
 
-      // الشكل الابتدائي عين
+      // Initial state: eye icon
       btn.textContent = '👁️';
       btn.setAttribute('aria-label', 'Show password');
 
@@ -212,7 +212,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const handleOk = () => {
         popup.style.display = 'none';
         okBtn.removeEventListener('click', handleOk);
-        // لأن signup.html داخل مجلد html
+        // signup.html is inside html folder
         window.location.href = './login.html';
       };
 

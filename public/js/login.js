@@ -27,7 +27,12 @@ document.addEventListener('DOMContentLoaded', () => {
       const username = user.username || (user.email.split('@')[0]);
       localStorage.setItem('currentUser', username);
   
-      window.location.href = '/index.html';
+      // Use go() function for consistent navigation, or relative path
+      if (typeof go === 'function') {
+        go('./index.html');
+      } else {
+        window.location.href = './index.html';
+      }
     });
   });
   

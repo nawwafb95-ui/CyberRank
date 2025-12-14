@@ -6,7 +6,7 @@ require("dotenv").config();
 admin.initializeApp();
 const db = admin.firestore();
 
-// إعداد الإيميل (Mailtrap أو SMTP آخر)
+// Email configuration (Mailtrap or other SMTP)
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
   port: process.env.SMTP_PORT,
@@ -16,19 +16,19 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-// توليد كود عشوائي
+// Generate random OTP code
 function generateOTP() {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
-// إرسال OTP بالإيميل
+// Send OTP via email
 exports.sendOtp = functions.https.onRequest(async (req, res) => {
   const email = req.body.email;
 
   if (!email) return res.status(400).send("Email is required.");
 
   const otp = generateOTP();
-  const expiresAt = Date.now() + 5 * 60 * 1000; // بعد 5 دقائق
+  const expiresAt = Date.now() + 5 * 60 * 1000; // Expires after 5 minutes
 
   await db.collection("otps").doc(email).set({
     otp,
@@ -36,18 +36,18 @@ exports.sendOtp = functions.https.onRequest(async (req, res) => {
     used: false,
   });
 
-  // إرسال الكود بالبريد
+  // Send code via email
   await transporter.sendMail({
     from: process.env.FROM_EMAIL,
     to: email,
-    subject: "Your CyberRank OTP Code",
+    subject: "Your SOCyberX OTP Code",
     text: `Your OTP is ${otp}. It expires in 5 minutes.`,
   });
 
   res.send("OTP sent successfully!");
 });
 
-// التحقق من الكود
+// Verify OTP code
 exports.verifyOtp = functions.https.onRequest(async (req, res) => {
   const { email, otp } = req.body;
 

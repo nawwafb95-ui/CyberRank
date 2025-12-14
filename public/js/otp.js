@@ -7,7 +7,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const email = document.getElementById("email").value;
         const resultEl = document.getElementById("result");
   
-        const res = await fetch("http://127.0.0.1:5001/cyberrank/us-central1/sendOtp", {
+        // Use environment-based URL for production compatibility
+        const functionsUrl = window.FIREBASE_FUNCTIONS_URL || "http://127.0.0.1:5001/cyberrank/us-central1";
+        const res = await fetch(`${functionsUrl}/sendOtp`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email }),
@@ -24,7 +26,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const otp   = document.getElementById("otp").value;
         const resultEl = document.getElementById("result");
   
-        const res = await fetch("http://127.0.0.1:5001/cyberrank/us-central1/verifyOtp", {
+        // Use environment-based URL for production compatibility
+        const functionsUrl = window.FIREBASE_FUNCTIONS_URL || "http://127.0.0.1:5001/cyberrank/us-central1";
+        const res = await fetch(`${functionsUrl}/verifyOtp`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email, otp }),

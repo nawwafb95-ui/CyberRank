@@ -1,7 +1,7 @@
 // public/js/profile.js
 document.addEventListener('DOMContentLoaded', () => {
     if (!isLoggedIn()) {
-      window.location.href = `/login.html?next=${encodeURIComponent('/profile.html')}`;
+      window.location.href = `./login.html?next=${encodeURIComponent('./profile.html')}`;
       return;
     }
   

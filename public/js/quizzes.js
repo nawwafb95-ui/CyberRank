@@ -6,20 +6,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (quiz1Btn) {
     quiz1Btn.addEventListener('click', () => {
-      // أول سؤال في الكويز 1
-      go('/html/question.html?quiz=1&q=1');
+      // First question in quiz 1
+      go('./question.html?quiz=1&q=1');
     });
   }
 
   if (quiz2Btn) {
     quiz2Btn.addEventListener('click', () => {
-      go('/html/question.html?quiz=2&q=1');
+      go('./question.html?quiz=2&q=1');
     });
   }
 
   if (quiz3Btn) {
     quiz3Btn.addEventListener('click', () => {
-      go('/html/question.html?quiz=3&q=1');
+      go('./question.html?quiz=3&q=1');
     });
   }
 

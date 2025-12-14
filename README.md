@@ -1,4 +1,4 @@
-# CyberRank
+# SOCyberX
 
 Modern, responsive cybersecurity training frontend with React + Vite.
 

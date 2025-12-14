@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>CyberRank — Home</title>
+    <title>SOCyberX — Home</title>
 
     <!-- Google Font -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -17,138 +17,114 @@
     <link rel="stylesheet" href="/css/components.css" />
     <link rel="stylesheet" href="/css/pages.css" />
 
-    <!-- Favicon (اختياري لو موجود في public/images) -->
+    <!-- Favicon (optional if available in public/images) -->
     <link rel="icon" type="image/png" href="../images/favicon.png" />
   </head>
 
   <body data-theme="night" data-page="home">
-    <!-- Navbar -->
-    <header class="topbar">
-      <!-- index.html موجود في نفس مجلد html/ -->
-      <a href="./index.html" class="brand-mini" id="go-home">
-        <span class="brand-dot"></span>
-        CyberRank
-      </a>
-
-      <div></div>
-
-      <div class="nav">
-        <button class="link-btn" id="nav-login">Login</button>
-        <button class="link-btn" id="nav-signup">Sign Up</button>
-
-        <!-- User Dropdown -->
-        <div
-          class="dropdown user-info-dropdown"
-          id="user-info-dropdown"
-          style="display: none;"
-        >
-          <button class="link-btn" id="user-info-btn" type="button">Info</button>
-
-          <div class="dropdown-panel" id="user-info-panel">
-            <div class="user-info-card">
-              <div class="avatar-wrap info">
-                <img
-                  id="info-photo"
-                  class="avatar"
-                  alt="User avatar"
-                  src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='96' height='96' viewBox='0 0 24 24' fill='none'><circle cx='12' cy='8' r='4' stroke='%23aab1c9' stroke-width='1.5'/><path d='M4 20c2.2-3 5-4.5 8-4.5s5.8 1.5 8 4.5' stroke='%23aab1c9' stroke-width='1.5' stroke-linecap='round'/></svg>'"
-                />
-              </div>
-
-              <div class="info-box">
-                <div class="info-title">Full Name:</div>
-                <div class="info-value" id="info-fullname">—</div>
-
-                <div class="info-title">Email:</div>
-                <div class="info-value" id="info-email">—</div>
-              </div>
-
-              <div class="info-links">
-                <!-- profile.html في نفس مجلد html/ -->
-                <a class="link-btn" href="./profile.html">Profile</a>
-              </div>
-            </div>
+    <!-- Minimal Side Menu (Cyber Side Dot) -->
+    <aside class="cyber-side-menu" id="cyber-side-menu">
+      <button class="cyber-side-dot" id="cyber-side-dot" type="button" aria-label="Menu">
+        <span class="dot-inner"></span>
+      </button>
+      <div class="cyber-side-panel" id="cyber-side-panel">
+        <div class="side-menu-content">
+          <button class="side-menu-item" id="side-login" style="display: none;">Login</button>
+          <button class="side-menu-item" id="side-signup" style="display: none;">Sign Up</button>
+          <button class="side-menu-item" id="side-logout" style="display: none;">Logout</button>
+          <div class="side-menu-item" id="side-user-info" style="display: none;">
+            <a href="./profile.html" class="side-menu-link">Profile</a>
           </div>
-        </div>
-
-        <!-- Settings Dropdown -->
-        <div class="dropdown" id="settings-dd">
-          <button class="link-btn" id="settings-btn" type="button">Settings</button>
-
-          <div class="dropdown-panel" style="max-width: 320px;">
-            <div
-              style="
-                display: flex;
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 10px;
-              "
-            >
-              <label style="color: var(--muted); font-size: 13px;">Theme:</label>
-
-              <div
-                style="
-                  display: grid;
-                  gap: 8px;
-                  grid-template-columns: 1fr 1fr;
-                  width: 100%;
-                "
-              >
-                <button
-                  class="btn"
-                  data-theme-choice="night"
-                  id="dark-mode-btn-settings"
-                >
-                  Dark Mode
-                </button>
-                <button
-                  class="btn"
-                  data-theme-choice="day"
-                  id="light-mode-btn-settings"
-                >
-                  Light Mode
-                </button>
-              </div>
-            </div>
-
-            <div style="height: 12px;"></div>
-
-            <!-- about.html برضو في نفس مجلد html/ -->
-            <a class="link-btn" href="./about.html" id="nav-about-link">About</a>
+          <div class="side-menu-item">
+            <a href="./about.html" class="side-menu-link">About</a>
           </div>
         </div>
       </div>
-    </header>
+    </aside>
 
-    <!-- Background -->
-    <div class="background">
-      <div class="bg-gradient"></div>
-
-      <div class="bg-blobs">
-        <span class="blob b1"></span>
-        <span class="blob b2"></span>
-        <span class="blob b3"></span>
-      </div>
-
-      <div class="bg-grid"></div>
-    </div>
-
-    <!-- Hero Section -->
+    <!-- Hero: SOC Command Center -->
     <section id="home" class="hero">
-      <div class="hero-card">
-        <h1 class="hero-title">Welcome to CyberRank</h1>
+      <div class="socx-home">
+        <!-- Layer 1: Background Grid -->
+        <div class="socx-bg-grid"></div>
 
-        <p class="hero-sub">
-          Test your cybersecurity skills, track your level, and grow with tailored challenges.
-        </p>
-
-        <div class="hero-actions">
-          <button class="cta quizzes-btn" id="home-quizzes">Quizzes</button>
+        <!-- Layer 2: World Map -->
+        <div class="socx-bg-map">
+          <!-- Threat blips on map -->
+          <div class="socx-map-dot socx-dot-us"></div>
+          <div class="socx-map-dot socx-dot-eu"></div>
+          <div class="socx-map-dot socx-dot-me"></div>
+          <div class="socx-map-dot socx-dot-asia"></div>
         </div>
+
+        <!-- Layer 3: Scan Line -->
+        <div class="socx-scanline"></div>
+
+        <!-- Layer 4: Portal (Main Focus) -->
+        <div class="door-scene" id="doorScene">
+          <!-- Background Particles -->
+          <div class="background-particles">
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+          </div>
+
+          <!-- Portal Card -->
+          <div class="portal-wrapper">
+            <button class="portal-card" id="enter-door" type="button" aria-label="Enter Challenges">
+              <!-- Warp Lines (NO diagonal 45deg/135deg lines) -->
+              <div class="portal-warp-lines">
+                <div class="portal-warp-line" style="--rotation: rotate(0deg);"></div>
+                <div class="portal-warp-line" style="--rotation: rotate(90deg);"></div>
+                <div class="portal-warp-line" style="--rotation: rotate(180deg);"></div>
+                <div class="portal-warp-line" style="--rotation: rotate(270deg);"></div>
+                <div class="portal-warp-line" style="--rotation: rotate(30deg);"></div>
+                <div class="portal-warp-line" style="--rotation: rotate(60deg);"></div>
+                <div class="portal-warp-line" style="--rotation: rotate(120deg);"></div>
+                <div class="portal-warp-line" style="--rotation: rotate(150deg);"></div>
+              </div>
+
+              <!-- Portal Inner Container -->
+              <div class="portal-inner">
+                <!-- Inner Frame -->
+                <div class="portal-inner-frame"></div>
+
+                <!-- Cyber Glyphs -->
+                <div class="portal-glyphs">
+                  <div class="glyph glyph-top" style="left: 0%;">◊</div>
+                  <div class="glyph glyph-top" style="left: 25%;">◆</div>
+                  <div class="glyph glyph-top" style="left: 50%;">◈</div>
+                  <div class="glyph glyph-top" style="left: 75%;">◇</div>
+                  <div class="glyph glyph-bottom" style="right: 0%;">◊</div>
+                  <div class="glyph glyph-bottom" style="right: 25%;">◆</div>
+                  <div class="glyph glyph-bottom" style="right: 50%;">◈</div>
+                  <div class="glyph glyph-left" style="top: 20%;">◊</div>
+                  <div class="glyph glyph-left" style="top: 60%;">◆</div>
+                  <div class="glyph glyph-right" style="bottom: 20%;">◈</div>
+                  <div class="glyph glyph-right" style="bottom: 60%;">◇</div>
+                </div>
+
+                <!-- Portal Text -->
+                <div class="portal-text">ENTER CHALLENGES</div>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        <!-- Portal Entry Sound -->
+        <audio id="portalSound" preload="auto">
+          <source src="../assets/sounds/portal-enter.mp3" type="audio/mpeg" />
+        </audio>
       </div>
     </section>
 
-    <!-- Scripts (ملف html داخل public/html ⇒ نطلع لمجلد public ثم js) -->
+    <br><br><br><br><br><br><br><br>
+
+    <div class="leaderboard-btn-wrapper">
+      <button id="leaderboard-btn">Go to Leaderboard</button>
+    </div>
+
+    <!-- Scripts -->
     <script src="../js/core.js"></script>
     <script src="../js/main.js"></script>
     <script src="../js/home.js"></script>

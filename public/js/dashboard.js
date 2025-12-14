@@ -1,39 +1,39 @@
 // public/js/dashboard.js
 
-// Firebase CDNs (نفس الإصدار اللي كنت تستخدمه)
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+// Firebase CDNs (same version as before)
+import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
-// ملفات المشروع (نفس الأسماء لكن المسار يصبح نسبي من داخل مجلد js)
+// Project files (same names, paths relative from js folder)
 import { firebaseConfig } from "./firebaseConfig.js";
 import * as DB from "./db.js"; // addScore, listenUserScores
 
-// تهيئة Firebase
-const app  = initializeApp(firebaseConfig);
+// Initialize Firebase (check for existing app to avoid duplicate initialization)
+const app  = getApps().length ? getApp() : initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db   = getFirestore(app);
 
-// عناصر الواجهة
+// UI elements
 const scoresList = document.getElementById("scores");
 const scoreInput = document.getElementById("score");
 const addBtn     = document.getElementById("btn-add-score");
 
-// التأكد من تسجيل الدخول
+// Check authentication status
 onAuthStateChanged(auth, (user) => {
   if (!user) {
-    // لو مش مسجّل دخول → رجّعه لصفحة login داخل فولدر html
+    // If not logged in, redirect to login page in html folder
     location.replace("./login.html");
     return;
   }
 
-  // تحميل / تحديث قائمة السكورات لهذا المستخدم
+  // Load/update scores list for this user
   if (scoresList) {
     DB.listenUserScores(db, user.uid, scoresList);
   }
 });
 
-// إضافة Score جديد
+// Add new score
 if (addBtn && scoreInput) {
   addBtn.addEventListener("click", async () => {
     const user = auth.currentUser;
