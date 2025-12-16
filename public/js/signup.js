@@ -180,7 +180,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ================== Submit Handler ==================
-  signupForm.addEventListener('submit', (e) => {
+  signupForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const { ok, values } = validateSignup(signupForm);
     if (!ok) return;
@@ -191,34 +191,54 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    users[values.email] = {
-      email: values.email,
-      username: values.username,
-      password: values.password,
-      createdAt: new Date().toISOString()
-    };
-    saveUsers(users);
+    // 1) نحفظ بيانات التسجيل مؤقتاً لغاية ما الـ OTP ينجح
+    // username + email + password
+    try {
+      localStorage.setItem('pendingSignup', JSON.stringify(values));
+    } catch (err) {
+      console.error('Error saving pending signup', err);
+    }
+
+    // 2) نرسل طلب sendOtp إلى Cloud Function
+    const functionsUrl =
+      // window.FIREBASE_FUNCTIONS_URL ||
+      'http://127.0.0.1:5001/cyberrank-a4380/us-central1';
+
+    const signupStatus = document.getElementById('signup-status');
+    if (signupStatus) {
+      signupStatus.textContent = 'Sending OTP...';
+    }
 
     try {
-      localStorage.removeItem('currentUser');
-    } catch {}
+      const res = await fetch(`${functionsUrl}/sendOtp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: values.email }),
+      });
 
-    const popup = document.getElementById('successPopup');
-    const okBtn = document.getElementById('popupOkBtn');
+      const text = await res.text();
 
-    if (popup && okBtn) {
-      popup.style.display = 'flex';
+      if (!res.ok) {
+        console.error(text);
+        if (signupStatus) {
+          signupStatus.textContent = text || 'Failed to send OTP.';
+        }
+        // لو بدك تلغي pendingSignup في حالة الفشل:
+        // localStorage.removeItem('pendingSignup');
+        return;
+      }
 
-      const handleOk = () => {
-        popup.style.display = 'none';
-        okBtn.removeEventListener('click', handleOk);
-        // signup.html is inside html folder
-        window.location.href = './login.html';
-      };
+      if (signupStatus) {
+        signupStatus.textContent = 'OTP sent. Check your email.';
+      }
 
-      okBtn.addEventListener('click', handleOk);
-    } else {
-      window.location.href = './login.html';
+      window.location.href = '../html/success.html';
+    } catch (err) {
+      console.error(err);
+      if (signupStatus) {
+        signupStatus.textContent = 'Error sending OTP.';
+      }
+      // localStorage.removeItem('pendingSignup'); // لو حابب
     }
   });
 });
