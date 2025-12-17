@@ -27,11 +27,16 @@ document.addEventListener('DOMContentLoaded', () => {
       const username = user.username || (user.email.split('@')[0]);
       localStorage.setItem('currentUser', username);
   
+      // Check for ?next parameter for redirect after login
+      const urlParams = new URLSearchParams(window.location.search);
+      const nextUrl = urlParams.get('next');
+      const redirectUrl = nextUrl ? decodeURIComponent(nextUrl) : './index.html';
+  
       // Use go() function for consistent navigation, or relative path
       if (typeof go === 'function') {
-        go('./index.html');
+        go(redirectUrl);
       } else {
-        window.location.href = './index.html';
+        window.location.href = redirectUrl;
       }
     });
   });

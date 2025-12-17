@@ -1,4 +1,9 @@
-const FUNCTIONS_BASE_URL = "http://127.0.0.1:5001/cyberrank-a4380/us-central1";
+const FUNCTIONS_BASE_URL = "http://localhost:5001/cyberrank-a4380/us-central1";
+
+function logRequest(endpoint, payload) {
+  console.log(`[OTP] Request to: ${endpoint}`);
+  console.log(`[OTP] Payload:`, payload);
+}
 
 document.addEventListener('DOMContentLoaded', () => {
   const otpInputs = [
@@ -125,16 +130,22 @@ document.addEventListener('DOMContentLoaded', () => {
       e.preventDefault();
       setStatus('Resending OTP...');
 
+      const endpoint = `${FUNCTIONS_BASE_URL}/sendOtp`;
+      const payload = { email };
+      logRequest(endpoint, payload);
+
       try {
-        const res = await fetch(`${FUNCTIONS_BASE_URL}/sendOtp`, {
+        const res = await fetch(endpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email }),
+          body: JSON.stringify(payload),
         });
 
         const text = await res.text();
+        console.log('[OTP] Resend response:', res.status, text);
 
         if (!res.ok) {
+          console.error('[OTP] Resend failed. Status:', res.status);
           setStatus(text || 'Failed to resend OTP.', 'error');
           return;
         }
@@ -143,8 +154,8 @@ document.addEventListener('DOMContentLoaded', () => {
         clearOTP();
         setTimeout(() => setStatus(''), 3000);
       } catch (err) {
-        console.error('Error resending OTP:', err);
-        setStatus('Error resending OTP. Please try again.', 'error');
+        console.error('[OTP] Error resending OTP:', err);
+        setStatus('Network error. Is the emulator running?', 'error');
       }
     });
   }
@@ -161,16 +172,22 @@ document.addEventListener('DOMContentLoaded', () => {
       setStatus('Verifying OTP...');
       verifyBtn.disabled = true;
 
+      const endpoint = `${FUNCTIONS_BASE_URL}/verifyOtp`;
+      const payload = { email, otp };
+      logRequest(endpoint, { email, otp: '******' }); // Don't log full OTP
+
       try {
-        const res = await fetch(`${FUNCTIONS_BASE_URL}/verifyOtp`, {
+        const res = await fetch(endpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, otp }),
+          body: JSON.stringify(payload),
         });
 
         const text = await res.text();
+        console.log('[OTP] Verify response:', res.status, text);
 
         if (!res.ok) {
+          console.error('[OTP] Verification failed. Status:', res.status);
           setStatus(text || 'OTP verification failed.', 'error');
           verifyBtn.disabled = false;
           clearOTP();
@@ -196,8 +213,13 @@ document.addEventListener('DOMContentLoaded', () => {
           window.location.href = '../index.html';
         }, 500);
       } catch (err) {
-        console.error('Error verifying OTP:', err);
-        setStatus('Error verifying OTP. Please try again.', 'error');
+        console.error('[OTP] Network/Request error:', err);
+        console.error('[OTP] Error details:', {
+          message: err.message,
+          stack: err.stack,
+          endpoint: endpoint
+        });
+        setStatus('Network error. Is the emulator running?', 'error');
         verifyBtn.disabled = false;
       }
     });

@@ -202,7 +202,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // 2) نرسل طلب sendOtp إلى Cloud Function
     const functionsUrl =
       // window.FIREBASE_FUNCTIONS_URL ||
-      'http://127.0.0.1:5001/cyberrank-a4380/us-central1';
+      'http://localhost:5001/cyberrank-a4380/us-central1';
+    const endpoint = `${functionsUrl}/sendOtp`;
+    
+    console.log('[Signup] Sending OTP request to:', endpoint);
+    console.log('[Signup] Request payload:', { email: values.email });
 
     const signupStatus = document.getElementById('signup-status');
     if (signupStatus) {
@@ -210,35 +214,59 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     try {
-      const res = await fetch(`${functionsUrl}/sendOtp`, {
+      const res = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: values.email }),
       });
+      
+      console.log('[Signup] Response status:', res.status, res.statusText);
 
       const text = await res.text();
 
       if (!res.ok) {
-        console.error(text);
+        console.error('[Signup] OTP send failed. Status:', res.status);
+        console.error('[Signup] Response text:', text);
+        const errorMsg = text || `Failed to send OTP (${res.status}). Please check emulator logs.`;
         if (signupStatus) {
-          signupStatus.textContent = text || 'Failed to send OTP.';
+          signupStatus.textContent = errorMsg;
+          signupStatus.className = 'error';
+        } else {
+          // Fallback: show alert if status element doesn't exist
+          alert(errorMsg);
         }
-        // لو بدك تلغي pendingSignup في حالة الفشل:
-        // localStorage.removeItem('pendingSignup');
+        // Clean up on error
+        localStorage.removeItem('pendingSignup');
         return;
       }
 
+      console.log('[Signup] OTP sent successfully. Response:', text);
       if (signupStatus) {
         signupStatus.textContent = 'OTP sent. Check your email.';
+        signupStatus.className = 'success';
       }
 
-      window.location.href = '../html/success.html';
+      // Redirect to OTP verification page (success.html is the OTP page)
+      // signup.html is in public/html/, so success.html is in the same directory
+      window.location.href = './success.html';
     } catch (err) {
-      console.error(err);
+      console.error('[Signup] Network/Request error:', err);
+      console.error('[Signup] Error details:', {
+        message: err.message,
+        stack: err.stack,
+        endpoint: endpoint
+      });
+      // Show error to user
+      const errorMsg = err.message || 'Network error. Is the emulator running on http://localhost:5001?';
       if (signupStatus) {
-        signupStatus.textContent = 'Error sending OTP.';
+        signupStatus.textContent = errorMsg;
+        signupStatus.className = 'error';
+      } else {
+        // Fallback: show alert if status element doesn't exist
+        alert(errorMsg);
       }
-      // localStorage.removeItem('pendingSignup'); // لو حابب
+      // Clean up on error
+      localStorage.removeItem('pendingSignup');
     }
   });
 });

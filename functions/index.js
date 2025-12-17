@@ -1,11 +1,20 @@
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 const cors = require("cors")({
-  origin: "http://localhost:5173",
+  origin: true
 });
 require("dotenv").config();
 
-admin.initializeApp();
+// Initialize Firebase Admin
+// Set Firestore emulator host before initialization
+if (process.env.FUNCTIONS_EMULATOR === "true" || !process.env.FIRESTORE_EMULATOR_HOST) {
+  process.env.FIRESTORE_EMULATOR_HOST = process.env.FIRESTORE_EMULATOR_HOST || "127.0.0.1:8080";
+}
+
+if (!admin.apps.length) {
+  admin.initializeApp();
+}
+
 const db = admin.firestore();
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
@@ -15,11 +24,7 @@ function generateOTP() {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
-function setCors(res) {
-  res.set("Access-Control-Allow-Origin", "http://localhost:5173");
-  res.set("Access-Control-Allow-Headers", "Content-Type");
-  res.set("Access-Control-Allow-Methods", "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS");
-}
+// Removed setCors - cors middleware handles all CORS headers
 
 async function sendEmailViaResend(to, subject, text) {
   if (!RESEND_API_KEY) {
@@ -51,11 +56,10 @@ async function sendEmailViaResend(to, subject, text) {
   return await response.json();
 }
 
-exports.sendOtp = functions.https.onRequest((req, res) =>
+exports.sendOtp = functions.https.onRequest((req, res) => {
   cors(req, res, async () => {
-    setCors(res);
-
     if (req.method === "OPTIONS") {
+      console.log("[sendOtp] OPTIONS preflight request");
       return res.status(204).send("");
     }
 
@@ -65,6 +69,7 @@ exports.sendOtp = functions.https.onRequest((req, res) =>
 
     try {
       const { email } = req.body || {};
+      console.log("[sendOtp] Received request for email:", email);
       if (!email) {
         return res.status(400).send("Email is required.");
       }
@@ -89,6 +94,13 @@ exports.sendOtp = functions.https.onRequest((req, res) =>
         console.log("OTP email sent successfully to", email);
       } catch (mailErr) {
         console.error("Error sending email via Resend:", mailErr.message);
+        // In emulator mode, log OTP to console instead of failing
+        if (process.env.FUNCTIONS_EMULATOR || !RESEND_API_KEY) {
+          console.log("[EMULATOR MODE] OTP for", email, "is:", otp);
+          console.log("[EMULATOR MODE] Email sending skipped (RESEND_API_KEY not configured)");
+          // Still return success in emulator mode
+          return res.status(200).send(`OTP generated: ${otp} (emulator mode - check console logs)`);
+        }
         return res.status(500).send("Failed to send OTP email: " + mailErr.message);
       }
 
@@ -97,14 +109,13 @@ exports.sendOtp = functions.https.onRequest((req, res) =>
       console.error("Error in sendOtp:", err);
       return res.status(500).send("Internal error sending OTP: " + err.message);
     }
-  })
-);
+  });
+});
 
-exports.verifyOtp = functions.https.onRequest((req, res) =>
+exports.verifyOtp = functions.https.onRequest((req, res) => {
   cors(req, res, async () => {
-    setCors(res);
-
     if (req.method === "OPTIONS") {
+      console.log("[verifyOtp] OPTIONS preflight request");
       return res.status(204).send("");
     }
 
@@ -136,5 +147,5 @@ exports.verifyOtp = functions.https.onRequest((req, res) =>
       console.error("Error in verifyOtp:", err);
       return res.status(500).send("Internal error verifying OTP: " + err.message);
     }
-  })
-);
+  });
+});

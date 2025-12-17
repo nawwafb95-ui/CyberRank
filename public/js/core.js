@@ -56,6 +56,11 @@
     }
   
     function isLoggedIn() {
+      // Check Firebase auth first if available
+      if (window.auth && window.auth.currentUser) {
+        return true;
+      }
+      // Fallback to localStorage check
       return !!localStorage.getItem('currentUser');
     }
   

@@ -1,9 +1,43 @@
 // public/js/profile.js
 document.addEventListener('DOMContentLoaded', () => {
-    if (!isLoggedIn()) {
-      window.location.href = `./login.html?next=${encodeURIComponent('./profile.html')}`;
-      return;
+    // Wait for Firebase auth to initialize before checking auth state
+    function checkAuthAndLoad() {
+      // Wait for window.auth to be available (set by navAuth.js module)
+      let attempts = 0;
+      const maxAttempts = 30; // Wait up to 3 seconds (30 * 100ms)
+      
+      const checkAuth = () => {
+        if (window.auth) {
+          // Firebase auth is available, wait a bit for onAuthStateChanged to fire
+          // then check auth state
+          setTimeout(() => {
+            // Check both Firebase auth and localStorage
+            const firebaseAuth = window.auth.currentUser !== null;
+            const localAuth = isLoggedIn();
+            
+            if (!firebaseAuth && !localAuth) {
+              window.location.href = `./login.html?next=${encodeURIComponent('./profile.html')}`;
+              return;
+            }
+            loadProfile();
+          }, 100); // Small delay to let onAuthStateChanged initialize
+        } else if (attempts < maxAttempts) {
+          attempts++;
+          setTimeout(checkAuth, 100);
+        } else {
+          // Timeout: fallback to localStorage check only
+          if (!isLoggedIn()) {
+            window.location.href = `./login.html?next=${encodeURIComponent('./profile.html')}`;
+            return;
+          }
+          loadProfile();
+        }
+      };
+      
+      checkAuth();
     }
+    
+    function loadProfile() {
   
     let currentIdentifier = '';
     try { currentIdentifier = localStorage.getItem('currentUser') || ''; } catch {}
@@ -50,5 +84,9 @@ document.addEventListener('DOMContentLoaded', () => {
       const defaultSrc = photoEl.dataset?.default || photoEl.getAttribute('data-default');
       photoEl.src = resolved.photo || defaultSrc || photoEl.src;
     }
+    }
+    
+    // Start auth check
+    checkAuthAndLoad();
   });
   
