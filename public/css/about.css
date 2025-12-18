@@ -123,6 +123,19 @@ body[data-page="about"] main.container {
   z-index: 2;
 }
 
+.flip-card-instagram {
+  font-size: 15px;
+  color: #7dd3fc;
+  font-weight: 500;
+  margin: 8px 0;
+  text-align: center;
+  position: relative;
+  z-index: 2;
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  text-shadow: 0 0 8px rgba(125, 211, 252, 0.3);
+  letter-spacing: 0.01em;
+}
+
 .flip-card-hint {
   font-size: 13px;
   color: var(--muted);

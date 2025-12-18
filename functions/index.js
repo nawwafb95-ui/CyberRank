@@ -1,30 +1,34 @@
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
-const cors = require("cors")({
-  origin: true
-});
+const { FieldValue } = require("firebase-admin/firestore");
 require("dotenv").config();
-
-// Initialize Firebase Admin
-// Set Firestore emulator host before initialization
-if (process.env.FUNCTIONS_EMULATOR === "true" || !process.env.FIRESTORE_EMULATOR_HOST) {
-  process.env.FIRESTORE_EMULATOR_HOST = process.env.FIRESTORE_EMULATOR_HOST || "127.0.0.1:8080";
-}
 
 if (!admin.apps.length) {
   admin.initializeApp();
 }
-
 const db = admin.firestore();
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const FROM_EMAIL = process.env.FROM_EMAIL;
+const ALLOWED_ORIGIN = "http://localhost:5173";
+
+function setCorsHeaders(res, origin) {
+  if (origin === ALLOWED_ORIGIN) {
+    res.set("Access-Control-Allow-Origin", ALLOWED_ORIGIN);
+  }
+  res.set("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.set("Access-Control-Max-Age", "3600");
+}
+
+function handleOptions(res, origin) {
+  setCorsHeaders(res, origin);
+  return res.status(204).send("");
+}
 
 function generateOTP() {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
-
-// Removed setCors - cors middleware handles all CORS headers
 
 async function sendEmailViaResend(to, subject, text) {
   if (!RESEND_API_KEY) {
@@ -34,118 +38,162 @@ async function sendEmailViaResend(to, subject, text) {
     throw new Error("FROM_EMAIL is not configured");
   }
 
+  if (typeof fetch !== "function") {
+    throw new Error("Global fetch is not available. Use Node 18+ or add a fetch polyfill.");
+  }
+
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
-      "Authorization": `Bearer ${RESEND_API_KEY}`,
+      Authorization: `Bearer ${RESEND_API_KEY}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
       from: FROM_EMAIL,
-      to: to,
-      subject: subject,
-      text: text,
+      to,
+      subject,
+      text,
     }),
   });
 
   if (!response.ok) {
-    const errorText = await response.text();
+    const errorText = await response.text().catch(() => "");
     throw new Error(`Resend API error: ${response.status} - ${errorText}`);
   }
 
-  return await response.json();
+  return response.json();
 }
 
-exports.sendOtp = functions.https.onRequest((req, res) => {
-  cors(req, res, async () => {
+function withCors(handler) {
+  return async (req, res) => {
+    const origin = req.get("Origin") || "";
+
     if (req.method === "OPTIONS") {
-      console.log("[sendOtp] OPTIONS preflight request");
-      return res.status(204).send("");
+      return handleOptions(res, origin);
     }
 
     if (req.method !== "POST") {
+      setCorsHeaders(res, origin);
       return res.status(405).send("Only POST allowed");
     }
 
+    if (origin && origin !== ALLOWED_ORIGIN) {
+      setCorsHeaders(res, origin);
+      return res.status(403).send("CORS blocked: origin not allowed");
+    }
+
     try {
-      const { email } = req.body || {};
-      console.log("[sendOtp] Received request for email:", email);
-      if (!email) {
-        return res.status(400).send("Email is required.");
+      setCorsHeaders(res, origin);
+      await handler(req, res);
+    } catch (err) {
+      console.error("[Function Error]", err);
+      setCorsHeaders(res, origin);
+      if (!res.headersSent) {
+        res.status(500).send("Internal server error: " + (err?.message || String(err)));
       }
+    }
+  };
+}
 
-      const otp = generateOTP();
-      const expiresAt = Date.now() + 5 * 60 * 1000;
+exports.sendOtp = functions.https.onRequest(
+  withCors(async (req, res) => {
+    const { email } = req.body || {};
 
-      await db.collection("otps").doc(email).set({
+    if (!email || typeof email !== "string" || !email.trim()) {
+      return res.status(400).send("Email is required.");
+    }
+
+    const emailTrimmed = email.trim().toLowerCase();
+    const otp = generateOTP();
+    const expiresAt = Date.now() + 5 * 60 * 1000;
+
+    try {
+      await db.collection("otps").doc(emailTrimmed).set({
         otp,
         expiresAt,
         used: false,
+        createdAt: FieldValue.serverTimestamp(),
       });
 
-      console.log("Generated OTP for", email, "=", otp);
+      console.log("[sendOtp] Generated OTP for", emailTrimmed);
+
+      if (!RESEND_API_KEY || !FROM_EMAIL) {
+        console.log("[sendOtp] OTP for", emailTrimmed, "is:", otp);
+        console.log("[sendOtp] Email sending skipped. Missing RESEND_API_KEY or FROM_EMAIL.");
+        return res.status(200).json({
+          ok: true,
+          message: "OTP generated (dev mode). Check emulator logs for OTP.",
+        });
+      }
 
       try {
         await sendEmailViaResend(
-          email,
+          emailTrimmed,
           "Your SOCyberX OTP Code",
           `Your OTP is ${otp}. It expires in 5 minutes.`
         );
-        console.log("OTP email sent successfully to", email);
-      } catch (mailErr) {
-        console.error("Error sending email via Resend:", mailErr.message);
-        // In emulator mode, log OTP to console instead of failing
-        if (process.env.FUNCTIONS_EMULATOR || !RESEND_API_KEY) {
-          console.log("[EMULATOR MODE] OTP for", email, "is:", otp);
-          console.log("[EMULATOR MODE] Email sending skipped (RESEND_API_KEY not configured)");
-          // Still return success in emulator mode
-          return res.status(200).send(`OTP generated: ${otp} (emulator mode - check console logs)`);
-        }
-        return res.status(500).send("Failed to send OTP email: " + mailErr.message);
+        console.log("[sendOtp] OTP email sent successfully to", emailTrimmed);
+        return res.status(200).json({ ok: true, message: "OTP sent successfully." });
+      } catch (emailErr) {
+        console.error("[sendOtp] Email error:", emailErr.message);
+        console.log("[sendOtp] OTP logged due to email failure:", otp);
+        return res.status(200).json({
+          ok: true,
+          message: "OTP generated. Email delivery failed. Check logs for OTP.",
+        });
       }
-
-      return res.status(200).send("OTP sent successfully.");
-    } catch (err) {
-      console.error("Error in sendOtp:", err);
-      return res.status(500).send("Internal error sending OTP: " + err.message);
+    } catch (dbErr) {
+      console.error("[sendOtp] Database error:", dbErr);
+      return res.status(500).send("Failed to generate OTP. Please try again.");
     }
-  });
-});
+  })
+);
 
-exports.verifyOtp = functions.https.onRequest((req, res) => {
-  cors(req, res, async () => {
-    if (req.method === "OPTIONS") {
-      console.log("[verifyOtp] OPTIONS preflight request");
-      return res.status(204).send("");
+exports.verifyOtp = functions.https.onRequest(
+  withCors(async (req, res) => {
+    const { email, otp } = req.body || {};
+
+    if (!email || typeof email !== "string" || !email.trim()) {
+      return res.status(400).send("Email is required.");
     }
 
-    if (req.method !== "POST") {
-      return res.status(405).send("Only POST allowed");
+    if (!otp || typeof otp !== "string" || !otp.trim()) {
+      return res.status(400).send("OTP is required.");
     }
+
+    const emailTrimmed = email.trim().toLowerCase();
+    const otpTrimmed = otp.trim();
 
     try {
-      const { email, otp } = req.body || {};
-      if (!email || !otp) {
-        return res.status(400).send("Missing fields.");
-      }
+      const doc = await db.collection("otps").doc(emailTrimmed).get();
 
-      const doc = await db.collection("otps").doc(email).get();
       if (!doc.exists) {
         return res.status(400).send("OTP not found.");
       }
 
       const data = doc.data();
-      if (data.used) return res.status(400).send("OTP already used.");
-      if (Date.now() > data.expiresAt)
+
+      if (data.used === true) {
+        return res.status(400).send("OTP already used.");
+      }
+
+      if (Date.now() > data.expiresAt) {
         return res.status(400).send("OTP expired.");
-      if (data.otp !== otp) return res.status(400).send("Invalid OTP.");
+      }
 
-      await db.collection("otps").doc(email).update({ used: true });
+      if (String(data.otp) !== String(otpTrimmed)) {
+        return res.status(400).send("Invalid OTP.");
+      }
 
-      return res.status(200).send("OTP verified successfully!");
-    } catch (err) {
-      console.error("Error in verifyOtp:", err);
-      return res.status(500).send("Internal error verifying OTP: " + err.message);
+      await db.collection("otps").doc(emailTrimmed).update({
+        used: true,
+        usedAt: FieldValue.serverTimestamp(),
+      });
+
+      return res.status(200).json({ ok: true, message: "OTP verified successfully!" });
+    } catch (dbErr) {
+      console.error("[verifyOtp] Database error:", dbErr);
+      return res.status(500).send("Failed to verify OTP. Please try again.");
     }
-  });
-});
+  })
+);
