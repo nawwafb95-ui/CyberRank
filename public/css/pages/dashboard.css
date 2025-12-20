@@ -1,0 +1,54 @@
+/* ===========================
+   Dashboard Page Styles
+   =========================== */
+
+body[data-page="dashboard"] .dash {
+  min-height: 100vh;
+  padding: 30px 16px;
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+body[data-page="dashboard"] .dash h2 {
+  font-size: 24px;
+  margin-bottom: 16px;
+  color: var(--text);
+}
+
+body[data-page="dashboard"] .add-score {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+body[data-page="dashboard"] .add-score input {
+  flex: 1;
+  padding: 8px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text);
+  outline: none;
+  font-size: 14px;
+}
+
+body[data-page="dashboard"] .add-score input::placeholder {
+  color: var(--muted);
+}
+
+body[data-page="dashboard"] #scores {
+  list-style: none;
+  margin-top: 10px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  overflow: hidden;
+}
+
+body[data-page="dashboard"] #scores li {
+  padding: 8px 12px;
+  font-size: 14px;
+  color: var(--text);
+  border-bottom: 1px solid var(--border);
+}
+

@@ -37,6 +37,18 @@ button {
   --card-bg-night: rgba(15, 23, 42, 0.92);
   --border-subtle-night: rgba(148, 163, 184, 0.28);
 
+  /* Dark theme CSS variables (for night theme) */
+  --bg: #050b18;
+  --surface: rgba(255, 255, 255, 0.03);
+  --card: rgba(255, 255, 255, 0.04);
+  --border: rgba(0, 200, 255, 0.18);
+  --text: #eaf6ff;
+  --muted: rgba(234, 246, 255, 0.75);
+  --shadow: rgba(0, 0, 0, 0.35);
+  --glow: rgba(0, 200, 255, 0.35);
+  /* Legacy compatibility */
+  --panel: rgba(15, 23, 42, 0.92);
+
   /* Day theme */
   --bg-day: #f9fafb;
   --fg-day: #020617;
@@ -74,14 +86,41 @@ button {
 
 body[data-theme="night"],
 body:not([data-theme]) {
-  --bg: var(--bg-night);
+  --bg: #050b18;
+  --surface: rgba(255, 255, 255, 0.03);
+  --card: rgba(255, 255, 255, 0.04);
+  --border: rgba(0, 200, 255, 0.18);
+  --text: #eaf6ff;
+  --muted: rgba(234, 246, 255, 0.75);
+  --shadow: rgba(0, 0, 0, 0.35);
+  --glow: rgba(0, 200, 255, 0.35);
+  /* Legacy compatibility */
+  --panel: rgba(15, 23, 42, 0.92);
   --bg-soft: var(--bg-night-soft);
   --fg-main: var(--fg-night);
-  --muted: var(--muted-night);
   --accent: var(--accent-night);
   --accent-strong: var(--accent-strong-night);
   --card-bg: var(--card-bg-night);
   --border-subtle: var(--border-subtle-night);
+}
+
+body[data-theme="light"] {
+  --bg: #edf2f7;
+  --surface: rgba(255, 255, 255, 0.75);
+  --card: rgba(255, 255, 255, 0.92);
+  --border: rgba(0, 140, 255, 0.22);
+  --text: #0b1f33;
+  --muted: rgba(11, 31, 51, 0.68);
+  --shadow: rgba(11, 31, 51, 0.16);
+  --glow: rgba(0, 140, 255, 0.20);
+  /* Legacy compatibility */
+  --panel: rgba(255, 255, 255, 0.92);
+  --bg-soft: #eff3ff;
+  --fg-main: #0b1f33;
+  --accent: var(--accent-day);
+  --accent-strong: var(--accent-strong-day);
+  --card-bg: rgba(255, 255, 255, 0.92);
+  --border-subtle: rgba(0, 140, 255, 0.22);
 }
 
 body[data-theme="day"] {
@@ -124,9 +163,9 @@ body {
   font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
     Arial, sans-serif;
   line-height: 1.5;
-  background: #050b18 !important;
+  background: var(--bg, #050b18) !important;
   background-image: none !important;
-  color: var(--fg-main, #e5e7eb);
+  color: var(--text);
 }
 
 /* ===========================
@@ -141,15 +180,15 @@ body[data-page="about"],
 body[data-page="settings"],
 body[data-page="success"],
 body[data-page="dashboard"] {
-  background: #050b18 !important;
+  background: var(--bg, #050b18) !important;
   background-image: none !important;
-  color: var(--fg-main);
+  color: var(--text);
   overflow-x: hidden;
 }
 
-/* Padding for fixed navbar */
+/* Padding for fixed navbar - removed since topbar is no longer used */
 main {
-  padding-top: 80px;
+  padding-top: 0;
 }
 
 /* Container and card styles */
@@ -161,11 +200,12 @@ main {
 }
 
 .card {
-  background: var(--card-bg);
+  background: var(--card, var(--card-bg));
   border-radius: var(--radius-lg);
-  border: 1px solid var(--border-subtle);
-  box-shadow: var(--shadow-soft);
+  border: 1px solid var(--border, var(--border-subtle));
+  box-shadow: 0 24px 60px var(--shadow, rgba(15, 23, 42, 0.65));
   padding: 24px;
+  color: var(--text);
 }
 
 /* ===========================

@@ -229,7 +229,7 @@ body.auth-page {
 /* Forgot Password Link */
 .forgot-password-link {
   display: block;
-  text-align: right;
+  text-align: left;
   font-size: 13px;
   color: #38bdf8;
   text-decoration: none;

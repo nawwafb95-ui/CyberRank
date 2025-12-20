@@ -1,0 +1,43 @@
+/* ===========================
+   Challenges Page - Level Cards
+   =========================== */
+
+body[data-page="challenges"] .level-card {
+  transition: opacity 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+  position: relative;
+}
+
+body[data-page="challenges"] .level-card:hover:not(.level-locked) {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 32px rgba(56, 189, 248, 0.3);
+}
+
+body[data-page="challenges"] .level-locked {
+  opacity: 0.5;
+  pointer-events: none;
+  position: relative;
+}
+
+body[data-page="challenges"] .level-locked .btn {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+body[data-page="challenges"] .level-locked-badge {
+  display: inline-block;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+body[data-page="challenges"] .level-card h2 {
+  text-transform: capitalize;
+}
+

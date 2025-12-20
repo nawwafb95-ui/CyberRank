@@ -19,16 +19,37 @@ const scoresList = document.getElementById("scores");
 const scoreInput = document.getElementById("score");
 const addBtn     = document.getElementById("btn-add-score");
 
-// Check authentication status
+// Check authentication status - wait for initial state resolution
+let authStateResolved = false;
+let initialCheckDone = false;
+
 onAuthStateChanged(auth, (user) => {
-  if (!user) {
-    // If not logged in, redirect to login page in html folder
-    location.replace("./login.html");
-    return;
+  // Wait for initial state resolution before redirecting
+  if (!authStateResolved) {
+    authStateResolved = true;
+    // Small delay to ensure auth state is fully resolved
+    setTimeout(() => {
+      initialCheckDone = true;
+      if (!auth.currentUser && !localStorage.getItem('currentUser')) {
+        // Only redirect if truly not authenticated after resolution
+        location.replace("./login.html");
+        return;
+      }
+    }, 100);
+  }
+  
+  // Only check auth state after initial resolution
+  if (initialCheckDone && !user) {
+    // Don't redirect on every auth state change - only if user explicitly signs out
+    // This prevents logout on navigation
+    if (!localStorage.getItem('currentUser')) {
+      location.replace("./login.html");
+      return;
+    }
   }
 
   // Load/update scores list for this user
-  if (scoresList) {
+  if (user && scoresList) {
     DB.listenUserScores(db, user.uid, scoresList);
   }
 });

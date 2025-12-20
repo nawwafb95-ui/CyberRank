@@ -16,32 +16,14 @@
     <link rel="stylesheet" href="/css/base.css" />
     <link rel="stylesheet" href="/css/components.css" />
     <link rel="stylesheet" href="/css/pages.css" />
+    <link rel="stylesheet" href="/css/pages/challenges.css" />
+    <link rel="stylesheet" href="/css/sidebar.css" />
 
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="../images/favicon.png" />
   </head>
 
   <body data-theme="night" data-page="challenges">
-    <!-- Minimal Side Menu (Cyber Side Dot) -->
-    <aside class="cyber-side-menu" id="cyber-side-menu">
-      <button class="cyber-side-dot" id="cyber-side-dot" type="button" aria-label="Menu">
-        <span class="dot-inner"></span>
-      </button>
-      <div class="cyber-side-panel" id="cyber-side-panel">
-        <div class="side-menu-content">
-          <button class="side-menu-item" id="side-login" style="display: none;">Login</button>
-          <button class="side-menu-item" id="side-signup" style="display: none;">Sign Up</button>
-          <button class="side-menu-item" id="side-logout" style="display: none;">Logout</button>
-          <div class="side-menu-item" id="side-user-info" style="display: none;">
-            <a href="./profile.html" class="side-menu-link">Profile</a>
-          </div>
-          <div class="side-menu-item">
-            <a href="./about.html" class="side-menu-link">About</a>
-          </div>
-        </div>
-      </div>
-    </aside>
-
     <!-- Background -->
     <div class="background">
       <div class="bg-gradient"></div>
@@ -135,8 +117,10 @@
     <!-- Scripts -->
     <script src="../js/core.js"></script>
     <script src="../js/main.js"></script>
-    <script src="../js/challenges.js"></script>
     <script type="module" src="../js/navAuth.js"></script>
+    <script src="../js/sidebar-inject.js"></script>
+    <script src="../js/sidebar.js"></script>
+    <script src="../js/challenges.js"></script>
   </body>
 </html>
 

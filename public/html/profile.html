@@ -15,79 +15,15 @@
     <link rel="stylesheet" href="/css/base.css" />
     <link rel="stylesheet" href="/css/components.css" />
     <link rel="stylesheet" href="/css/pages.css" />
+    <link rel="stylesheet" href="/css/pages/profile.css" />
+    <link rel="stylesheet" href="/css/sidebar.css" />
+    <link rel="stylesheet" href="/css/auth.css" />
 
     <!-- Favicon inside public/images -->
     <link rel="icon" type="image/png" href="../images/favicon.png" />
   </head>
 
   <body data-theme="night" data-page="profile">
-    <header class="topbar">
-      <!-- index.html in same html folder -->
-      <a href="./index.html" class="brand-mini" id="go-home">
-        <span class="brand-dot"></span>
-        SOCyberX
-      </a>
-
-      <div></div>
-
-      <div class="nav">
-        <button class="link-btn" id="nav-login">Login</button>
-        <button class="link-btn" id="nav-signup">Sign Up</button>
-
-        <div class="dropdown user-info-dropdown" id="user-info-dropdown" style="display:none;">
-          <button class="link-btn" id="user-info-btn" type="button">Info</button>
-          <div class="dropdown-panel" id="user-info-panel">
-            <div class="user-info-card">
-              <div class="avatar-wrap info">
-                <img
-                  id="info-photo"
-                  class="avatar"
-                  alt="User avatar"
-                  src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='96' height='96' viewBox='0 0 24 24' fill='none'><circle cx='12' cy='8' r='4' stroke='%23aab1c9' stroke-width='1.5'/><path d='M4 20c2.2-3 5-4.5 8-4.5s5.8 1.5 8 4.5' stroke='%23aab1c9' stroke-width='1.5' stroke-linecap='round'/></svg>'"
-                  data-default="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='96' height='96' viewBox='0 0 24 24' fill='none'><circle cx='12' cy='8' r='4' stroke='%23aab1c9' stroke-width='1.5'/><path d='M4 20c2.2-3 5-4.5 8-4.5s5.8 1.5 8 4.5' stroke='%23aab1c9' stroke-width='1.5' stroke-linecap='round'/></svg>'"
-                />
-              </div>
-
-              <div class="info-box">
-                <div class="info-title">Full Name:</div>
-                <div class="info-value" id="info-fullname">—</div>
-
-                <div class="info-title">Email:</div>
-                <div class="info-value" id="info-email">—</div>
-              </div>
-
-              <div class="info-links">
-                <!-- Same page -->
-                <a class="link-btn" href="./profile.html">Profile</a>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="dropdown" id="settings-dd">
-          <button class="link-btn" id="settings-btn" type="button">Settings</button>
-          <div class="dropdown-panel" style="max-width: 320px;">
-            <div style="display:flex; flex-direction:column; align-items:flex-start; gap:10px;">
-              <label style="color:var(--muted);font-size:13px;">Theme:</label>
-              <div style="display:grid;gap:8px; grid-template-columns:1fr 1fr; width:100%;">
-                <button class="btn" data-theme-choice="night" id="dark-mode-btn-settings">
-                  Dark Mode
-                </button>
-                <button class="btn" data-theme-choice="day" id="light-mode-btn-settings">
-                  Light Mode
-                </button>
-              </div>
-            </div>
-
-            <div style="height:12px;"></div>
-
-            <!-- about.html in same html folder -->
-            <a class="link-btn" href="./about.html" id="nav-about-link">About</a>
-          </div>
-        </div>
-      </div>
-    </header>
-
     <div class="background">
       <div class="bg-gradient"></div>
       <div class="bg-blobs">
@@ -98,60 +34,206 @@
       <div class="bg-grid"></div>
     </div>
 
-    <main class="container" style="padding-top:24px;">
+    <main class="container" style="padding-top:0;">
       <div class="card profile-card" id="profile-card">
         <div class="profile-header">
-          <div class="avatar-wrap info">
-            <img
-              id="profile-photo"
-              class="avatar-lg"
-              alt="Profile photo"
-              src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 24 24' fill='none'><circle cx='12' cy='8' r='4' stroke='%23aab1c9' stroke-width='1.5'/><path d='M4 20c2.2-3 5-4.5 8-4.5s5.8 1.5 8 4.5' stroke='%23aab1c9' stroke-width='1.5' stroke-linecap='round'/></svg>'"
-              data-default="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 24 24' fill='none'><circle cx='12' cy='8' r='4' stroke='%23aab1c9' stroke-width='1.5'/><path d='M4 20c2.2-3 5-4.5 8-4.5s5.8 1.5 8 4.5' stroke='%23aab1c9' stroke-width='1.5' stroke-linecap='round'/></svg>'"
-            />
-          </div>
-
           <div>
             <h2 id="profile-fullname">—</h2>
-            <p class="muted" id="profile-email">—</p>
+            <p class="muted" id="profile-email-display">—</p>
           </div>
         </div>
 
-        <div class="profile-details">
-          <div class="profile-detail">
-            <span class="label">Username</span>
-            <span id="profile-username">—</span>
+        <!-- Message area -->
+        <div id="profileMsg" style="margin-bottom: 20px; min-height: 20px; display: none;"></div>
+
+        <!-- Profile Form -->
+        <form id="profile-form">
+          <div class="form-group">
+            <div class="field">
+              <input
+                type="text"
+                id="profile-username"
+                class="floating-input"
+                placeholder=" "
+                required
+              />
+              <label for="profile-username" class="floating-label">Username</label>
+            </div>
           </div>
 
-          <div class="profile-detail">
-            <span class="label">User Type</span>
-            <span id="profile-usertype">—</span>
+          <div class="form-group">
+            <div class="field">
+              <input
+                type="email"
+                id="profile-email"
+                class="floating-input"
+                placeholder=" "
+                disabled
+                style="background: var(--surface); opacity: 0.7; cursor: not-allowed;"
+              />
+              <label for="profile-email" class="floating-label">Email</label>
+            </div>
+            <small style="display: block; margin-top: 4px; font-size: 12px; color: var(--muted);">Email cannot be changed</small>
           </div>
 
-          <div class="profile-detail">
-            <span class="label">Age</span>
-            <span id="profile-age">—</span>
+          <div class="form-group">
+            <label for="profile-dob" style="display: block; margin-bottom: 4px; font-size: 14px; color: var(--text);">Date of Birth</label>
+            <input
+              type="date"
+              id="profile-dob"
+              style="width: 100%; padding: 12px 14px; border: none; border-radius: 10px; background: #1e293b; color: #fff; font-size: 15px; outline: none;"
+            />
+            <small id="dob-hint" style="display: block; margin-top: 4px; font-size: 12px; color: var(--muted);"></small>
           </div>
 
-          <div class="profile-detail">
-            <span class="label">Major</span>
-            <span id="profile-major">—</span>
+          <div class="form-group">
+            <div class="field">
+              <input
+                type="text"
+                id="profile-major"
+                class="floating-input"
+                placeholder=" "
+              />
+              <label for="profile-major" class="floating-label">Major</label>
+            </div>
           </div>
 
-          <div class="profile-detail">
-            <span class="label">Stage / Level</span>
-            <span id="profile-stage">—</span>
+          <div class="form-group">
+            <div class="field">
+              <input
+                type="text"
+                id="profile-university"
+                class="floating-input"
+                placeholder=" "
+              />
+              <label for="profile-university" class="floating-label">University</label>
+            </div>
           </div>
 
-          <div class="profile-detail">
-            <span class="label">University</span>
-            <span id="profile-university">—</span>
+          <div class="form-group">
+            <div class="field">
+              <input
+                type="text"
+                id="profile-country"
+                class="floating-input"
+                placeholder=" "
+              />
+              <label for="profile-country" class="floating-label">Country</label>
+            </div>
           </div>
 
-          <div class="profile-detail">
-            <span class="label">Country</span>
-            <span id="profile-country">—</span>
+          <div class="form-group">
+            <div class="field">
+              <input
+                type="text"
+                id="profile-usertype"
+                class="floating-input"
+                placeholder=" "
+              />
+              <label for="profile-usertype" class="floating-label">User Type</label>
+            </div>
           </div>
+
+          <div class="form-group">
+            <div class="field">
+              <input
+                type="text"
+                id="profile-stage"
+                class="floating-input"
+                placeholder=" "
+              />
+              <label for="profile-stage" class="floating-label">Stage / Level</label>
+            </div>
+          </div>
+
+          <button type="submit" class="btn" style="width: 100%; margin-top: 10px;">Save Profile</button>
+        </form>
+
+        <!-- Password Change Section -->
+        <div style="margin-top: 32px; padding-top: 32px; border-top: 1px solid var(--border);">
+          <h3 style="font-size: 18px; margin-bottom: 16px; color: var(--text);">Change Password</h3>
+          <form id="password-form">
+            <div class="form-group">
+              <div class="field password-wrapper">
+                <input
+                  type="password"
+                  id="current-password"
+                  class="floating-input"
+                  placeholder=" "
+                  required
+                />
+                <label for="current-password" class="floating-label">Current Password</label>
+                <button
+                  type="button"
+                  class="toggle-visibility"
+                  data-target="current-password"
+                  aria-label="Show password"
+                >
+                  👁️
+                </button>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <div class="field password-wrapper">
+                <input
+                  type="password"
+                  id="new-password"
+                  class="floating-input"
+                  placeholder=" "
+                  required
+                />
+                <label for="new-password" class="floating-label">New Password</label>
+                <button
+                  type="button"
+                  class="toggle-visibility"
+                  data-target="new-password"
+                  aria-label="Show password"
+                >
+                  👁️
+                </button>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <div class="field password-wrapper">
+                <input
+                  type="password"
+                  id="confirm-password"
+                  class="floating-input"
+                  placeholder=" "
+                  required
+                />
+                <label for="confirm-password" class="floating-label">Confirm New Password</label>
+                <button
+                  type="button"
+                  class="toggle-visibility"
+                  data-target="confirm-password"
+                  aria-label="Show password"
+                >
+                  👁️
+                </button>
+              </div>
+            </div>
+
+            <button type="submit" class="btn" style="width: 100%; margin-top: 10px;">Update Password</button>
+          </form>
+        </div>
+
+        <!-- Delete Account Section -->
+        <div style="margin-top: 32px; padding-top: 32px; border-top: 1px solid var(--border);">
+          <h3 style="font-size: 18px; margin-bottom: 16px; color: #f97373;">Danger Zone</h3>
+          <p style="font-size: 14px; color: var(--muted); margin-bottom: 16px;">
+            Permanently delete your account and all associated data. This action cannot be undone.
+          </p>
+          <button
+            type="button"
+            id="delete-account-btn"
+            class="btn"
+            style="width: 100%; background: #dc2626; border-color: #dc2626; color: white;"
+          >
+            Delete Account
+          </button>
         </div>
       </div>
     </main>
@@ -159,7 +241,10 @@
     <!-- Scripts -->
     <script src="../js/core.js"></script>
     <script src="../js/main.js"></script>
-    <script src="../js/profile.js"></script>
     <script type="module" src="../js/navAuth.js"></script>
+    <script src="../js/sidebar-inject.js"></script>
+    <script src="../js/sidebar.js"></script>
+    <script src="../js/auth-guard.js"></script>
+    <script type="module" src="../js/profile.js"></script>
   </body>
 </html>

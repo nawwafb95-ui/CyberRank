@@ -15,76 +15,14 @@
     <link rel="stylesheet" href="/css/base.css" />
     <link rel="stylesheet" href="/css/components.css" />
     <link rel="stylesheet" href="/css/pages.css" />
+    <link rel="stylesheet" href="/css/pages/dashboard.css" />
+    <link rel="stylesheet" href="/css/sidebar.css" />
 
     <!-- Favicon from public/images -->
     <link rel="icon" type="image/png" href="../images/favicon.png" />
   </head>
 
   <body data-theme="colors" data-page="dashboard">
-    <header class="topbar">
-      <!-- index.html in same html folder -->
-      <a class="brand-mini" href="./index.html" id="go-home">
-        <span class="brand-dot"></span>
-        SOCyberX
-      </a>
-
-      <div></div>
-
-      <div class="nav">
-        <button class="link-btn" id="nav-login">Login</button>
-        <button class="link-btn" id="nav-signup">Sign Up</button>
-
-        <div class="dropdown user-info-dropdown" id="user-info-dropdown" style="display:none;">
-          <button class="link-btn" id="user-info-btn" type="button">Info</button>
-          <div class="dropdown-panel" id="user-info-panel">
-            <div class="user-info-card">
-              <div class="avatar-wrap info">
-                <img
-                  id="info-photo"
-                  class="avatar"
-                  alt="User avatar"
-                  src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='96' height='96' viewBox='0 0 24 24' fill='none'><circle cx='12' cy='8' r='4' stroke='%23aab1c9' stroke-width='1.5'/><path d='M4 20c2.2-3 5-4.5 8-4.5s5.8 1.5 8 4.5' stroke='%23aab1c9' stroke-width='1.5' stroke-linecap='round'/></svg>'"
-                  data-default="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='96' height='96' viewBox='0 0 24 24' fill='none'><circle cx='12' cy='8' r='4' stroke='%23aab1c9' stroke-width='1.5'/><path d='M4 20c2.2-3 5-4.5 8-4.5s5.8 1.5 8 4.5' stroke='%23aab1c9' stroke-width='1.5' stroke-linecap='round'/></svg>'"
-                />
-              </div>
-
-              <div class="info-box">
-                <div class="info-title">Full Name:</div>
-                <div class="info-value" id="info-fullname">—</div>
-
-                <div class="info-title">Email:</div>
-                <div class="info-value" id="info-email">—</div>
-              </div>
-
-              <div class="info-links">
-                <a class="link-btn" href="./profile.html">Profile</a>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="dropdown" id="settings-dd">
-          <button class="link-btn" id="settings-btn" type="button">Settings</button>
-          <div class="dropdown-panel" style="max-width: 320px;">
-            <div style="display:flex; flex-direction:column; align-items:flex-start; gap:10px;">
-              <label style="color:var(--muted);font-size:13px;">Theme:</label>
-              <div style="display:grid;gap:8px; grid-template-columns:1fr 1fr; width:100%;">
-                <button class="btn" data-theme-choice="night" id="dark-mode-btn-settings">
-                  Dark Mode
-                </button>
-                <button class="btn" data-theme-choice="day" id="light-mode-btn-settings">
-                  Light Mode
-                </button>
-              </div>
-            </div>
-
-            <div style="height:12px;"></div>
-            <a class="link-btn" href="./about.html" id="nav-about-link">About</a>
-          </div>
-        </div>
-      </div>
-    </header>
-
     <main class="dash">
       <h2>Your Scores</h2>
 
@@ -99,7 +37,9 @@
     <!-- Scripts -->
     <script src="../js/core.js"></script>
     <script src="../js/main.js"></script>
-    <script type="module" src="../js/dashboard.js"></script>
     <script type="module" src="../js/navAuth.js"></script>
+    <script src="../js/sidebar-inject.js"></script>
+    <script src="../js/sidebar.js"></script>
+    <script type="module" src="../js/dashboard.js"></script>
   </body>
 </html>

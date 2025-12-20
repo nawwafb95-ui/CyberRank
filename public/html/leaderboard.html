@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SOCyberX — Leaderboard</title>
+
+    <!-- Google Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+
+    <link rel="stylesheet" href="/css/base.css" />
+    <link rel="stylesheet" href="/css/components.css" />
+    <link rel="stylesheet" href="/css/pages.css" />
+    <link rel="stylesheet" href="/css/pages/leaderboard.css" />
+    <link rel="stylesheet" href="/css/sidebar.css" />
+    <link rel="stylesheet" href="/css/leaderboard.css" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="../images/favicon.png" />
+  </head>
+
+  <body data-theme="night" data-page="leaderboard">
+    <!-- Background -->
+    <div class="background">
+      <div class="bg-gradient"></div>
+      <div class="bg-blobs">
+        <span class="blob b1"></span>
+        <span class="blob b2"></span>
+        <span class="blob b3"></span>
+      </div>
+      <div class="bg-grid"></div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="container" style="padding-top: 100px; padding-bottom: 48px;">
+      <!-- Header Section -->
+      <div class="socx-lb-header">
+        <div class="socx-lb-title-group">
+          <h1 class="socx-lb-title">Leaderboard</h1>
+          <p class="socx-lb-subtitle">Top performers in SOCyberX</p>
+        </div>
+
+        <!-- Controls -->
+        <div class="socx-lb-controls">
+          <select id="lbScope" class="socx-lb-select">
+            <option value="global">Global</option>
+            <option value="weekly">Weekly</option>
+            <option value="daily">Daily</option>
+          </select>
+          <input
+            type="text"
+            id="lbSearch"
+            class="socx-lb-search"
+            placeholder="Search user..."
+            aria-label="Search users"
+          />
+        </div>
+      </div>
+
+      <!-- Leaderboard Table -->
+      <div class="socx-lb-card">
+        <div class="socx-lb-table-header">
+          <div class="socx-lb-col-rank">Rank</div>
+          <div class="socx-lb-col-user">User</div>
+          <div class="socx-lb-col-level">Level</div>
+          <div class="socx-lb-col-points">Points</div>
+        </div>
+        <div id="lbRows" class="socx-lb-rows">
+          <!-- Rows will be rendered here by leaderboard.js -->
+        </div>
+      </div>
+    </main>
+
+    <!-- Scripts -->
+    <script src="../js/core.js"></script>
+    <script src="../js/main.js"></script>
+    <script type="module" src="../js/navAuth.js"></script>
+    <script src="../js/sidebar-inject.js"></script>
+    <script src="../js/sidebar.js"></script>
+    <script src="../js/leaderboard.js"></script>
+  </body>
+</html>
+

@@ -142,7 +142,15 @@
     }
   
     function logout() {
-      localStorage.removeItem('currentUser');
+      // Clear all auth-related localStorage
+      try { localStorage.removeItem('currentUser'); } catch {}
+      try { localStorage.removeItem('user'); } catch {}
+      
+      // Sign out from Firebase if available
+      if (window.auth && typeof window.auth.signOut === 'function') {
+        window.auth.signOut().catch(console.error);
+      }
+      
       updateNavigationState();
       go('/index.html');
     }
@@ -168,7 +176,8 @@
       if (isLoggedIn()) {
         if (navLogin) {
           navLogin.textContent = 'Logout';
-          navLogin.onclick = () => logout();
+          // Don't set onclick here - navAuth.js handles it
+          // This prevents duplicate handlers
         }
         if (navSignup) navSignup.style.display = 'none';
         if (userInfoDropdown) userInfoDropdown.style.display = 'inline-flex';

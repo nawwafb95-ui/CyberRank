@@ -1,0 +1,29 @@
+/* ===========================
+   About Page Styles
+   =========================== */
+
+body[data-page="about"] .section {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 96px 24px 40px;
+}
+
+body[data-page="about"] .section h1,
+body[data-page="about"] .section h2 {
+  font-weight: 700;
+  margin-bottom: 12px;
+  color: var(--text);
+}
+
+body[data-page="about"] .section p {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  body[data-page="about"] .section {
+    padding-top: 88px;
+  }
+}
+

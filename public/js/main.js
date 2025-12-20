@@ -75,23 +75,60 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   } catch {}
 
-  // Logout button handler
+  // Toggle visibility buttons (for signup/login pages)
+  try {
+    document.querySelectorAll(".toggle-visibility").forEach((btn) => {
+      const targetId = btn.getAttribute("data-target");
+      if (!targetId) return;
+      const input = document.getElementById(targetId);
+      if (!input) return;
+
+      // Initial state: eye icon
+      btn.textContent = "👁️";
+      btn.setAttribute("aria-label", "Show password");
+
+      btn.addEventListener("click", () => {
+        const isPassword = input.type === "password";
+
+        if (isPassword) {
+          input.type = "text";
+          btn.textContent = "🙈";
+          btn.setAttribute("aria-label", "Hide password");
+        } else {
+          input.type = "password";
+          btn.textContent = "👁️";
+          btn.setAttribute("aria-label", "Show password");
+        }
+      });
+    });
+  } catch {}
+
+  // Logout button handler - ONLY for nav-logout (not nav-login which is handled by navAuth.js)
   const logoutBtn = document.getElementById("nav-logout");
   if (logoutBtn) {
-    logoutBtn.addEventListener("click", async () => {
+    logoutBtn.addEventListener("click", async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      if (logoutBtn.disabled) return;
+      logoutBtn.disabled = true;
+      
       try {
+        // Clear localStorage on explicit logout
+        try { localStorage.removeItem("currentUser"); } catch {}
+        try { localStorage.removeItem("user"); } catch {}
+        
         // Use logout function if available
         if (typeof logout === "function") {
           await logout();
         } else if (window.auth && typeof signOut === "function") {
           // Firebase Auth fallback
           await signOut(window.auth);
-        } else {
-          // Simple fallback if neither is available
-          localStorage.removeItem("user");
         }
       } catch (err) {
         console.error("Logout error:", err);
+        logoutBtn.disabled = false;
+        return;
       }
 
       // After logout
@@ -134,17 +171,27 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   if (sideLogout) {
-    sideLogout.addEventListener("click", async () => {
+    sideLogout.addEventListener("click", async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      if (sideLogout.disabled) return;
+      sideLogout.disabled = true;
+      
       try {
+        // Clear localStorage on explicit logout
+        try { localStorage.removeItem("currentUser"); } catch {}
+        try { localStorage.removeItem("user"); } catch {}
+        
         if (typeof logout === "function") {
           await logout();
         } else if (window.auth && typeof signOut === "function") {
           await signOut(window.auth);
-        } else {
-          localStorage.removeItem("user");
         }
       } catch (err) {
         console.error("Logout error:", err);
+        sideLogout.disabled = false;
+        return;
       }
 
       if (typeof go === "function") {

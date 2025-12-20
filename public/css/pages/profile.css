@@ -1,0 +1,451 @@
+/* ===========================
+   Profile Page Styles
+   =========================== */
+
+/* Profile Card - Premium Glass Effect */
+body[data-page="profile"] #profile-card {
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(0, 255, 255, 0.25);
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(0, 255, 255, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+  padding: 2rem;
+  position: relative;
+  overflow: hidden;
+}
+
+body[data-page="profile"] #profile-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: 
+    radial-gradient(circle at 20% 30%, rgba(0, 255, 255, 0.03) 0%, transparent 50%),
+    radial-gradient(circle at 80% 70%, rgba(0, 140, 255, 0.02) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+body[data-page="profile"] #profile-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Light Theme Override */
+body[data-page="profile"][data-theme="light"] #profile-card {
+  background: rgba(249, 250, 251, 0.9);
+  border-color: rgba(0, 140, 255, 0.3);
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.15),
+    0 0 0 1px rgba(0, 140, 255, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+/* Profile Header */
+body[data-page="profile"] .profile-header {
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid rgba(0, 255, 255, 0.15);
+}
+
+body[data-page="profile"] .profile-header h2 {
+  color: rgba(255, 255, 255, 0.95);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+body[data-page="profile"][data-theme="light"] .profile-header h2 {
+  color: rgba(15, 23, 42, 0.95);
+}
+
+body[data-page="profile"] .profile-header .muted {
+  color: rgba(255, 255, 255, 0.65);
+}
+
+body[data-page="profile"][data-theme="light"] .profile-header .muted {
+  color: rgba(15, 23, 42, 0.6);
+}
+
+/* Form Groups - Consistent Spacing */
+body[data-page="profile"] #profile-form .form-group,
+body[data-page="profile"] #password-form .form-group {
+  margin-bottom: 1.5rem;
+}
+
+body[data-page="profile"] #profile-form .form-group:last-of-type {
+  margin-bottom: 0;
+}
+
+/* Floating Inputs - Clean Glass Style */
+body[data-page="profile"] .floating-input {
+  background: rgba(30, 41, 59, 0.6) !important;
+  border: 1px solid rgba(0, 255, 255, 0.2) !important;
+  color: rgba(255, 255, 255, 0.95) !important;
+  transition: all 0.25s ease;
+}
+
+body[data-page="profile"] .floating-input::placeholder {
+  color: transparent;
+}
+
+body[data-page="profile"] .floating-input:focus {
+  background: rgba(30, 41, 59, 0.8) !important;
+  border-color: rgba(0, 255, 255, 0.5) !important;
+  box-shadow: 
+    0 0 0 3px rgba(0, 255, 255, 0.15),
+    0 0 20px rgba(0, 255, 255, 0.2);
+  outline: none;
+}
+
+body[data-page="profile"] .floating-input:not(:placeholder-shown) {
+  background: rgba(30, 41, 59, 0.7) !important;
+}
+
+/* Light Theme Inputs */
+body[data-page="profile"][data-theme="light"] .floating-input {
+  background: rgba(241, 245, 249, 0.8) !important;
+  border-color: rgba(0, 140, 255, 0.25) !important;
+  color: rgba(15, 23, 42, 0.95) !important;
+}
+
+body[data-page="profile"][data-theme="light"] .floating-input:focus {
+  background: rgba(241, 245, 249, 0.95) !important;
+  border-color: rgba(0, 140, 255, 0.5) !important;
+  box-shadow: 
+    0 0 0 3px rgba(0, 140, 255, 0.15),
+    0 0 20px rgba(0, 140, 255, 0.2);
+}
+
+body[data-page="profile"][data-theme="light"] .floating-input:not(:placeholder-shown) {
+  background: rgba(241, 245, 249, 0.9) !important;
+}
+
+/* Floating Labels */
+body[data-page="profile"] .floating-label {
+  color: rgba(255, 255, 255, 0.7);
+  background: rgba(15, 23, 42, 0.85);
+}
+
+body[data-page="profile"][data-theme="light"] .floating-label {
+  color: rgba(15, 23, 42, 0.6);
+  background: rgba(249, 250, 251, 0.9);
+}
+
+body[data-page="profile"] .floating-input:focus + .floating-label,
+body[data-page="profile"] .floating-input:not(:placeholder-shown) + .floating-label {
+  color: rgba(0, 255, 255, 0.9);
+}
+
+body[data-page="profile"][data-theme="light"] .floating-input:focus + .floating-label,
+body[data-page="profile"][data-theme="light"] .floating-input:not(:placeholder-shown) + .floating-label {
+  color: rgba(0, 140, 255, 0.9);
+}
+
+/* Disabled Email Input */
+body[data-page="profile"] #profile-email.floating-input:disabled {
+  background: rgba(30, 41, 59, 0.4) !important;
+  border-color: rgba(0, 255, 255, 0.15) !important;
+  color: rgba(255, 255, 255, 0.5) !important;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+body[data-page="profile"][data-theme="light"] #profile-email.floating-input:disabled {
+  background: rgba(241, 245, 249, 0.5) !important;
+  border-color: rgba(0, 140, 255, 0.15) !important;
+  color: rgba(15, 23, 42, 0.5) !important;
+}
+
+/* Date Input - Match Other Inputs */
+body[data-page="profile"] #profile-dob {
+  background: rgba(30, 41, 59, 0.6) !important;
+  border: 1px solid rgba(0, 255, 255, 0.2) !important;
+  color: rgba(255, 255, 255, 0.95) !important;
+  border-radius: 10px !important;
+  transition: all 0.25s ease;
+}
+
+body[data-page="profile"] #profile-dob:focus {
+  background: rgba(30, 41, 59, 0.8) !important;
+  border-color: rgba(0, 255, 255, 0.5) !important;
+  box-shadow: 
+    0 0 0 3px rgba(0, 255, 255, 0.15),
+    0 0 20px rgba(0, 255, 255, 0.2);
+  outline: none;
+}
+
+body[data-page="profile"] #profile-dob:disabled {
+  background: rgba(30, 41, 59, 0.4) !important;
+  border-color: rgba(0, 255, 255, 0.15) !important;
+  color: rgba(255, 255, 255, 0.5) !important;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+body[data-page="profile"][data-theme="light"] #profile-dob {
+  background: rgba(241, 245, 249, 0.8) !important;
+  border-color: rgba(0, 140, 255, 0.25) !important;
+  color: rgba(15, 23, 42, 0.95) !important;
+}
+
+body[data-page="profile"][data-theme="light"] #profile-dob:focus {
+  background: rgba(241, 245, 249, 0.95) !important;
+  border-color: rgba(0, 140, 255, 0.5) !important;
+  box-shadow: 
+    0 0 0 3px rgba(0, 140, 255, 0.15),
+    0 0 20px rgba(0, 140, 255, 0.2);
+}
+
+body[data-page="profile"][data-theme="light"] #profile-dob:disabled {
+  background: rgba(241, 245, 249, 0.5) !important;
+  border-color: rgba(0, 140, 255, 0.15) !important;
+  color: rgba(15, 23, 42, 0.5) !important;
+}
+
+/* Date Input Label */
+body[data-page="profile"] #profile-form label[for="profile-dob"] {
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
+body[data-page="profile"][data-theme="light"] #profile-form label[for="profile-dob"] {
+  color: rgba(15, 23, 42, 0.8);
+}
+
+/* Small Text Hints */
+body[data-page="profile"] small {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.75rem;
+}
+
+body[data-page="profile"][data-theme="light"] small {
+  color: rgba(15, 23, 42, 0.6);
+}
+
+/* Buttons - Enhanced on Profile Page */
+body[data-page="profile"] .btn {
+  background: linear-gradient(135deg, rgba(0, 255, 255, 0.15) 0%, rgba(0, 140, 255, 0.15) 100%);
+  border: 1px solid rgba(0, 255, 255, 0.4);
+  color: rgba(255, 255, 255, 0.95);
+  font-weight: 600;
+  padding: 0.875rem 1.5rem;
+  border-radius: 10px;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+body[data-page="profile"] .btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, transparent 100%);
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+body[data-page="profile"] .btn:hover {
+  transform: translateY(-2px);
+  border-color: rgba(0, 255, 255, 0.6);
+  box-shadow: 
+    0 4px 16px rgba(0, 255, 255, 0.3),
+    0 0 30px rgba(0, 255, 255, 0.2);
+  background: linear-gradient(135deg, rgba(0, 255, 255, 0.2) 0%, rgba(0, 140, 255, 0.2) 100%);
+}
+
+body[data-page="profile"] .btn:hover::before {
+  opacity: 1;
+}
+
+body[data-page="profile"] .btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+body[data-page="profile"] .btn:focus-visible {
+  outline: 2px solid rgba(0, 255, 255, 0.6);
+  outline-offset: 2px;
+}
+
+body[data-page="profile"][data-theme="light"] .btn {
+  background: linear-gradient(135deg, rgba(0, 140, 255, 0.1) 0%, rgba(0, 120, 215, 0.1) 100%);
+  border-color: rgba(0, 140, 255, 0.4);
+  color: rgba(15, 23, 42, 0.95);
+}
+
+body[data-page="profile"][data-theme="light"] .btn:hover {
+  border-color: rgba(0, 140, 255, 0.6);
+  box-shadow: 
+    0 4px 16px rgba(0, 140, 255, 0.3),
+    0 0 30px rgba(0, 140, 255, 0.2);
+  background: linear-gradient(135deg, rgba(0, 140, 255, 0.15) 0%, rgba(0, 120, 215, 0.15) 100%);
+}
+
+/* Password Visibility Toggle */
+body[data-page="profile"] .toggle-visibility {
+  color: rgba(255, 255, 255, 0.7);
+  transition: all 0.25s ease;
+  border-radius: 4px;
+  padding: 2px;
+}
+
+body[data-page="profile"] .toggle-visibility:hover {
+  color: rgba(0, 255, 255, 0.9);
+  background: rgba(0, 255, 255, 0.1);
+  box-shadow: 0 0 12px rgba(0, 255, 255, 0.3);
+  transform: scale(1.1);
+}
+
+body[data-page="profile"] .toggle-visibility:focus-visible {
+  outline: 2px solid rgba(0, 255, 255, 0.6);
+  outline-offset: 2px;
+}
+
+body[data-page="profile"][data-theme="light"] .toggle-visibility {
+  color: rgba(15, 23, 42, 0.6);
+}
+
+body[data-page="profile"][data-theme="light"] .toggle-visibility:hover {
+  color: rgba(0, 140, 255, 0.9);
+  background: rgba(0, 140, 255, 0.1);
+  box-shadow: 0 0 12px rgba(0, 140, 255, 0.3);
+}
+
+/* Message Box */
+body[data-page="profile"] #profileMsg {
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  line-height: 1.5;
+  transition: all 0.25s ease;
+  border: 1px solid;
+}
+
+body[data-page="profile"] #profileMsg:empty {
+  display: none !important;
+}
+
+/* Success Message */
+body[data-page="profile"] #profileMsg:not(:empty) {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: rgba(16, 185, 129, 0.4);
+  color: rgba(16, 185, 129, 0.95);
+  box-shadow: 
+    0 2px 8px rgba(16, 185, 129, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+/* Error Message (when styled via JS) */
+body[data-page="profile"] #profileMsg[style*="color: #f97373"],
+body[data-page="profile"] #profileMsg[style*="color: rgb(249, 115, 115)"] {
+  background: rgba(239, 68, 68, 0.15) !important;
+  border-color: rgba(239, 68, 68, 0.4) !important;
+  color: rgba(239, 68, 68, 0.95) !important;
+  box-shadow: 
+    0 2px 8px rgba(239, 68, 68, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+body[data-page="profile"][data-theme="light"] #profileMsg:not(:empty) {
+  background: rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.3);
+  color: rgba(5, 150, 105, 0.95);
+}
+
+body[data-page="profile"][data-theme="light"] #profileMsg[style*="color: #f97373"],
+body[data-page="profile"][data-theme="light"] #profileMsg[style*="color: rgb(249, 115, 115)"] {
+  background: rgba(239, 68, 68, 0.1) !important;
+  border-color: rgba(239, 68, 68, 0.3) !important;
+  color: rgba(220, 38, 38, 0.95) !important;
+}
+
+/* Section Dividers */
+body[data-page="profile"] #password-form,
+body[data-page="profile"] #profile-form + div[style*="border-top"] {
+  margin-top: 2.5rem;
+  padding-top: 2.5rem;
+  border-top: 1px solid rgba(0, 255, 255, 0.15);
+}
+
+body[data-page="profile"][data-theme="light"] #password-form,
+body[data-page="profile"][data-theme="light"] #profile-form + div[style*="border-top"] {
+  border-top-color: rgba(0, 140, 255, 0.2);
+}
+
+/* Section Headings */
+body[data-page="profile"] #password-form h3,
+body[data-page="profile"] #profile-form + div[style*="border-top"] h3 {
+  color: rgba(255, 255, 255, 0.95);
+  font-weight: 600;
+  margin-bottom: 1.25rem;
+}
+
+body[data-page="profile"][data-theme="light"] #password-form h3,
+body[data-page="profile"][data-theme="light"] #profile-form + div[style*="border-top"] h3 {
+  color: rgba(15, 23, 42, 0.95);
+}
+
+/* Danger Zone */
+body[data-page="profile"] #profile-form + div[style*="border-top"]:last-child {
+  border-top-color: rgba(239, 68, 68, 0.3);
+}
+
+body[data-page="profile"] #profile-form + div[style*="border-top"]:last-child h3 {
+  color: rgba(239, 68, 68, 0.95);
+}
+
+body[data-page="profile"] #profile-form + div[style*="border-top"]:last-child p {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+body[data-page="profile"][data-theme="light"] #profile-form + div[style*="border-top"]:last-child {
+  border-top-color: rgba(239, 68, 68, 0.25);
+}
+
+body[data-page="profile"][data-theme="light"] #profile-form + div[style*="border-top"]:last-child h3 {
+  color: rgba(220, 38, 38, 0.95);
+}
+
+body[data-page="profile"][data-theme="light"] #profile-form + div[style*="border-top"]:last-child p {
+  color: rgba(15, 23, 42, 0.7);
+}
+
+/* Delete Account Button */
+body[data-page="profile"] #delete-account-btn {
+  background: rgba(239, 68, 68, 0.15) !important;
+  border: 1px solid rgba(239, 68, 68, 0.4) !important;
+  color: rgba(255, 255, 255, 0.95) !important;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.2);
+}
+
+body[data-page="profile"] #delete-account-btn:hover {
+  background: rgba(239, 68, 68, 0.25) !important;
+  border-color: rgba(239, 68, 68, 0.6) !important;
+  box-shadow: 
+    0 4px 16px rgba(239, 68, 68, 0.4),
+    0 0 25px rgba(239, 68, 68, 0.3);
+  transform: translateY(-2px);
+}
+
+body[data-page="profile"] #delete-account-btn:active {
+  transform: translateY(0);
+  background: rgba(239, 68, 68, 0.3) !important;
+}
+
+body[data-page="profile"][data-theme="light"] #delete-account-btn {
+  background: rgba(239, 68, 68, 0.1) !important;
+  border-color: rgba(239, 68, 68, 0.3) !important;
+  color: rgba(220, 38, 38, 0.95) !important;
+}
+
+body[data-page="profile"][data-theme="light"] #delete-account-btn:hover {
+  background: rgba(239, 68, 68, 0.2) !important;
+  border-color: rgba(239, 68, 68, 0.5) !important;
+  color: rgba(220, 38, 38, 1) !important;
+}
+

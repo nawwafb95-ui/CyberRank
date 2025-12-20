@@ -16,9 +16,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (lightBtn) {
     lightBtn.addEventListener('click', () => {
-      document.body.setAttribute('data-theme', 'day');
+      document.body.setAttribute('data-theme', 'light');
       try {
-        localStorage.setItem('theme', 'day');
+        localStorage.setItem('theme', 'light');
       } catch (e) {
         console.warn('Failed to save theme preference');
       }

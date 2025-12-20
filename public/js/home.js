@@ -1,21 +1,53 @@
 // public/js/home.js
 document.addEventListener('DOMContentLoaded', () => {
-  const portalCard = document.getElementById('enter-door');
+  const portalCard = document.getElementById('enterChallengesPortal') || document.getElementById('enter-door');
   const scene = document.querySelector('.door-scene');
   let doorClicked = false;
 
-  if (portalCard && scene) {
-    portalCard.addEventListener('click', () => {
-      if (doorClicked) return;
-      doorClicked = true;
+  // Navigation function
+  const navigateToChallenges = () => {
+    if (doorClicked) return;
+    doorClicked = true;
 
+    // Play sound effect if available
+    const portalSound = document.getElementById('portalSound');
+    if (portalSound) {
+      portalSound.currentTime = 0;
+      portalSound.play().catch(err => {
+        // Silently handle autoplay restrictions
+        console.debug('Audio play prevented:', err);
+      });
+    }
+
+    if (scene) {
       scene.classList.add('scene-zooming');
-      document.body.classList.add('door-animating');
+    }
+    document.body.classList.add('door-animating');
+    if (portalCard) {
       portalCard.classList.add('door-animating');
+    }
 
-      setTimeout(() => {
-        window.location.href = './html/challenges.html';
-      }, 1150);
+    // Use absolute path for reliability
+    setTimeout(() => {
+      window.location.href = '/html/challenges.html';
+    }, 1150);
+  };
+
+  if (portalCard) {
+    // Click handler
+    portalCard.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      navigateToChallenges();
+    });
+
+    // Keyboard accessibility (Enter/Space)
+    portalCard.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        e.stopPropagation();
+        navigateToChallenges();
+      }
     });
   }
 

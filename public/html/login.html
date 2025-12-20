@@ -6,6 +6,7 @@
 
     <link rel="stylesheet" href="/css/base.css" />
     <link rel="stylesheet" href="/css/auth.css" />
+    <link rel="stylesheet" href="/css/sidebar.css" />
     <title>Login</title>
   </head>
 
@@ -52,6 +53,14 @@
               <label for="login-password" class="floating-label">
                 Password
               </label>
+              <button
+                type="button"
+                class="toggle-visibility"
+                data-target="login-password"
+                aria-label="Show password"
+              >
+                👁️
+              </button>
             </div>
             <p class="error" data-error-for="login-password"></p>
           </div>
@@ -73,8 +82,9 @@
     <!-- Project scripts -->
     <script src="../js/core.js"></script>
     <script src="../js/main.js"></script>
-    <script src="../js/login.js"></script>
-    <!-- If you want to connect Firebase login in navbar -->
     <script type="module" src="../js/navAuth.js"></script>
+    <script src="../js/sidebar-inject.js"></script>
+    <script src="../js/sidebar.js"></script>
+    <script src="../js/login.js"></script>
   </body>
 </html>

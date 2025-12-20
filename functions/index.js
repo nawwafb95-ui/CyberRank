@@ -10,11 +10,25 @@ const db = admin.firestore();
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const FROM_EMAIL = process.env.FROM_EMAIL;
-const ALLOWED_ORIGIN = "http://localhost:5173";
+
+// Allow localhost on any port for development
+// In production, set ALLOWED_ORIGINS env var with comma-separated origins
+const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(",").map((o) => o.trim())
+  : ["http://localhost:5173", "http://localhost:3000", "http://localhost:8080", "http://127.0.0.1:5173", "http://127.0.0.1:3000"];
+
+function isOriginAllowed(origin) {
+  if (!origin) return false;
+  // Allow any localhost origin in development
+  if (origin.startsWith("http://localhost:") || origin.startsWith("http://127.0.0.1:")) {
+    return true;
+  }
+  return ALLOWED_ORIGINS.includes(origin);
+}
 
 function setCorsHeaders(res, origin) {
-  if (origin === ALLOWED_ORIGIN) {
-    res.set("Access-Control-Allow-Origin", ALLOWED_ORIGIN);
+  if (isOriginAllowed(origin)) {
+    res.set("Access-Control-Allow-Origin", origin);
   }
   res.set("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
@@ -77,8 +91,9 @@ function withCors(handler) {
       return res.status(405).send("Only POST allowed");
     }
 
-    if (origin && origin !== ALLOWED_ORIGIN) {
+    if (origin && !isOriginAllowed(origin)) {
       setCorsHeaders(res, origin);
+      console.warn("[CORS] Blocked origin:", origin);
       return res.status(403).send("CORS blocked: origin not allowed");
     }
 
@@ -144,7 +159,12 @@ exports.sendOtp = functions.https.onRequest(
       }
     } catch (dbErr) {
       console.error("[sendOtp] Database error:", dbErr);
-      return res.status(500).send("Failed to generate OTP. Please try again.");
+      const errorMsg = dbErr.message || String(dbErr);
+      // Provide more helpful error message
+      if (errorMsg.includes("ECONNREFUSED") || errorMsg.includes("connect")) {
+        return res.status(500).send("Failed to generate OTP: Firestore emulator not running. Start with: firebase emulators:start");
+      }
+      return res.status(500).send("Failed to generate OTP. Please try again. Error: " + errorMsg);
     }
   })
 );
@@ -193,7 +213,12 @@ exports.verifyOtp = functions.https.onRequest(
       return res.status(200).json({ ok: true, message: "OTP verified successfully!" });
     } catch (dbErr) {
       console.error("[verifyOtp] Database error:", dbErr);
-      return res.status(500).send("Failed to verify OTP. Please try again.");
+      const errorMsg = dbErr.message || String(dbErr);
+      // Provide more helpful error message
+      if (errorMsg.includes("ECONNREFUSED") || errorMsg.includes("connect")) {
+        return res.status(500).send("Failed to verify OTP: Firestore emulator not running. Start with: firebase emulators:start");
+      }
+      return res.status(500).send("Failed to verify OTP. Please try again. Error: " + errorMsg);
     }
   })
 );

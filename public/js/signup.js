@@ -111,36 +111,6 @@ document.addEventListener('DOMContentLoaded', () => {
     return true;
   }
 
-  // ================== Toggle Show / Hide Password (👁️ / 🙈) ==================
-  function attachToggleButtons() {
-    const toggles = document.querySelectorAll('.toggle-visibility');
-    toggles.forEach((btn) => {
-      const targetId = btn.getAttribute('data-target');
-      if (!targetId) return;
-      const input = document.getElementById(targetId);
-      if (!input) return;
-
-      // Initial state: eye icon
-      btn.textContent = '👁️';
-      btn.setAttribute('aria-label', 'Show password');
-
-      btn.addEventListener('click', () => {
-        const isPassword = input.type === 'password';
-
-        if (isPassword) {
-          input.type = 'text';
-          btn.textContent = '🙈';
-          btn.setAttribute('aria-label', 'Hide password');
-        } else {
-          input.type = 'password';
-          btn.textContent = '👁️';
-          btn.setAttribute('aria-label', 'Show password');
-        }
-      });
-    });
-  }
-
-  attachToggleButtons();
 
   // ================== Form Validation ==================
   function validateSignup(form) {

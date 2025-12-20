@@ -30,21 +30,38 @@ function updateAuthButton(user) {
   if (user && loginBtn) {
     loginBtn.textContent = 'Logout';
     loginBtn.dataset.state = 'logout';
-    loginBtn.onclick = async () => {
+    // Set onclick handler directly - this replaces any previous handler
+    loginBtn.onclick = async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      if (loginBtn.disabled) return;
       loginBtn.disabled = true;
+      
       try {
-        await signOut(auth);
+        // Clear localStorage on explicit logout
+        try { localStorage.removeItem('currentUser'); } catch {}
+        
+        // Sign out from Firebase
+        if (auth) {
+          await signOut(auth);
+        }
+        
         window.location.href = './index.html';
       } catch (err) {
         console.error('[Logout] Error:', err);
-      } finally {
         loginBtn.disabled = false;
       }
     };
   } else if (loginBtn) {
     loginBtn.textContent = 'Login';
     loginBtn.dataset.state = 'login';
-    loginBtn.onclick = () => (window.location.href = './login.html');
+    // Set onclick handler directly - this replaces any previous handler
+    loginBtn.onclick = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      window.location.href = './login.html';
+    };
   }
 
   if (signupBtn) {
@@ -67,15 +84,19 @@ function updateAuthButton(user) {
       const defaultSrc = infoPhoto.dataset?.default || infoPhoto.getAttribute('data-default');
       infoPhoto.src = profile?.photo || user.photoURL || defaultSrc || infoPhoto.src;
     }
+    // Only update localStorage when user is authenticated
+    // Don't remove it when user is null - that happens on explicit logout only
     try { localStorage.setItem('currentUser', user.email || user.uid); } catch {}
   } else {
+    // When user is null, only clear UI - DON'T remove localStorage
+    // localStorage is only cleared on explicit logout (see logout handlers)
     if (infoFullName) infoFullName.textContent = '—';
     if (infoEmail) infoEmail.textContent = '—';
     if (infoPhoto) {
       const defaultSrc = infoPhoto.dataset?.default || infoPhoto.getAttribute('data-default');
       if (defaultSrc) infoPhoto.src = defaultSrc;
     }
-    try { localStorage.removeItem('currentUser'); } catch {}
+    // REMOVED: localStorage.removeItem('currentUser') - this was causing logout on navigation
   }
 }
 

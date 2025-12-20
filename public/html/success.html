@@ -15,6 +15,8 @@
     <link rel="stylesheet" href="/css/base.css" />
     <link rel="stylesheet" href="/css/components.css" />
     <link rel="stylesheet" href="/css/pages.css" />
+    <link rel="stylesheet" href="/css/pages/success.css" />
+    <link rel="stylesheet" href="/css/sidebar.css" />
 
     <link rel="icon" type="image/png" href="../images/favicon.png" />
 
@@ -160,7 +162,7 @@
     </style>
   </head>
 
-  <body class="otp-page">
+  <body class="otp-page" data-page="success">
     <div class="otp-container">
       <div class="otp-icon">🔐</div>
       <h1 class="otp-title">Verify OTP</h1>
@@ -188,7 +190,9 @@
 
     <script src="../js/core.js"></script>
     <script src="../js/main.js"></script>
-    <script src="../js/otp.js"></script>
     <script type="module" src="../js/navAuth.js"></script>
+    <script src="../js/sidebar-inject.js"></script>
+    <script src="../js/sidebar.js"></script>
+    <script src="../js/otp.js"></script>
   </body>
 </html>
