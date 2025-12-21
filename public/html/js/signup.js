@@ -1,3 +1,8 @@
+// ================== OTP Feature Flag ==================
+// Set to false to bypass OTP verification during development
+// Set to true to re-enable OTP email verification flow
+const OTP_ENABLED = false;
+
 document.addEventListener('DOMContentLoaded', () => {
   const signupForm = document.getElementById('signup-form');
   if (!signupForm) return;
@@ -36,15 +41,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // ================== Helpers from core.js ==================
-  // clearErrors(form), setError(inputId, message),
-  // getUsers(), saveUsers(), emailRegex
-  // Available in core.js
-
   // ================== Username Validation ==================
   function validateUsername(username) {
-    // First letter must be Capital, rest lowercase, numbers, -, or _
-    // Minimum 4 characters
     const usernameRegex = /^[A-Z][a-z0-9_-]{3,}$/;
 
     if (!username) {
@@ -60,7 +58,6 @@ document.addEventListener('DOMContentLoaded', () => {
       return false;
     }
 
-    // Check for duplicate username (from locally stored users)
     const usersNow = getUsers();
     const lower = username.toLowerCase();
     for (const emailKey in usersNow) {
@@ -83,8 +80,6 @@ document.addEventListener('DOMContentLoaded', () => {
       return false;
     }
 
-    // At minimum:
-    // 1 Uppercase, 1 Digit, 1 Symbol, length 8+
     const passwordRegex =
       /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()[\]{};:,.?/~_+\-=|<>]).{8,}$/;
 
@@ -111,7 +106,6 @@ document.addEventListener('DOMContentLoaded', () => {
     return true;
   }
 
-
   // ================== Form Validation ==================
   function validateSignup(form) {
     clearErrors(form);
@@ -122,10 +116,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const password        = form.password?.value;
     const confirmPassword = form.confirmPassword?.value;
 
-    // Username
     if (!validateUsername(username)) ok = false;
 
-    // Email
     if (!email || !emailRegex.test(email)) {
       setError('signup-email', 'Enter a valid email.');
       ok = false;
@@ -137,10 +129,8 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
-    // Password
     if (!validatePassword(password)) ok = false;
 
-    // Confirm Password
     if (!validateConfirmPassword(password, confirmPassword)) ok = false;
 
     return {
@@ -152,6 +142,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // ================== Submit Handler ==================
   signupForm.addEventListener('submit', async (e) => {
     e.preventDefault();
+
     const { ok, values } = validateSignup(signupForm);
     if (!ok) return;
 
@@ -161,24 +152,62 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    // 1) نحفظ بيانات التسجيل مؤقتاً لغاية ما الـ OTP ينجح
-    // username + email + password
+    const signupStatus = document.getElementById('signup-status');
+
+    // ================== OTP Bypass Logic ==================
+    if (!OTP_ENABLED) {
+      console.log('[Signup] OTP disabled - creating account directly');
+
+      if (signupStatus) {
+        signupStatus.textContent = 'Creating account...';
+        signupStatus.className = '';
+      }
+
+      try {
+        const { username, email, password } = values;
+
+        users[email] = {
+          email,
+          username,
+          password,
+          createdAt: new Date().toISOString(),
+          verified: true
+        };
+        saveUsers(users);
+
+        localStorage.setItem('currentUser', email);
+
+        if (signupStatus) {
+          signupStatus.textContent = 'Account created successfully!';
+          signupStatus.className = 'success';
+        }
+
+        setTimeout(() => {
+          window.location.href = '/index.html';
+        }, 300);
+      } catch (err) {
+        console.error('[Signup] Error creating account:', err);
+        const errorMsg = 'Failed to create account. Please try again.';
+        if (signupStatus) {
+          signupStatus.textContent = errorMsg;
+          signupStatus.className = 'error';
+        } else {
+          alert(errorMsg);
+        }
+      }
+      return;
+    }
+
+    // ================== OTP Enabled Flow (kept for later) ==================
     try {
       localStorage.setItem('pendingSignup', JSON.stringify(values));
     } catch (err) {
       console.error('Error saving pending signup', err);
     }
 
-    // 2) نرسل طلب sendOtp إلى Cloud Function
-    const functionsUrl =
-      // window.FIREBASE_FUNCTIONS_URL ||
-      'http://localhost:5001/cyberrank-a4380/us-central1';
+    const functionsUrl = 'http://localhost:5001/cyberrank-a4380/us-central1';
     const endpoint = `${functionsUrl}/sendOtp`;
-    
-    console.log('[Signup] Sending OTP request to:', endpoint);
-    console.log('[Signup] Request payload:', { email: values.email });
 
-    const signupStatus = document.getElementById('signup-status');
     if (signupStatus) {
       signupStatus.textContent = 'Sending OTP...';
     }
@@ -189,53 +218,35 @@ document.addEventListener('DOMContentLoaded', () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: values.email }),
       });
-      
-      console.log('[Signup] Response status:', res.status, res.statusText);
 
       const text = await res.text();
 
       if (!res.ok) {
-        console.error('[Signup] OTP send failed. Status:', res.status);
-        console.error('[Signup] Response text:', text);
-        const errorMsg = text || `Failed to send OTP (${res.status}). Please check emulator logs.`;
+        const errorMsg = text || `Failed to send OTP (${res.status}).`;
         if (signupStatus) {
           signupStatus.textContent = errorMsg;
           signupStatus.className = 'error';
         } else {
-          // Fallback: show alert if status element doesn't exist
           alert(errorMsg);
         }
-        // Clean up on error
         localStorage.removeItem('pendingSignup');
         return;
       }
 
-      console.log('[Signup] OTP sent successfully. Response:', text);
       if (signupStatus) {
         signupStatus.textContent = 'OTP sent. Check your email.';
         signupStatus.className = 'success';
       }
 
-      // Redirect to OTP verification page (success.html is the OTP page)
-      // signup.html is in public/html/, so success.html is in the same directory
-      window.location.href = './success.html';
+      window.location.href = '/success.html';
     } catch (err) {
-      console.error('[Signup] Network/Request error:', err);
-      console.error('[Signup] Error details:', {
-        message: err.message,
-        stack: err.stack,
-        endpoint: endpoint
-      });
-      // Show error to user
-      const errorMsg = err.message || 'Network error. Is the emulator running on http://localhost:5001?';
+      const errorMsg = err.message || 'Network error. Is functions emulator running?';
       if (signupStatus) {
         signupStatus.textContent = errorMsg;
         signupStatus.className = 'error';
       } else {
-        // Fallback: show alert if status element doesn't exist
         alert(errorMsg);
       }
-      // Clean up on error
       localStorage.removeItem('pendingSignup');
     }
   });

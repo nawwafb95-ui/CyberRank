@@ -1,38 +1,41 @@
 // public/js/home.js
 document.addEventListener('DOMContentLoaded', () => {
+  // New hero CTA button
+  const challengesBtn = document.getElementById('enterChallengesBtn');
+  // Legacy portal/door buttons (for backward compatibility)
   const portalCard = document.getElementById('enterChallengesPortal') || document.getElementById('enter-door');
   const scene = document.querySelector('.door-scene');
-  let doorClicked = false;
+  let buttonClicked = false;
 
   // Navigation function
   const navigateToChallenges = () => {
-    if (doorClicked) return;
-    doorClicked = true;
+    if (buttonClicked) return;
+    buttonClicked = true;
 
-    // Play sound effect if available
-    const portalSound = document.getElementById('portalSound');
-    if (portalSound) {
-      portalSound.currentTime = 0;
-      portalSound.play().catch(err => {
-        // Silently handle autoplay restrictions
-        console.debug('Audio play prevented:', err);
-      });
-    }
-
-    if (scene) {
-      scene.classList.add('scene-zooming');
-    }
-    document.body.classList.add('door-animating');
-    if (portalCard) {
-      portalCard.classList.add('door-animating');
-    }
-
-    // Use absolute path for reliability
-    setTimeout(() => {
-      window.location.href = '/html/challenges.html';
-    }, 1150);
+    // Navigate to challenges page
+    window.location.href = '/challenges.html';
   };
 
+  // Handle new hero CTA button
+  if (challengesBtn) {
+    // Click handler
+    challengesBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      navigateToChallenges();
+    });
+
+    // Keyboard accessibility (Enter/Space)
+    challengesBtn.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        e.stopPropagation();
+        navigateToChallenges();
+      }
+    });
+  }
+
+  // Legacy portal card handler (for backward compatibility)
   if (portalCard) {
     // Click handler
     portalCard.addEventListener('click', (e) => {
@@ -53,18 +56,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Fallback for old door ID if it exists
   const doorBtn = document.getElementById('challengeDoor');
-  if (doorBtn && !portalCard) {
+  if (doorBtn && !portalCard && !challengesBtn) {
     doorBtn.addEventListener('click', () => {
       if (doorBtn.classList.contains('door-animating')) return;
       doorBtn.classList.add('door-animating');
-      const target = './challenges.html';
-      setTimeout(() => {
-        if (typeof go === 'function') {
-          go(target);
-        } else {
-          window.location.href = target;
-        }
-      }, 200);
+      navigateToChallenges();
     });
   }
 
@@ -91,8 +87,11 @@ document.addEventListener('DOMContentLoaded', () => {
     window.updateSideMenuState();
   }
 
-  // Leaderboard button
-  document.getElementById("leaderboard-btn").addEventListener("click", () => {
-    window.location.href = "/html/leaderboard.html";
-  });
+  // Leaderboard button (if exists)
+  const leaderboardBtn = document.getElementById("leaderboard-btn");
+  if (leaderboardBtn) {
+    leaderboardBtn.addEventListener("click", () => {
+      window.location.href = "/leaderboard.html";
+    });
+  }
 });

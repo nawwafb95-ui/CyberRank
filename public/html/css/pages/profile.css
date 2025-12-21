@@ -158,16 +158,30 @@ body[data-page="profile"][data-theme="light"] #profile-email.floating-input:disa
   color: rgba(15, 23, 42, 0.5) !important;
 }
 
-/* Date Input - Match Other Inputs */
-body[data-page="profile"] #profile-dob {
+/* Date Input - Use Floating Input System */
+/* Date inputs don't support placeholder, so handle label positioning differently */
+body[data-page="profile"] .dob-input {
   background: rgba(30, 41, 59, 0.6) !important;
   border: 1px solid rgba(0, 255, 255, 0.2) !important;
   color: rgba(255, 255, 255, 0.95) !important;
-  border-radius: 10px !important;
   transition: all 0.25s ease;
 }
 
-body[data-page="profile"] #profile-dob:focus {
+/* For date inputs, move label up when focused or has value */
+body[data-page="profile"] .dob-input:focus + .floating-label,
+body[data-page="profile"] .dob-input.dob-input--has-value + .floating-label {
+  top: -8px;
+  transform: translateY(0);
+  font-size: 11px;
+  color: rgba(0, 255, 255, 0.9);
+}
+
+body[data-page="profile"][data-theme="light"] .dob-input:focus + .floating-label,
+body[data-page="profile"][data-theme="light"] .dob-input.dob-input--has-value + .floating-label {
+  color: rgba(0, 140, 255, 0.9);
+}
+
+body[data-page="profile"] .dob-input:focus {
   background: rgba(30, 41, 59, 0.8) !important;
   border-color: rgba(0, 255, 255, 0.5) !important;
   box-shadow: 
@@ -176,7 +190,7 @@ body[data-page="profile"] #profile-dob:focus {
   outline: none;
 }
 
-body[data-page="profile"] #profile-dob:disabled {
+body[data-page="profile"] .dob-input--locked {
   background: rgba(30, 41, 59, 0.4) !important;
   border-color: rgba(0, 255, 255, 0.15) !important;
   color: rgba(255, 255, 255, 0.5) !important;
@@ -184,13 +198,13 @@ body[data-page="profile"] #profile-dob:disabled {
   opacity: 0.6;
 }
 
-body[data-page="profile"][data-theme="light"] #profile-dob {
+body[data-page="profile"][data-theme="light"] .dob-input {
   background: rgba(241, 245, 249, 0.8) !important;
   border-color: rgba(0, 140, 255, 0.25) !important;
   color: rgba(15, 23, 42, 0.95) !important;
 }
 
-body[data-page="profile"][data-theme="light"] #profile-dob:focus {
+body[data-page="profile"][data-theme="light"] .dob-input:focus {
   background: rgba(241, 245, 249, 0.95) !important;
   border-color: rgba(0, 140, 255, 0.5) !important;
   box-shadow: 
@@ -198,21 +212,26 @@ body[data-page="profile"][data-theme="light"] #profile-dob:focus {
     0 0 20px rgba(0, 140, 255, 0.2);
 }
 
-body[data-page="profile"][data-theme="light"] #profile-dob:disabled {
+body[data-page="profile"][data-theme="light"] .dob-input--locked {
   background: rgba(241, 245, 249, 0.5) !important;
   border-color: rgba(0, 140, 255, 0.15) !important;
   color: rgba(15, 23, 42, 0.5) !important;
 }
 
-/* Date Input Label */
-body[data-page="profile"] #profile-form label[for="profile-dob"] {
-  color: rgba(255, 255, 255, 0.8);
-  font-weight: 500;
-  margin-bottom: 0.5rem;
+/* DOB Hint Styling */
+body[data-page="profile"] .dob-hint {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--muted);
 }
 
-body[data-page="profile"][data-theme="light"] #profile-form label[for="profile-dob"] {
-  color: rgba(15, 23, 42, 0.8);
+body[data-page="profile"] .dob-hint--warning {
+  color: #fbbf24;
+}
+
+body[data-page="profile"] .dob-hint--locked {
+  color: #94a3b8;
 }
 
 /* Small Text Hints */
@@ -221,7 +240,15 @@ body[data-page="profile"] small {
   font-size: 0.75rem;
 }
 
-body[data-page="profile"][data-theme="light"] small {
+body[data-page="profile"] .field-hint {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+body[data-page="profile"][data-theme="light"] small,
+body[data-page="profile"][data-theme="light"] .field-hint {
   color: rgba(15, 23, 42, 0.6);
 }
 
@@ -364,66 +391,70 @@ body[data-page="profile"][data-theme="light"] #profileMsg[style*="color: rgb(249
   color: rgba(220, 38, 38, 0.95) !important;
 }
 
-/* Section Dividers */
-body[data-page="profile"] #password-form,
-body[data-page="profile"] #profile-form + div[style*="border-top"] {
-  margin-top: 2.5rem;
-  padding-top: 2.5rem;
+/* Profile Sections - Semantic Classes */
+body[data-page="profile"] .profile-section {
+  margin-top: 2rem;
+  padding-top: 2rem;
   border-top: 1px solid rgba(0, 255, 255, 0.15);
 }
 
-body[data-page="profile"][data-theme="light"] #password-form,
-body[data-page="profile"][data-theme="light"] #profile-form + div[style*="border-top"] {
+body[data-page="profile"] .profile-section h3 {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: rgba(255, 255, 255, 0.95);
+}
+
+body[data-page="profile"] .profile-section__description {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 1rem;
+}
+
+body[data-page="profile"][data-theme="light"] .profile-section {
   border-top-color: rgba(0, 140, 255, 0.2);
 }
 
-/* Section Headings */
-body[data-page="profile"] #password-form h3,
-body[data-page="profile"] #profile-form + div[style*="border-top"] h3 {
-  color: rgba(255, 255, 255, 0.95);
-  font-weight: 600;
-  margin-bottom: 1.25rem;
-}
-
-body[data-page="profile"][data-theme="light"] #password-form h3,
-body[data-page="profile"][data-theme="light"] #profile-form + div[style*="border-top"] h3 {
+body[data-page="profile"][data-theme="light"] .profile-section h3 {
   color: rgba(15, 23, 42, 0.95);
 }
 
-/* Danger Zone */
-body[data-page="profile"] #profile-form + div[style*="border-top"]:last-child {
-  border-top-color: rgba(239, 68, 68, 0.3);
-}
-
-body[data-page="profile"] #profile-form + div[style*="border-top"]:last-child h3 {
-  color: rgba(239, 68, 68, 0.95);
-}
-
-body[data-page="profile"] #profile-form + div[style*="border-top"]:last-child p {
-  color: rgba(255, 255, 255, 0.7);
-}
-
-body[data-page="profile"][data-theme="light"] #profile-form + div[style*="border-top"]:last-child {
-  border-top-color: rgba(239, 68, 68, 0.25);
-}
-
-body[data-page="profile"][data-theme="light"] #profile-form + div[style*="border-top"]:last-child h3 {
-  color: rgba(220, 38, 38, 0.95);
-}
-
-body[data-page="profile"][data-theme="light"] #profile-form + div[style*="border-top"]:last-child p {
+body[data-page="profile"][data-theme="light"] .profile-section__description {
   color: rgba(15, 23, 42, 0.7);
 }
 
-/* Delete Account Button */
-body[data-page="profile"] #delete-account-btn {
+/* Danger Zone Section */
+body[data-page="profile"] .profile-section--danger {
+  border-top-color: rgba(239, 68, 68, 0.3);
+}
+
+body[data-page="profile"] .profile-section--danger h3 {
+  color: rgba(239, 68, 68, 0.95);
+}
+
+body[data-page="profile"][data-theme="light"] .profile-section--danger {
+  border-top-color: rgba(239, 68, 68, 0.25);
+}
+
+body[data-page="profile"][data-theme="light"] .profile-section--danger h3 {
+  color: rgba(220, 38, 38, 0.95);
+}
+
+/* Button Variants */
+body[data-page="profile"] .btn--full {
+  width: 100%;
+  margin-top: 10px;
+}
+
+body[data-page="profile"] .btn--danger {
+  width: 100%;
   background: rgba(239, 68, 68, 0.15) !important;
   border: 1px solid rgba(239, 68, 68, 0.4) !important;
   color: rgba(255, 255, 255, 0.95) !important;
   box-shadow: 0 2px 8px rgba(239, 68, 68, 0.2);
 }
 
-body[data-page="profile"] #delete-account-btn:hover {
+body[data-page="profile"] .btn--danger:hover {
   background: rgba(239, 68, 68, 0.25) !important;
   border-color: rgba(239, 68, 68, 0.6) !important;
   box-shadow: 
@@ -432,18 +463,18 @@ body[data-page="profile"] #delete-account-btn:hover {
   transform: translateY(-2px);
 }
 
-body[data-page="profile"] #delete-account-btn:active {
+body[data-page="profile"] .btn--danger:active {
   transform: translateY(0);
   background: rgba(239, 68, 68, 0.3) !important;
 }
 
-body[data-page="profile"][data-theme="light"] #delete-account-btn {
+body[data-page="profile"][data-theme="light"] .btn--danger {
   background: rgba(239, 68, 68, 0.1) !important;
   border-color: rgba(239, 68, 68, 0.3) !important;
   color: rgba(220, 38, 38, 0.95) !important;
 }
 
-body[data-page="profile"][data-theme="light"] #delete-account-btn:hover {
+body[data-page="profile"][data-theme="light"] .btn--danger:hover {
   background: rgba(239, 68, 68, 0.2) !important;
   border-color: rgba(239, 68, 68, 0.5) !important;
   color: rgba(220, 38, 38, 1) !important;

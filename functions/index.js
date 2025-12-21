@@ -11,15 +11,19 @@ const db = admin.firestore();
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const FROM_EMAIL = process.env.FROM_EMAIL;
 
-// Allow localhost on any port for development
-// In production, set ALLOWED_ORIGINS env var with comma-separated origins
+// Allow localhost origins
 const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS
-  ? process.env.ALLOWED_ORIGINS.split(",").map((o) => o.trim())
-  : ["http://localhost:5173", "http://localhost:3000", "http://localhost:8080", "http://127.0.0.1:5173", "http://127.0.0.1:3000"];
+  ? process.env.ALLOWED_ORIGINS.split(",").map(o => o.trim())
+  : [
+      "http://localhost:5173",
+      "http://localhost:3000",
+      "http://localhost:8080",
+      "http://127.0.0.1:5173",
+      "http://127.0.0.1:3000"
+    ];
 
 function isOriginAllowed(origin) {
   if (!origin) return false;
-  // Allow any localhost origin in development
   if (origin.startsWith("http://localhost:") || origin.startsWith("http://127.0.0.1:")) {
     return true;
   }
@@ -45,16 +49,8 @@ function generateOTP() {
 }
 
 async function sendEmailViaResend(to, subject, text) {
-  if (!RESEND_API_KEY) {
-    throw new Error("RESEND_API_KEY is not configured");
-  }
-  if (!FROM_EMAIL) {
-    throw new Error("FROM_EMAIL is not configured");
-  }
-
-  if (typeof fetch !== "function") {
-    throw new Error("Global fetch is not available. Use Node 18+ or add a fetch polyfill.");
-  }
+  if (!RESEND_API_KEY) throw new Error("RESEND_API_KEY is not configured");
+  if (!FROM_EMAIL) throw new Error("FROM_EMAIL is not configured");
 
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -62,19 +58,13 @@ async function sendEmailViaResend(to, subject, text) {
       Authorization: `Bearer ${RESEND_API_KEY}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({
-      from: FROM_EMAIL,
-      to,
-      subject,
-      text,
-    }),
+    body: JSON.stringify({ from: FROM_EMAIL, to, subject, text }),
   });
 
   if (!response.ok) {
     const errorText = await response.text().catch(() => "");
     throw new Error(`Resend API error: ${response.status} - ${errorText}`);
   }
-
   return response.json();
 }
 
@@ -82,9 +72,7 @@ function withCors(handler) {
   return async (req, res) => {
     const origin = req.get("Origin") || "";
 
-    if (req.method === "OPTIONS") {
-      return handleOptions(res, origin);
-    }
+    if (req.method === "OPTIONS") return handleOptions(res, origin);
 
     if (req.method !== "POST") {
       setCorsHeaders(res, origin);
@@ -93,8 +81,7 @@ function withCors(handler) {
 
     if (origin && !isOriginAllowed(origin)) {
       setCorsHeaders(res, origin);
-      console.warn("[CORS] Blocked origin:", origin);
-      return res.status(403).send("CORS blocked: origin not allowed");
+      return res.status(403).send("CORS blocked");
     }
 
     try {
@@ -102,21 +89,18 @@ function withCors(handler) {
       await handler(req, res);
     } catch (err) {
       console.error("[Function Error]", err);
-      setCorsHeaders(res, origin);
       if (!res.headersSent) {
-        res.status(500).send("Internal server error: " + (err?.message || String(err)));
+        res.status(500).send("Internal server error: " + err.message);
       }
     }
   };
 }
 
+// 📩 Send OTP
 exports.sendOtp = functions.https.onRequest(
   withCors(async (req, res) => {
     const { email } = req.body || {};
-
-    if (!email || typeof email !== "string" || !email.trim()) {
-      return res.status(400).send("Email is required.");
-    }
+    if (!email) return res.status(400).send("Email is required.");
 
     const emailTrimmed = email.trim().toLowerCase();
     const otp = generateOTP();
@@ -130,80 +114,44 @@ exports.sendOtp = functions.https.onRequest(
         createdAt: FieldValue.serverTimestamp(),
       });
 
-      console.log("[sendOtp] Generated OTP for", emailTrimmed);
+      console.log("[sendOtp] OTP generated for", emailTrimmed);
 
       if (!RESEND_API_KEY || !FROM_EMAIL) {
-        console.log("[sendOtp] OTP for", emailTrimmed, "is:", otp);
-        console.log("[sendOtp] Email sending skipped. Missing RESEND_API_KEY or FROM_EMAIL.");
-        return res.status(200).json({
-          ok: true,
-          message: "OTP generated (dev mode). Check emulator logs for OTP.",
-        });
+        console.log("[DEV MODE] OTP:", otp);
+        return res.status(200).json({ ok: true, message: "OTP generated (dev mode)." });
       }
 
-      try {
-        await sendEmailViaResend(
-          emailTrimmed,
-          "Your SOCyberX OTP Code",
-          `Your OTP is ${otp}. It expires in 5 minutes.`
-        );
-        console.log("[sendOtp] OTP email sent successfully to", emailTrimmed);
-        return res.status(200).json({ ok: true, message: "OTP sent successfully." });
-      } catch (emailErr) {
-        console.error("[sendOtp] Email error:", emailErr.message);
-        console.log("[sendOtp] OTP logged due to email failure:", otp);
-        return res.status(200).json({
-          ok: true,
-          message: "OTP generated. Email delivery failed. Check logs for OTP.",
-        });
-      }
-    } catch (dbErr) {
-      console.error("[sendOtp] Database error:", dbErr);
-      const errorMsg = dbErr.message || String(dbErr);
-      // Provide more helpful error message
-      if (errorMsg.includes("ECONNREFUSED") || errorMsg.includes("connect")) {
-        return res.status(500).send("Failed to generate OTP: Firestore emulator not running. Start with: firebase emulators:start");
-      }
-      return res.status(500).send("Failed to generate OTP. Please try again. Error: " + errorMsg);
+      await sendEmailViaResend(
+        emailTrimmed,
+        "Your SOCyberX OTP Code",
+        `Your OTP is ${otp}. It expires in 5 minutes.`
+      );
+
+      return res.status(200).json({ ok: true, message: "OTP sent successfully." });
+    } catch (err) {
+      console.error("[sendOtp] DB error:", err);
+      return res.status(500).send("Failed to generate OTP. " + err.message);
     }
   })
 );
 
+// ✅ Verify OTP
 exports.verifyOtp = functions.https.onRequest(
   withCors(async (req, res) => {
     const { email, otp } = req.body || {};
-
-    if (!email || typeof email !== "string" || !email.trim()) {
-      return res.status(400).send("Email is required.");
-    }
-
-    if (!otp || typeof otp !== "string" || !otp.trim()) {
-      return res.status(400).send("OTP is required.");
-    }
+    if (!email || !otp) return res.status(400).send("Email and OTP required.");
 
     const emailTrimmed = email.trim().toLowerCase();
     const otpTrimmed = otp.trim();
 
     try {
       const doc = await db.collection("otps").doc(emailTrimmed).get();
-
-      if (!doc.exists) {
-        return res.status(400).send("OTP not found.");
-      }
+      if (!doc.exists) return res.status(400).send("OTP not found.");
 
       const data = doc.data();
-
-      if (data.used === true) {
-        return res.status(400).send("OTP already used.");
-      }
-
-      if (Date.now() > data.expiresAt) {
-        return res.status(400).send("OTP expired.");
-      }
-
-      if (String(data.otp) !== String(otpTrimmed)) {
-        return res.status(400).send("Invalid OTP.");
-      }
+      if (data.used) return res.status(400).send("OTP already used.");
+      if (Date.now() > data.expiresAt) return res.status(400).send("OTP expired.");
+      if (String(data.otp) !== otpTrimmed) return res.status(400).send("Invalid OTP.");
 
       await db.collection("otps").doc(emailTrimmed).update({
         used: true,
@@ -211,14 +159,9 @@ exports.verifyOtp = functions.https.onRequest(
       });
 
       return res.status(200).json({ ok: true, message: "OTP verified successfully!" });
-    } catch (dbErr) {
-      console.error("[verifyOtp] Database error:", dbErr);
-      const errorMsg = dbErr.message || String(dbErr);
-      // Provide more helpful error message
-      if (errorMsg.includes("ECONNREFUSED") || errorMsg.includes("connect")) {
-        return res.status(500).send("Failed to verify OTP: Firestore emulator not running. Start with: firebase emulators:start");
-      }
-      return res.status(500).send("Failed to verify OTP. Please try again. Error: " + errorMsg);
+    } catch (err) {
+      console.error("[verifyOtp] DB error:", err);
+      return res.status(500).send("Failed to verify OTP. " + err.message);
     }
   })
 );

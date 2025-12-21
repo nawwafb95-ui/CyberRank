@@ -12,28 +12,18 @@
       rel="stylesheet"
     />
 
-    <link rel="stylesheet" href="/css/base.css" />
-    <link rel="stylesheet" href="/css/components.css" />
-    <link rel="stylesheet" href="/css/pages.css" />
-    <link rel="stylesheet" href="/css/pages/profile.css" />
-    <link rel="stylesheet" href="/css/sidebar.css" />
-    <link rel="stylesheet" href="/css/auth.css" />
+    <!-- IMPORTANT: profile.html is inside /html, so use ../ -->
+    <link rel="stylesheet" href="../css/base.css" />
+    <link rel="stylesheet" href="../css/components.css" />
+    <link rel="stylesheet" href="../css/pages.css" />
+    <link rel="stylesheet" href="../css/pages/profile.css" />
+    <link rel="stylesheet" href="../css/sidebar.css" />
+    <link rel="stylesheet" href="../css/auth.css" />
 
-    <!-- Favicon inside public/images -->
     <link rel="icon" type="image/png" href="../images/favicon.png" />
   </head>
 
   <body data-theme="night" data-page="profile">
-    <div class="background">
-      <div class="bg-gradient"></div>
-      <div class="bg-blobs">
-        <span class="blob b1"></span>
-        <span class="blob b2"></span>
-        <span class="blob b3"></span>
-      </div>
-      <div class="bg-grid"></div>
-    </div>
-
     <main class="container" style="padding-top:0;">
       <div class="card profile-card" id="profile-card">
         <div class="profile-header">
@@ -50,201 +40,116 @@
         <form id="profile-form">
           <div class="form-group">
             <div class="field">
-              <input
-                type="text"
-                id="profile-username"
-                class="floating-input"
-                placeholder=" "
-                required
-              />
+              <input type="text" id="profile-username" class="floating-input" placeholder=" " required />
               <label for="profile-username" class="floating-label">Username</label>
             </div>
           </div>
 
           <div class="form-group">
             <div class="field">
-              <input
-                type="email"
-                id="profile-email"
-                class="floating-input"
-                placeholder=" "
-                disabled
-                style="background: var(--surface); opacity: 0.7; cursor: not-allowed;"
-              />
+              <input type="email" id="profile-email" class="floating-input" placeholder=" " disabled />
               <label for="profile-email" class="floating-label">Email</label>
             </div>
-            <small style="display: block; margin-top: 4px; font-size: 12px; color: var(--muted);">Email cannot be changed</small>
-          </div>
-
-          <div class="form-group">
-            <label for="profile-dob" style="display: block; margin-bottom: 4px; font-size: 14px; color: var(--text);">Date of Birth</label>
-            <input
-              type="date"
-              id="profile-dob"
-              style="width: 100%; padding: 12px 14px; border: none; border-radius: 10px; background: #1e293b; color: #fff; font-size: 15px; outline: none;"
-            />
-            <small id="dob-hint" style="display: block; margin-top: 4px; font-size: 12px; color: var(--muted);"></small>
+            <small class="field-hint">Email cannot be changed</small>
           </div>
 
           <div class="form-group">
             <div class="field">
-              <input
-                type="text"
-                id="profile-major"
-                class="floating-input"
-                placeholder=" "
-              />
+              <input type="date" id="profile-dob" class="floating-input dob-input" placeholder=" " />
+              <label for="profile-dob" class="floating-label">Date of Birth</label>
+            </div>
+            <small id="dob-hint" class="dob-hint"></small>
+          </div>
+
+          <div class="form-group">
+            <div class="field">
+              <input type="text" id="profile-major" class="floating-input" placeholder=" " />
               <label for="profile-major" class="floating-label">Major</label>
             </div>
           </div>
 
           <div class="form-group">
             <div class="field">
-              <input
-                type="text"
-                id="profile-university"
-                class="floating-input"
-                placeholder=" "
-              />
+              <input type="text" id="profile-university" class="floating-input" placeholder=" " />
               <label for="profile-university" class="floating-label">University</label>
             </div>
           </div>
 
           <div class="form-group">
             <div class="field">
-              <input
-                type="text"
-                id="profile-country"
-                class="floating-input"
-                placeholder=" "
-              />
+              <input type="text" id="profile-country" class="floating-input" placeholder=" " />
               <label for="profile-country" class="floating-label">Country</label>
             </div>
           </div>
 
           <div class="form-group">
             <div class="field">
-              <input
-                type="text"
-                id="profile-usertype"
-                class="floating-input"
-                placeholder=" "
-              />
+              <input type="text" id="profile-usertype" class="floating-input" placeholder=" " />
               <label for="profile-usertype" class="floating-label">User Type</label>
             </div>
           </div>
 
           <div class="form-group">
             <div class="field">
-              <input
-                type="text"
-                id="profile-stage"
-                class="floating-input"
-                placeholder=" "
-              />
+              <input type="text" id="profile-stage" class="floating-input" placeholder=" " />
               <label for="profile-stage" class="floating-label">Stage / Level</label>
             </div>
           </div>
 
-          <button type="submit" class="btn" style="width: 100%; margin-top: 10px;">Save Profile</button>
+          <button type="submit" class="btn btn--full">Save Profile</button>
         </form>
 
         <!-- Password Change Section -->
-        <div style="margin-top: 32px; padding-top: 32px; border-top: 1px solid var(--border);">
-          <h3 style="font-size: 18px; margin-bottom: 16px; color: var(--text);">Change Password</h3>
+        <div class="profile-section">
+          <h3>Change Password</h3>
           <form id="password-form">
             <div class="form-group">
               <div class="field password-wrapper">
-                <input
-                  type="password"
-                  id="current-password"
-                  class="floating-input"
-                  placeholder=" "
-                  required
-                />
+                <input type="password" id="current-password" class="floating-input" placeholder=" " required />
                 <label for="current-password" class="floating-label">Current Password</label>
-                <button
-                  type="button"
-                  class="toggle-visibility"
-                  data-target="current-password"
-                  aria-label="Show password"
-                >
-                  👁️
-                </button>
+                <button type="button" class="toggle-visibility" data-target="current-password" aria-label="Show password">👁️</button>
               </div>
             </div>
 
             <div class="form-group">
               <div class="field password-wrapper">
-                <input
-                  type="password"
-                  id="new-password"
-                  class="floating-input"
-                  placeholder=" "
-                  required
-                />
+                <input type="password" id="new-password" class="floating-input" placeholder=" " required />
                 <label for="new-password" class="floating-label">New Password</label>
-                <button
-                  type="button"
-                  class="toggle-visibility"
-                  data-target="new-password"
-                  aria-label="Show password"
-                >
-                  👁️
-                </button>
+                <button type="button" class="toggle-visibility" data-target="new-password" aria-label="Show password">👁️</button>
               </div>
             </div>
 
             <div class="form-group">
               <div class="field password-wrapper">
-                <input
-                  type="password"
-                  id="confirm-password"
-                  class="floating-input"
-                  placeholder=" "
-                  required
-                />
+                <input type="password" id="confirm-password" class="floating-input" placeholder=" " required />
                 <label for="confirm-password" class="floating-label">Confirm New Password</label>
-                <button
-                  type="button"
-                  class="toggle-visibility"
-                  data-target="confirm-password"
-                  aria-label="Show password"
-                >
-                  👁️
-                </button>
+                <button type="button" class="toggle-visibility" data-target="confirm-password" aria-label="Show password">👁️</button>
               </div>
             </div>
 
-            <button type="submit" class="btn" style="width: 100%; margin-top: 10px;">Update Password</button>
+            <button type="submit" class="btn btn--full">Update Password</button>
           </form>
         </div>
 
         <!-- Delete Account Section -->
-        <div style="margin-top: 32px; padding-top: 32px; border-top: 1px solid var(--border);">
-          <h3 style="font-size: 18px; margin-bottom: 16px; color: #f97373;">Danger Zone</h3>
-          <p style="font-size: 14px; color: var(--muted); margin-bottom: 16px;">
+        <div class="profile-section profile-section--danger">
+          <h3>Danger Zone</h3>
+          <p class="profile-section__description">
             Permanently delete your account and all associated data. This action cannot be undone.
           </p>
-          <button
-            type="button"
-            id="delete-account-btn"
-            class="btn"
-            style="width: 100%; background: #dc2626; border-color: #dc2626; color: white;"
-          >
-            Delete Account
-          </button>
+          <button type="button" id="delete-account-btn" class="btn btn--danger">Delete Account</button>
         </div>
       </div>
     </main>
 
-    <!-- Scripts -->
-    <script src="../js/core.js"></script>
-    <script src="../js/main.js"></script>
+    <!-- Scripts (order matters) -->
+    <script src="../js/core.js" defer></script>
+    <script src="../js/main.js" defer></script>
+    <script src="../js/sidebar-inject.js" defer></script>
+    <script src="../js/sidebar.js" defer></script>
+
+    <!-- Auth modules -->
     <script type="module" src="../js/navAuth.js"></script>
-    <script src="../js/sidebar-inject.js"></script>
-    <script src="../js/sidebar.js"></script>
-    <script src="../js/auth-guard.js"></script>
     <script type="module" src="../js/profile.js"></script>
   </body>
 </html>

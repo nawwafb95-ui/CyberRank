@@ -73,21 +73,21 @@ document.addEventListener('DOMContentLoaded', () => {
     // Check if level is allowed
     if (level === 'easy') {
       // Easy is always allowed
-      window.location.href = `./question.html?level=${level}&q=1`;
+      window.location.href = `/html/question.html?level=${level}&q=1`;
     } else if (level === 'medium') {
       // Medium requires easy to be completed
       if (!isLevelCompleted('easy')) {
         alert('Complete the Easy level first to unlock Medium.');
         return;
       }
-      window.location.href = `./question.html?level=${level}&q=1`;
+      window.location.href = `/html/question.html?level=${level}&q=1`;
     } else if (level === 'hard') {
       // Hard requires medium to be completed
       if (!isLevelCompleted('medium')) {
         alert('Complete the Medium level first to unlock Hard.');
         return;
       }
-      window.location.href = `./question.html?level=${level}&q=1`;
+      window.location.href = `/html/question.html?level=${level}&q=1`;
     }
   }
 

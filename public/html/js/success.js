@@ -33,22 +33,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (toHome) {
     toHome.addEventListener('click', () => {
-      // go() available from core.js
-      if (typeof go === 'function') {
-        go('index.html');
-      } else {
-        location.href = './index.html';
-      }
+      const homePath = typeof getPath === 'function' ? getPath('home') : '/index.html';
+      location.href = homePath;
     });
   }
 
   if (toLogin) {
     toLogin.addEventListener('click', () => {
-      if (typeof go === 'function') {
-        go('login.html');
-      } else {
-        location.href = './login.html';
-      }
+      const loginPath = typeof getPath === 'function' ? getPath('login') : '/login.html';
+      location.href = loginPath;
     });
   }
 });

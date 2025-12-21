@@ -32,7 +32,7 @@ onAuthStateChanged(auth, (user) => {
       initialCheckDone = true;
       if (!auth.currentUser && !localStorage.getItem('currentUser')) {
         // Only redirect if truly not authenticated after resolution
-        location.replace("./login.html");
+        location.replace("/login.html");
         return;
       }
     }, 100);
@@ -43,7 +43,7 @@ onAuthStateChanged(auth, (user) => {
     // Don't redirect on every auth state change - only if user explicitly signs out
     // This prevents logout on navigation
     if (!localStorage.getItem('currentUser')) {
-      location.replace("./login.html");
+      location.replace("/login.html");
       return;
     }
   }

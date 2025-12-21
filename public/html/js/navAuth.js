@@ -47,7 +47,8 @@ function updateAuthButton(user) {
           await signOut(auth);
         }
         
-        window.location.href = './index.html';
+        const homePath = typeof window.getPath === 'function' ? window.getPath('home') : '/index.html';
+        window.location.href = homePath;
       } catch (err) {
         console.error('[Logout] Error:', err);
         loginBtn.disabled = false;
@@ -60,7 +61,8 @@ function updateAuthButton(user) {
     loginBtn.onclick = (e) => {
       e.preventDefault();
       e.stopPropagation();
-      window.location.href = './login.html';
+      const loginPath = typeof window.getPath === 'function' ? window.getPath('login') : '/login.html';
+      window.location.href = loginPath;
     };
   }
 

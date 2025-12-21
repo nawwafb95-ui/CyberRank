@@ -33,10 +33,21 @@
       "src/**"
     ],
     "rewrites": [
-      {
-        "source": "**",
-        "destination": "/html/index.html"
-      }
+      { "source": "/", "destination": "/html/index.html" }
+    ],
+    "redirects": [
+      { "source": "/login.html", "destination": "/html/login.html", "type": 301 },
+      { "source": "/signup.html", "destination": "/html/signup.html", "type": 301 },
+      { "source": "/profile.html", "destination": "/html/profile.html", "type": 301 },
+      { "source": "/success.html", "destination": "/html/success.html", "type": 301 },
+      { "source": "/forgot-password.html", "destination": "/html/forgot-password.html", "type": 301 },
+      { "source": "/challenges.html", "destination": "/html/challenges.html", "type": 301 },
+      { "source": "/question.html", "destination": "/html/question.html", "type": 301 },
+      { "source": "/leaderboard.html", "destination": "/html/leaderboard.html", "type": 301 },
+      { "source": "/settings.html", "destination": "/html/settings.html", "type": 301 },
+      { "source": "/about.html", "destination": "/html/about.html", "type": 301 },
+      { "source": "/quizzes.html", "destination": "/html/quizzes.html", "type": 301 },
+      { "source": "/dashboard.html", "destination": "/html/dashboard.html", "type": 301 }
     ],
     "headers": [
       {

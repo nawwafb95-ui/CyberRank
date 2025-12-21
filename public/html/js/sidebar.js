@@ -184,7 +184,7 @@
       // Update avatar
       const avatarEl = document.getElementById('socxSidebarAvatar');
       if (avatarEl) {
-        let avatarSrc = '../images/default-avatar.jpeg';
+        let avatarSrc = '../../images/default-avatar.jpeg';
         
         if (typeof window.getProfile === 'function') {
           const profile = window.getProfile();
@@ -194,7 +194,7 @@
         }
         
         // Fallback: check Firebase auth
-        if (avatarSrc === '../images/default-avatar.jpeg' && window.auth && window.auth.currentUser) {
+        if (avatarSrc === '../../images/default-avatar.jpeg' && window.auth && window.auth.currentUser) {
           const user = window.auth.currentUser;
           if (user.photoURL) {
             avatarSrc = user.photoURL;

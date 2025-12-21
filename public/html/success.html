@@ -12,11 +12,11 @@
       rel="stylesheet"
     />
 
-    <link rel="stylesheet" href="/css/base.css" />
-    <link rel="stylesheet" href="/css/components.css" />
-    <link rel="stylesheet" href="/css/pages.css" />
-    <link rel="stylesheet" href="/css/pages/success.css" />
-    <link rel="stylesheet" href="/css/sidebar.css" />
+    <link rel="stylesheet" href="../css/base.css" />
+    <link rel="stylesheet" href="../css/components.css" />
+    <link rel="stylesheet" href="../css/pages.css" />
+    <link rel="stylesheet" href="../css/pages/success.css" />
+    <link rel="stylesheet" href="../css/sidebar.css" />
 
     <link rel="icon" type="image/png" href="../images/favicon.png" />
 
@@ -160,6 +160,17 @@
         color: #10b981;
       }
     </style>
+
+    <script>
+      // ================== OTP Feature Flag Check ==================
+      // Keep this consistent with signup.js + otp.js
+      const OTP_ENABLED = false;
+
+      if (!OTP_ENABLED) {
+        // Stop loading OTP page when disabled
+        window.location.replace('./signup.html');
+      }
+    </script>
   </head>
 
   <body class="otp-page" data-page="success">

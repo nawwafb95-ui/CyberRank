@@ -105,7 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
       btnNext.textContent = 'Back to Challenges';
       btnNext.disabled = false;
       btnNext.onclick = () => {
-        window.location.href = './challenges.html';
+        window.location.href = '/challenges.html';
       };
     }
     if (btnSkip) btnSkip.style.display = 'none';
@@ -190,16 +190,15 @@ document.addEventListener('DOMContentLoaded', () => {
       if (btnNext) {
         btnNext.textContent = 'Back to Challenges';
         btnNext.onclick = () => {
-          window.location.href = './challenges.html';
+          window.location.href = '/challenges.html';
         };
       }
       if (btnSkip) btnSkip.style.display = 'none';
       return;
     }
 
-    // Continue to next question
-    const base = location.pathname.replace(/[^/]+$/, '');
-    let nextUrl = `${base}question.html?`;
+    // Continue to next question - use absolute path
+    let nextUrl = '/question.html?';
     
     if (level) {
       nextUrl += `level=${encodeURIComponent(level)}&q=${next}`;

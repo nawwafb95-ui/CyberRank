@@ -1,3 +1,9 @@
+// ================== OTP Feature Flag ==================
+// Set to false to bypass OTP verification during development
+// Set to true to re-enable OTP email verification flow
+// NOTE: This flag must match the one in signup.js
+const OTP_ENABLED = false;
+
 const FUNCTIONS_BASE_URL = "http://localhost:5001/cyberrank-a4380/us-central1";
 
 function logRequest(endpoint, payload) {
@@ -6,6 +12,13 @@ function logRequest(endpoint, payload) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  // ================== Check OTP Feature Flag ==================
+  if (!OTP_ENABLED) {
+    console.log('[OTP] OTP is disabled - redirecting to signup');
+    window.location.href = '/signup.html';
+    return;
+  }
+
   const otpInputs = [
     document.getElementById('otp-0'),
     document.getElementById('otp-1'),
@@ -22,7 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const pendingRaw = localStorage.getItem('pendingSignup');
   if (!pendingRaw) {
-    window.location.href = './signup.html';
+    window.location.href = '/signup.html';
     return;
   }
 
@@ -31,20 +44,17 @@ document.addEventListener('DOMContentLoaded', () => {
     pendingSignup = JSON.parse(pendingRaw);
   } catch (err) {
     console.error('Error parsing pendingSignup:', err);
-    window.location.href = './signup.html';
+    window.location.href = '/signup.html';
     return;
   }
 
   if (!pendingSignup.email) {
-    window.location.href = './signup.html';
+    window.location.href = '/signup.html';
     return;
   }
 
   const { email, username, password } = pendingSignup;
-
-  if (emailEl) {
-    emailEl.textContent = email;
-  }
+  if (emailEl) emailEl.textContent = email;
 
   function setStatus(message, type = '') {
     if (statusEl) {
@@ -58,22 +68,16 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function clearOTP() {
-    otpInputs.forEach(input => {
-      input.value = '';
-    });
+    otpInputs.forEach(input => (input.value = ''));
     otpInputs[0].focus();
   }
 
-  function focusNext(currentIndex) {
-    if (currentIndex < 5) {
-      otpInputs[currentIndex + 1].focus();
-    }
+  function focusNext(i) {
+    if (i < 5) otpInputs[i + 1].focus();
   }
 
-  function focusPrev(currentIndex) {
-    if (currentIndex > 0) {
-      otpInputs[currentIndex - 1].focus();
-    }
+  function focusPrev(i) {
+    if (i > 0) otpInputs[i - 1].focus();
   }
 
   otpInputs.forEach((input, index) => {
@@ -83,10 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
         e.target.value = '';
         return;
       }
-
-      if (value) {
-        focusNext(index);
-      }
+      if (value) focusNext(index);
     });
 
     input.addEventListener('keydown', (e) => {
@@ -107,45 +108,45 @@ document.addEventListener('DOMContentLoaded', () => {
 
     input.addEventListener('paste', (e) => {
       e.preventDefault();
-      const pastedData = (e.clipboardData || window.clipboardData).getData('text').trim();
-      const digits = pastedData.replace(/\D/g, '').slice(0, 6);
+      const pasted = (e.clipboardData || window.clipboardData)
+        .getData('text')
+        .replace(/\D/g, '')
+        .slice(0, 6);
 
-      if (digits.length === 6) {
-        digits.split('').forEach((digit, i) => {
-          if (otpInputs[i]) {
-            otpInputs[i].value = digit;
-          }
+      if (pasted.length === 6) {
+        pasted.split('').forEach((d, i) => {
+          if (otpInputs[i]) otpInputs[i].value = d;
         });
         otpInputs[5].focus();
       }
     });
 
-    input.addEventListener('focus', () => {
-      input.select();
-    });
+    input.addEventListener('focus', () => input.select());
   });
 
+  // 🔁 Resend OTP
   if (resendLink) {
     resendLink.addEventListener('click', async (e) => {
       e.preventDefault();
+      if (!OTP_ENABLED) {
+        window.location.href = '/signup.html';
+        return;
+      }
+
       setStatus('Resending OTP...');
 
       const endpoint = `${FUNCTIONS_BASE_URL}/sendOtp`;
-      const payload = { email };
-      logRequest(endpoint, payload);
+      logRequest(endpoint, { email });
 
       try {
         const res = await fetch(endpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
+          body: JSON.stringify({ email }),
         });
 
         const text = await res.text();
-        console.log('[OTP] Resend response:', res.status, text);
-
         if (!res.ok) {
-          console.error('[OTP] Resend failed. Status:', res.status);
           setStatus(text || 'Failed to resend OTP.', 'error');
           return;
         }
@@ -160,10 +161,15 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // ✅ Verify OTP
   if (verifyBtn) {
     verifyBtn.addEventListener('click', async () => {
-      const otp = getOTP();
+      if (!OTP_ENABLED) {
+        window.location.href = '/signup.html';
+        return;
+      }
 
+      const otp = getOTP();
       if (otp.length !== 6) {
         setStatus('Please enter the complete 6-digit code.', 'error');
         return;
@@ -173,21 +179,17 @@ document.addEventListener('DOMContentLoaded', () => {
       verifyBtn.disabled = true;
 
       const endpoint = `${FUNCTIONS_BASE_URL}/verifyOtp`;
-      const payload = { email, otp };
-      logRequest(endpoint, { email, otp: '******' }); // Don't log full OTP
+      logRequest(endpoint, { email, otp: '******' });
 
       try {
         const res = await fetch(endpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
+          body: JSON.stringify({ email, otp }),
         });
 
         const text = await res.text();
-        console.log('[OTP] Verify response:', res.status, text);
-
         if (!res.ok) {
-          console.error('[OTP] Verification failed. Status:', res.status);
           setStatus(text || 'OTP verification failed.', 'error');
           verifyBtn.disabled = false;
           clearOTP();
@@ -208,17 +210,9 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.removeItem('pendingSignup');
 
         setStatus('OTP verified! Redirecting...', 'success');
-
-        setTimeout(() => {
-          window.location.href = '../index.html';
-        }, 500);
+        setTimeout(() => (window.location.href = '/index.html'), 500);
       } catch (err) {
-        console.error('[OTP] Network/Request error:', err);
-        console.error('[OTP] Error details:', {
-          message: err.message,
-          stack: err.stack,
-          endpoint: endpoint
-        });
+        console.error('[OTP] Verify error:', err);
         setStatus('Network error. Is the emulator running?', 'error');
         verifyBtn.disabled = false;
       }

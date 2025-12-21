@@ -132,11 +132,8 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       // After logout
-      if (typeof go === "function") {
-        go("/login.html");
-      } else {
-        window.location.href = "./login.html";
-      }
+      const loginPath = typeof getPath === 'function' ? getPath('login') : '/login.html';
+      window.location.href = loginPath;
 
       // Update button states
       if (typeof window.updateNavigationState === "function") {
@@ -152,20 +149,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (sideLogin) {
     sideLogin.addEventListener("click", () => {
-      if (typeof go === "function") {
-        go("/login.html");
-      } else {
-        window.location.href = "./login.html";
-      }
+      const loginPath = typeof getPath === 'function' ? getPath('login') : '/login.html';
+      window.location.href = loginPath;
     });
   }
 
   if (sideSignup) {
     sideSignup.addEventListener("click", () => {
       if (typeof go === "function") {
-        go("/signup.html");
-      } else {
-        window.location.href = "./signup.html";
+        const signupPath = typeof getPath === 'function' ? getPath('signup') : '/signup.html';
+        window.location.href = signupPath;
       }
     });
   }
@@ -194,11 +187,8 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      if (typeof go === "function") {
-        go("/index.html");
-      } else {
-        window.location.href = "./index.html";
-      }
+      const homePath = typeof getPath === 'function' ? getPath('home') : '/index.html';
+      window.location.href = homePath;
 
       if (typeof window.updateNavigationState === "function") {
         window.updateNavigationState();
@@ -274,7 +264,7 @@ document.addEventListener("DOMContentLoaded", () => {
       // SEQUENCE 6: Redirect after animation completes
       // ========================================
       setTimeout(() => {
-        window.location.href = './html/challenges.html';
+        window.location.href = '/challenges.html';
       }, 1100); // Match animation duration (1.1s)
     });
   }

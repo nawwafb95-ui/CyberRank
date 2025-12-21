@@ -108,7 +108,7 @@ document.addEventListener('DOMContentLoaded', () => {
         goToLoginBtn.style.transform = '';
       });
       goToLoginBtn.addEventListener('click', () => {
-        window.location.href = './login.html';
+        window.location.href = '/login.html';
       });
 
       const existingBtn = form.querySelector('.go-to-login-btn');
