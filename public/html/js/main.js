@@ -114,16 +114,17 @@ document.addEventListener("DOMContentLoaded", () => {
       logoutBtn.disabled = true;
       
       try {
-        // Clear localStorage on explicit logout
-        try { localStorage.removeItem("currentUser"); } catch {}
-        try { localStorage.removeItem("user"); } catch {}
-        
-        // Use logout function if available
+        // REFACTORED: Use Firebase signOut only - removed localStorage clearing
+        // Firebase Auth manages session state, no need to clear localStorage
         if (typeof logout === "function") {
           await logout();
-        } else if (window.auth && typeof signOut === "function") {
+        } else if (window.auth) {
           // Firebase Auth fallback
-          await signOut(window.auth);
+          if (typeof signOut === "function") {
+            await signOut(window.auth);
+          } else if (typeof window.auth.signOut === "function") {
+            await window.auth.signOut();
+          }
         }
       } catch (err) {
         console.error("Logout error:", err);
@@ -132,7 +133,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       // After logout
-      const loginPath = typeof getPath === 'function' ? getPath('login') : '/login.html';
+      const loginPath = typeof getPath === 'function' ? getPath('login') : '/html/login.html';
       window.location.href = loginPath;
 
       // Update button states
@@ -149,7 +150,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (sideLogin) {
     sideLogin.addEventListener("click", () => {
-      const loginPath = typeof getPath === 'function' ? getPath('login') : '/login.html';
+      const loginPath = typeof getPath === 'function' ? getPath('login') : '/html/login.html';
       window.location.href = loginPath;
     });
   }
@@ -157,7 +158,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (sideSignup) {
     sideSignup.addEventListener("click", () => {
       if (typeof go === "function") {
-        const signupPath = typeof getPath === 'function' ? getPath('signup') : '/signup.html';
+        const signupPath = typeof getPath === 'function' ? getPath('signup') : '/html/signup.html';
         window.location.href = signupPath;
       }
     });
@@ -172,14 +173,16 @@ document.addEventListener("DOMContentLoaded", () => {
       sideLogout.disabled = true;
       
       try {
-        // Clear localStorage on explicit logout
-        try { localStorage.removeItem("currentUser"); } catch {}
-        try { localStorage.removeItem("user"); } catch {}
-        
+        // REFACTORED: Use Firebase signOut only - removed localStorage clearing
+        // Firebase Auth manages session state, no need to clear localStorage
         if (typeof logout === "function") {
           await logout();
-        } else if (window.auth && typeof signOut === "function") {
-          await signOut(window.auth);
+        } else if (window.auth) {
+          if (typeof signOut === "function") {
+            await signOut(window.auth);
+          } else if (typeof window.auth.signOut === "function") {
+            await window.auth.signOut();
+          }
         }
       } catch (err) {
         console.error("Logout error:", err);
@@ -187,7 +190,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      const homePath = typeof getPath === 'function' ? getPath('home') : '/index.html';
+      const homePath = typeof getPath === 'function' ? getPath('home') : '/html/index.html';
       window.location.href = homePath;
 
       if (typeof window.updateNavigationState === "function") {
@@ -264,7 +267,8 @@ document.addEventListener("DOMContentLoaded", () => {
       // SEQUENCE 6: Redirect after animation completes
       // ========================================
       setTimeout(() => {
-        window.location.href = '/challenges.html';
+        const challengesPath = typeof getPath === 'function' ? getPath('challenges') : '/html/challenges.html';
+        window.location.href = challengesPath;
       }, 1100); // Match animation duration (1.1s)
     });
   }

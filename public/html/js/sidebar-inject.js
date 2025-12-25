@@ -53,11 +53,10 @@
 
         <!-- Navigation Links -->
         <nav class="socx-sidebar-nav">
-          <a href="/index.html" class="socx-nav-link">Home Page</a>
-          <a href="/profile.html" class="socx-nav-link">Profile</a>
-          <a href="/leaderboard.html" class="socx-nav-link">Leaderboard</a>
-          <a href="/settings.html" class="socx-nav-link">Settings</a>
-          <a href="/about.html" class="socx-nav-link">About</a>
+          <a href="/html/index.html" class="socx-nav-link">Home Page</a>
+          <a href="/html/profile.html" class="socx-nav-link">Profile</a>
+          <a href="/html/leaderboard.html" class="socx-nav-link">Leaderboard</a>
+          <a href="/html/about.html" class="socx-nav-link">About</a>
         </nav>
 
         <!-- Theme Toggle -->
@@ -97,8 +96,8 @@
         <!-- Logout/Login/Sign Up Buttons -->
         <div class="socx-sidebar-footer">
           <button id="socxLogoutBtn" type="button" class="socx-btn socx-btn--logout">Logout</button>
-          <a id="socxLoginBtn" href="/login.html" class="socx-btn socx-btn--login" style="display:none;">Login</a>
-          <a id="socxSignupBtn" href="/signup.html" class="socx-btn socx-btn--signup" style="display:none;">Sign Up</a>
+          <a id="socxLoginBtn" href="/html/login.html" class="socx-btn socx-btn--login" style="display:none;">Login</a>
+          <a id="socxSignupBtn" href="/html/signup.html" class="socx-btn socx-btn--signup" style="display:none;">Sign Up</a>
         </div>
       </div>
     </aside>

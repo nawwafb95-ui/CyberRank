@@ -1,51 +1,18 @@
 // public/js/leaderboard.js
-// Leaderboard rendering and filtering
+// Leaderboard with Firestore integration
+
+import { auth, db } from './firebaseInit.js';
+import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js';
+import {
+  collection,
+  query,
+  orderBy,
+  limit,
+  getDocs
+} from 'https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js';
 
 (function() {
   'use strict';
-
-  // Mock data for different scopes
-  const mockData = {
-    global: [
-      { username: 'CyberMaster', level: 25, points: 12500, avatar: 'CM' },
-      { username: 'SecurityPro', level: 23, points: 11800, avatar: 'SP' },
-      { username: 'HackerHunter', level: 22, points: 11450, avatar: 'HH' },
-      { username: 'NetGuard', level: 21, points: 10900, avatar: 'NG' },
-      { username: 'CodeBreaker', level: 20, points: 10200, avatar: 'CB' },
-      { username: 'FireWall', level: 19, points: 9800, avatar: 'FW' },
-      { username: 'DataShield', level: 18, points: 9200, avatar: 'DS' },
-      { username: 'CryptoVault', level: 17, points: 8750, avatar: 'CV' },
-      { username: 'SafeNet', level: 16, points: 8200, avatar: 'SN' },
-      { username: 'SecureGate', level: 15, points: 7800, avatar: 'SG' },
-      { username: 'ByteGuard', level: 14, points: 7200, avatar: 'BG' },
-      { username: 'PhishBuster', level: 13, points: 6800, avatar: 'PB' },
-      { username: 'MalwareKiller', level: 12, points: 6400, avatar: 'MK' },
-      { username: 'ThreatWatch', level: 11, points: 5900, avatar: 'TW' },
-      { username: 'CyberShield', level: 10, points: 5400, avatar: 'CS' }
-    ],
-    weekly: [
-      { username: 'CyberMaster', level: 25, points: 3200, avatar: 'CM' },
-      { username: 'SecurityPro', level: 23, points: 2850, avatar: 'SP' },
-      { username: 'HackerHunter', level: 22, points: 2700, avatar: 'HH' },
-      { username: 'NetGuard', level: 21, points: 2500, avatar: 'NG' },
-      { username: 'CodeBreaker', level: 20, points: 2300, avatar: 'CB' },
-      { username: 'FireWall', level: 19, points: 2100, avatar: 'FW' },
-      { username: 'DataShield', level: 18, points: 1950, avatar: 'DS' },
-      { username: 'CryptoVault', level: 17, points: 1800, avatar: 'CV' },
-      { username: 'SafeNet', level: 16, points: 1650, avatar: 'SN' },
-      { username: 'SecureGate', level: 15, points: 1500, avatar: 'SG' }
-    ],
-    daily: [
-      { username: 'CyberMaster', level: 25, points: 850, avatar: 'CM' },
-      { username: 'SecurityPro', level: 23, points: 720, avatar: 'SP' },
-      { username: 'HackerHunter', level: 22, points: 680, avatar: 'HH' },
-      { username: 'NetGuard', level: 21, points: 620, avatar: 'NG' },
-      { username: 'CodeBreaker', level: 20, points: 580, avatar: 'CB' },
-      { username: 'FireWall', level: 19, points: 540, avatar: 'FW' },
-      { username: 'DataShield', level: 18, points: 500, avatar: 'DS' },
-      { username: 'CryptoVault', level: 17, points: 460, avatar: 'CV' }
-    ]
-  };
 
   const rowsContainer = document.getElementById('lbRows');
   const searchInput = document.getElementById('lbSearch');
@@ -56,56 +23,146 @@
     return;
   }
 
-  let currentScope = 'global';
-  let currentData = mockData[currentScope];
-  let filteredData = currentData;
+  let currentData = [];
+  let filteredData = [];
 
-  // Render leaderboard rows
+  // Check authentication and load leaderboard
+  onAuthStateChanged(auth, (user) => {
+    if (!user) {
+      // Redirect to login if not authenticated
+      window.location.href = '../login.html';
+      return;
+    }
+
+    // User is authenticated, load leaderboard
+    loadLeaderboard();
+  });
+
+  /**
+   * Load leaderboard data from Firestore
+   */
+  async function loadLeaderboard() {
+    try {
+      // Show loading state
+      rowsContainer.innerHTML = '<div class="socx-lb-empty">Loading leaderboard...</div>';
+
+      // Query Firestore: userStats collection, ordered by totalScore desc, limit 10
+      const userStatsRef = collection(db, 'userStats');
+      const q = query(
+        userStatsRef,
+        orderBy('totalScore', 'desc'),
+        limit(10)
+      );
+
+      const querySnapshot = await getDocs(q);
+
+      if (querySnapshot.empty) {
+        rowsContainer.innerHTML = '<div class="socx-lb-empty">No leaderboard data yet.</div>';
+        currentData = [];
+        filteredData = [];
+        return;
+      }
+
+      // Process documents
+      currentData = [];
+      querySnapshot.forEach((docSnap) => {
+        const data = docSnap.data();
+        currentData.push({
+          userId: data.userId || docSnap.id,
+          username: data.username || 'User',
+          totalScore: data.totalScore || 0,
+          bestScore: data.bestScore || 0,
+          totalAttempts: data.totalAttempts || 0,
+          lastAttemptAt: data.lastAttemptAt || null
+        });
+      });
+
+      // Sort by totalScore (desc) as backup
+      currentData.sort((a, b) => (b.totalScore || 0) - (a.totalScore || 0));
+
+      filteredData = [...currentData];
+      renderRows(filteredData);
+
+    } catch (error) {
+      console.error('Failed to load leaderboard:', error);
+      rowsContainer.innerHTML = '<div class="socx-lb-empty">Ready to receive your points! Start your first challenge now.</div>';
+      currentData = [];
+      filteredData = [];
+    }
+  }
+
+  /**
+   * Render leaderboard rows
+   */
   function renderRows(data) {
     if (!rowsContainer) return;
 
     if (data.length === 0) {
-      rowsContainer.innerHTML = '<div class="socx-lb-empty">No users found</div>';
+      rowsContainer.innerHTML = '<div class="socx-lb-empty">No leaderboard data yet.</div>';
       return;
     }
 
     rowsContainer.innerHTML = data.map((user, index) => {
       const rank = index + 1;
       const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : '';
-      const rankDisplay = medal ? `<span class="socx-lb-rank-medal">${medal}</span>` : rank;
+      const rankDisplay = medal ? `<span class="socx-lb-rank-medal">${medal}</span>` : `#${rank}`;
+
+      // Get initials for avatar
+      const initials = getUserInitials(user.username);
 
       return `
         <div class="socx-lb-row">
           <div class="socx-lb-rank">${rankDisplay}</div>
           <div class="socx-lb-user">
-            <div class="socx-lb-avatar">${user.avatar}</div>
+            <div class="socx-lb-avatar">${escapeHtml(initials)}</div>
             <div class="socx-lb-username">${escapeHtml(user.username)}</div>
           </div>
-          <div class="socx-lb-level">Level ${user.level}</div>
+          <div class="socx-lb-level">${formatNumber(user.totalAttempts || 0)} attempts</div>
           <div class="socx-lb-points">
-            <span class="socx-lb-points-value">${formatNumber(user.points)}</span>
+            <span class="socx-lb-points-value">${formatNumber(user.totalScore || 0)}</span>
+            ${user.bestScore && user.bestScore > 0 ? `<div style="font-size: 12px; color: var(--muted); margin-top: 4px;">Best: ${formatNumber(user.bestScore)}</div>` : ''}
           </div>
         </div>
       `;
     }).join('');
   }
 
-  // Escape HTML to prevent XSS
+  /**
+   * Get user initials from username
+   */
+  function getUserInitials(username) {
+    if (!username || username.trim() === '') return 'U';
+    const parts = username.trim().split(/\s+/);
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+    return username.substring(0, 2).toUpperCase();
+  }
+
+  /**
+   * Escape HTML to prevent XSS
+   */
   function escapeHtml(text) {
+    if (text == null) return '';
     const div = document.createElement('div');
-    div.textContent = text;
+    div.textContent = String(text);
     return div.innerHTML;
   }
 
-  // Format number with commas
+  /**
+   * Format number with commas
+   */
   function formatNumber(num) {
-    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    if (num == null || isNaN(num)) return '0';
+    return Number(num).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
   }
 
-  // Filter data by search query
+  /**
+   * Filter data by search query
+   */
   function filterData(query) {
     if (!query || query.trim() === '') {
-      filteredData = currentData;
+      filteredData = [...currentData];
     } else {
       const lowerQuery = query.toLowerCase().trim();
       filteredData = currentData.filter(user =>
@@ -115,12 +172,21 @@
     renderRows(filteredData);
   }
 
-  // Handle scope change
+  /**
+   * Handle scope change (currently only global is implemented)
+   */
   function handleScopeChange() {
     if (!scopeSelect) return;
-    currentScope = scopeSelect.value || 'global';
-    currentData = mockData[currentScope] || [];
-    filteredData = currentData;
+    const scope = scopeSelect.value || 'global';
+    
+    // For now, only global scope is implemented
+    // Future: implement weekly/daily filtering
+    if (scope === 'global') {
+      filteredData = [...currentData];
+    } else {
+      // Placeholder for future scope filtering
+      filteredData = [...currentData];
+    }
     
     // Clear search when scope changes
     if (searchInput) {
@@ -130,11 +196,10 @@
     renderRows(filteredData);
   }
 
-  // Initialize
+  /**
+   * Initialize event listeners
+   */
   function init() {
-    // Render initial data
-    renderRows(currentData);
-
     // Setup search input
     if (searchInput) {
       searchInput.addEventListener('input', (e) => {
@@ -156,4 +221,3 @@
   }
 
 })();
-

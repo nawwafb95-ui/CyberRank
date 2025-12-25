@@ -165,3 +165,142 @@ exports.verifyOtp = functions.https.onRequest(
     }
   })
 );
+
+// 📊 Update userStats when a new attempt is created
+// Triggers on attempt creation and updates userStats, creates pointTransactions, and logs audit entry
+exports.updateUserStatsOnAttempt = functions.firestore
+  .document("attempts/{attemptId}")
+  .onCreate(async (snap, context) => {
+    const attempt = snap.data();
+    const attemptId = context.params.attemptId;
+
+    // Validation: Check if userId exists
+    if (!attempt.userId) {
+      console.error(
+        `[updateUserStatsOnAttempt] Missing userId in attempt ${attemptId}. Skipping stats update.`
+      );
+      return null;
+    }
+
+    const userId = attempt.userId;
+
+    // Constants for level advancement
+    const PASS_PERCENT = 70;
+    const MAX_LEVEL = 3;
+
+    try {
+      // Compute pointsDelta and percent
+      const pointsDelta = attempt.score || 0;
+      const maxScore = attempt.maxScore || 0;
+      const percent = maxScore > 0 ? Math.round((pointsDelta / maxScore) * 100) : 0;
+
+      // Use transaction to ensure atomicity
+      await db.runTransaction(async (transaction) => {
+        // Read userStats/{userId}
+        const userStatsRef = db.collection("userStats").doc(userId);
+        const userStatsDoc = await transaction.get(userStatsRef);
+
+        // Initialize or get existing stats
+        let totalAttempts = 0;
+        let totalScore = 0;
+        let bestScore = 0;
+        let currentLevel = 1;
+        let levelProgress = 0;
+        let username = "";
+
+        if (userStatsDoc.exists) {
+          const statsData = userStatsDoc.data();
+          totalAttempts = statsData.totalAttempts || 0;
+          totalScore = statsData.totalScore || 0;
+          bestScore = statsData.bestScore || 0;
+          currentLevel = statsData.currentLevel || 1;
+          levelProgress = statsData.levelProgress || 0;
+          username = statsData.username || "";
+        }
+
+        // Fetch users/{userId} to get username if exists
+        const userRef = db.collection("users").doc(userId);
+        const userDoc = await transaction.get(userRef);
+        if (userDoc.exists) {
+          const userData = userDoc.data();
+          if (userData.username) {
+            username = userData.username;
+          }
+        }
+
+        // Update stats
+        totalAttempts += 1;
+        totalScore += pointsDelta;
+        bestScore = Math.max(bestScore, pointsDelta);
+        const lastAttemptAt = attempt.finishedAt || FieldValue.serverTimestamp();
+        levelProgress = Math.max(0, Math.min(100, percent)); // Clamp to 0-100
+
+        // Level advancement rule
+        if (levelProgress >= PASS_PERCENT && currentLevel < MAX_LEVEL) {
+          currentLevel += 1;
+          levelProgress = 0;
+        }
+
+        // Update or create userStats document
+        transaction.set(
+          userStatsRef,
+          {
+            userId: userId,
+            username: username,
+            totalScore: totalScore,
+            bestScore: bestScore,
+            totalAttempts: totalAttempts,
+            lastAttemptAt: lastAttemptAt,
+            currentLevel: currentLevel,
+            levelProgress: levelProgress,
+          },
+          { merge: true }
+        );
+
+        // Create pointTransactions document
+        const pointTransactionRef = db.collection("pointTransactions").doc();
+        transaction.set(pointTransactionRef, {
+          userId: userId,
+          delta: pointsDelta,
+          reason: "QUIZ_ATTEMPT",
+          attemptId: attemptId,
+          level: attempt.level || null,
+          score: pointsDelta,
+          createdAt: FieldValue.serverTimestamp(),
+        });
+
+        // Create logs document
+        const logRef = db.collection("logs").doc();
+        transaction.set(logRef, {
+          action: "ATTEMPT_STATS_UPDATED",
+          target: attemptId,
+          actor: userId,
+          meta: {
+            level: attempt.level || null,
+            score: pointsDelta,
+            percent: percent,
+            totalAttemptsAfter: totalAttempts,
+            totalScoreAfter: totalScore,
+            bestScoreAfter: bestScore,
+            currentLevelAfter: currentLevel,
+            levelProgressAfter: levelProgress,
+          },
+          createdAt: FieldValue.serverTimestamp(),
+        });
+
+        console.log(
+          `[updateUserStatsOnAttempt] Updated userStats for userId: ${userId}, attemptId: ${attemptId}, ` +
+            `score: ${pointsDelta}, level: ${currentLevel}, progress: ${levelProgress}%`
+        );
+      });
+
+      return null;
+    } catch (error) {
+      console.error(
+        `[updateUserStatsOnAttempt] Error updating userStats for attempt ${attemptId}:`,
+        error
+      );
+      // Don't throw - we don't want to retry the function if it fails
+      return null;
+    }
+  });

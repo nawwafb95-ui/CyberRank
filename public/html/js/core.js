@@ -24,60 +24,61 @@
     wireDropdown('#user-info-dropdown', '#user-info-btn');
   }
 
-  // ===== Local Users Storage (legacy; keep only if you still use it for profile extras) =====
-  function getUsers() {
-    try {
-      return JSON.parse(localStorage.getItem('users') || '{}');
-    } catch {
-      return {};
-    }
-  }
-
-  function saveUsers(users) {
-    localStorage.setItem('users', JSON.stringify(users));
-  }
-
-  function findUserByUsername(username) {
-    const users = getUsers();
-    for (const email in users) {
-      const u = users[email];
-      if (!u) continue;
-      const uname = u.username || (email.split('@')[0]);
-      if (uname.toLowerCase() === username.toLowerCase()) return u;
-    }
-    return null;
-  }
-
-  function getCurrentUser() {
-    const username = localStorage.getItem('currentUser');
-    if (!username) return null;
-    return findUserByUsername(username);
-  }
-
+  // ===== Firebase Auth - Single Source of Truth =====
+  // All authentication state comes from Firebase Auth via window.__authUser
+  // localStorage is NOT used for authentication
+  
+  /**
+   * Check if user is logged in
+   * Uses window.__authUser (Firebase auth state) - set by firebaseInit.js
+   * @returns {boolean} True if user is authenticated
+   */
   function isLoggedIn() {
-    return !!(window.auth && window.auth.currentUser);
+    // Use window.__authUser which is set by firebaseInit.js after auth state resolves
+    return !!(window.__authUser);
   }
+  
+  /**
+   * Get current authenticated user
+   * Returns Firebase auth user from window.__authUser (set by firebaseInit.js)
+   * @returns {User|null} Firebase auth user or null
+   */
+  function getCurrentUser() {
+    // Use window.__authUser which is set by firebaseInit.js
+    return window.__authUser || null;
+  }
+  
+  // ===== REMOVED: localStorage-based auth functions =====
+  // These functions have been completely removed as they were used for
+  // localStorage-based authentication which is insecure and has been replaced
+  // with Firebase Auth.
+  // 
+  // REMOVED: getUsers() - was storing users/passwords in localStorage
+  // REMOVED: saveUsers() - was storing users/passwords in localStorage
+  // REMOVED: findUserByUsername() - was using localStorage for user lookup
+  // 
+  // If you need user profile data, use Firestore (users collection) instead.
 
   // ===== Centralized Path Helpers =====
-  // BASE_PATH: All internal navigation uses this base to ensure same-origin navigation
-  // This prevents localStorage/auth state loss when navigating between different origins/ports
-  const BASE_PATH = '';
+  // BASE_PATH: All internal navigation uses /html/ as the base path
+  // The app is served under /html/ subfolder, so all paths must include this prefix
+  const BASE_PATH = '/html';
   
-  // Path constants for all pages (origin-relative, no /html prefix since root is public/html)
+  // Path constants for all pages - ALL paths must be prefixed with /html/
   const PATHS = {
-    home: '/index.html',
-    login: '/login.html',
-    signup: '/signup.html',
-    profile: '/profile.html',
-    otp: '/success.html',
-    forgotPassword: '/forgot-password.html',
-    challenges: '/challenges.html',
-    question: '/question.html',
-    leaderboard: '/leaderboard.html',
-    settings: '/settings.html',
-    about: '/about.html',
-    quizzes: '/quizzes.html',
-    dashboard: '/dashboard.html'
+    home: '/html/index.html',
+    login: '/html/login.html',
+    signup: '/html/signup.html',
+    profile: '/html/profile.html',
+    otp: '/html/success.html',
+    forgotPassword: '/html/forgot-password.html',
+    challenges: '/html/challenges.html',
+    question: '/html/question.html',
+    leaderboard: '/html/leaderboard.html',
+    settings: '/html/settings.html',
+    about: '/html/about.html',
+    quizzes: '/html/quizzes.html',
+    dashboard: '/html/dashboard.html'
   };
 
   /**
@@ -90,24 +91,37 @@
   }
 
   /**
-   * Sanitize path to remove /html/html/ duplication
+   * Sanitize path to fix /html/html/ duplication while preserving /html/ base
    * @param {string} path - Path to sanitize
-   * @returns {string} Sanitized path
+   * @returns {string} Sanitized path with /html/ prefix
    */
   function sanitizePath(path) {
     if (!path) return PATHS.home;
     
-    // Remove any /html/ prefix and /html/html/ duplication
-    path = path.replace(/^\/html\//, '/');
-    path = path.replace(/\/html\/html\//g, '/');
+    // Fix /html/html/ duplication (keep only one /html/)
+    path = path.replace(/\/html\/html\//g, '/html/');
+    path = path.replace(/\/html\/html\//g, '/html/'); // Run twice to catch nested duplications
     
-    // If path doesn't start with / and ends with .html, ensure it's absolute
+    // Ensure path starts with /html/ if it's an absolute path
+    if (path.startsWith('/') && !path.startsWith('/html/')) {
+      // If it's an absolute path without /html/, add it
+      if (path.endsWith('.html') || path.includes('/')) {
+        path = '/html' + path;
+      }
+    }
+    
+    // If path doesn't start with / and ends with .html, ensure it's absolute with /html/
     if (path.endsWith('.html') && !path.startsWith('/')) {
       if (path.startsWith('./') || path.startsWith('../')) {
         // Keep relative paths as-is for same-directory navigation
         return path;
       }
-      path = '/' + path.replace(/^\.?\//, '');
+      path = '/html/' + path.replace(/^\.?\//, '');
+    }
+    
+    // Final check: ensure all absolute paths have /html/ prefix
+    if (path.startsWith('/') && !path.startsWith('/html/') && path.endsWith('.html')) {
+      path = '/html' + path;
     }
     
     return path;
@@ -116,7 +130,7 @@
   /**
    * Sanitize and validate next parameter for redirects
    * @param {string} nextPath - Path from next parameter
-   * @returns {string} Safe, normalized absolute path
+   * @returns {string} Safe, normalized absolute path with /html/ prefix
    */
   function sanitizeNextPath(nextPath) {
     if (!nextPath) return PATHS.home;
@@ -138,21 +152,26 @@
       return PATHS.home;
     }
     
-    // Remove any /html/ prefix and /html/html/ duplication
-    decoded = decoded.replace(/^\/html\//, '/');
-    decoded = decoded.replace(/\/html\/html\//g, '/');
+    // Fix /html/html/ duplication (keep only one /html/)
+    decoded = decoded.replace(/\/html\/html\//g, '/html/');
+    decoded = decoded.replace(/\/html\/html\//g, '/html/'); // Run twice to catch nested duplications
     
-    // Sanitize path
+    // Sanitize path (this will ensure /html/ prefix)
     const sanitized = sanitizePath(decoded);
     
-    // Ensure it starts with / (origin-relative, no protocol/host/port)
+    // Ensure it starts with /html/ (all paths must be under /html/ base)
     let finalPath = sanitized;
-    if (!finalPath.startsWith('/')) {
+    if (!finalPath.startsWith('/html/')) {
       if (finalPath.startsWith('./') || finalPath.startsWith('../')) {
-        // Keep relative paths as-is
-        finalPath = sanitized;
+        // Relative paths: convert to absolute with /html/ prefix
+        // Remove ./ or ../ and prepend /html/
+        finalPath = '/html/' + finalPath.replace(/^\.\.?\//, '');
+      } else if (finalPath.startsWith('/')) {
+        // Absolute path without /html/: add it
+        finalPath = '/html' + finalPath;
       } else {
-        finalPath = '/' + finalPath.replace(/^\.?\//, '');
+        // No leading slash: add /html/ prefix
+        finalPath = '/html/' + finalPath.replace(/^\.?\//, '');
       }
     }
     
@@ -182,11 +201,22 @@
   }
 
   async function logout() {
-    try { localStorage.removeItem('currentUser'); } catch {}
-    try { localStorage.removeItem('user'); } catch {}
-
-    if (window.auth && typeof window.auth.signOut === 'function') {
-      try { await window.auth.signOut(); } catch (e) { console.error(e); }
+    // REFACTORED: Use Firebase signOut only - removed localStorage clearing
+    // Firebase Auth manages session state, no need to clear localStorage
+    if (window.auth) {
+      try {
+        // Try to use signOut if available (imported in navAuth.js)
+        // If signOut is not in scope, navAuth.js's logout handler will handle it
+        if (typeof signOut === 'function') {
+          await signOut(window.auth);
+        } else {
+          // Fallback: trigger logout via navAuth.js's handler or redirect
+          // The actual signOut is handled by navAuth.js's updateAuthButton logout handler
+          console.warn('[Logout] signOut not available, redirecting to home');
+        }
+      } catch (e) { 
+        console.error('[Logout] Error:', e); 
+      }
     }
 
     updateNavigationState();
@@ -202,7 +232,7 @@
     const infoPhoto = document.getElementById('info-photo');
 
     if (isLoggedIn()) {
-      const u = window.auth.currentUser;
+      const u = window.__authUser || getCurrentUser();
 
       if (navLogin) navLogin.textContent = 'Logout';
       if (navSignup) navSignup.style.display = 'none';
@@ -278,11 +308,21 @@
     const currentPath = window.location.pathname;
     const search = window.location.search;
     
-    // Check if path contains /html/ and convert to root-relative
-    if (currentPath.includes('/html/')) {
+    // Fix /html/html/ duplication while preserving /html/ base
+    // If path doesn't start with /html/, add it (shouldn't happen but defensive)
+    if (currentPath.startsWith('/') && !currentPath.startsWith('/html/') && currentPath.endsWith('.html')) {
+      const fixedPath = '/html' + currentPath;
+      const fixedUrl = fixedPath + search;
+      console.warn('[Path Fix] Adding /html/ prefix:', currentPath, '->', fixedPath);
+      window.location.replace(fixedUrl);
+      return;
+    }
+    
+    // Fix /html/html/ duplication
+    if (currentPath.includes('/html/html/')) {
       const fixedPath = sanitizePath(currentPath);
       const fixedUrl = fixedPath + search;
-      console.warn('[Path Fix] Correcting path:', currentPath, '->', fixedPath);
+      console.warn('[Path Fix] Correcting duplication:', currentPath, '->', fixedPath);
       window.location.replace(fixedUrl);
       return;
     }
@@ -321,9 +361,8 @@
   window.normalizeNextPath = normalizeNextPath;
   window.PATHS = PATHS;
   window.BASE_PATH = BASE_PATH;
-  window.getUsers = getUsers;
-  window.saveUsers = saveUsers;
-  window.findUserByUsername = findUserByUsername;
+  // REMOVED: getUsers, saveUsers, findUserByUsername exports
+  // These functions have been removed as they were used for localStorage-based auth
   window.getCurrentUser = getCurrentUser;
   window.isLoggedIn = isLoggedIn;
   window.logout = logout;

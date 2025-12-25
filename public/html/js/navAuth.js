@@ -1,23 +1,7 @@
-import {
-  initializeApp,
-  getApps,
-  getApp
-} from 'https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js';
-
-import {
-  getAuth,
-  onAuthStateChanged,
-  signOut,
-  setPersistence,
-  browserLocalPersistence
-} from 'https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js';
-
-import { firebaseConfig } from './firebaseConfig.js';
-
-const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
-const auth = getAuth(app);
-
-setPersistence(auth, browserLocalPersistence).catch(console.warn);
+// Navigation auth UI updates
+// Uses Firebase Auth from firebaseInit.js (single source of truth)
+import { auth } from './firebaseInit.js';
+import { signOut } from 'https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js';
 
 function updateAuthButton(user) {
   const loginBtn = document.getElementById('nav-login');
@@ -39,15 +23,13 @@ function updateAuthButton(user) {
       loginBtn.disabled = true;
       
       try {
-        // Clear localStorage on explicit logout
-        try { localStorage.removeItem('currentUser'); } catch {}
-        
-        // Sign out from Firebase
+        // REFACTORED: Use Firebase signOut only - removed localStorage clearing
+        // Firebase Auth manages session state, no need to clear localStorage
         if (auth) {
           await signOut(auth);
         }
         
-        const homePath = typeof window.getPath === 'function' ? window.getPath('home') : '/index.html';
+        const homePath = typeof window.getPath === 'function' ? window.getPath('home') : '/html/index.html';
         window.location.href = homePath;
       } catch (err) {
         console.error('[Logout] Error:', err);
@@ -61,7 +43,7 @@ function updateAuthButton(user) {
     loginBtn.onclick = (e) => {
       e.preventDefault();
       e.stopPropagation();
-      const loginPath = typeof window.getPath === 'function' ? window.getPath('login') : '/login.html';
+      const loginPath = typeof window.getPath === 'function' ? window.getPath('login') : '/html/login.html';
       window.location.href = loginPath;
     };
   }
@@ -86,29 +68,33 @@ function updateAuthButton(user) {
       const defaultSrc = infoPhoto.dataset?.default || infoPhoto.getAttribute('data-default');
       infoPhoto.src = profile?.photo || user.photoURL || defaultSrc || infoPhoto.src;
     }
-    // Only update localStorage when user is authenticated
-    // Don't remove it when user is null - that happens on explicit logout only
-    try { localStorage.setItem('currentUser', user.email || user.uid); } catch {}
+    // REMOVED: localStorage.setItem('currentUser') - Firebase Auth manages session state
   } else {
-    // When user is null, only clear UI - DON'T remove localStorage
-    // localStorage is only cleared on explicit logout (see logout handlers)
+    // When user is null, only clear UI
+    // Firebase Auth state is managed by onAuthStateChanged, no localStorage needed
     if (infoFullName) infoFullName.textContent = '—';
     if (infoEmail) infoEmail.textContent = '—';
     if (infoPhoto) {
       const defaultSrc = infoPhoto.dataset?.default || infoPhoto.getAttribute('data-default');
       if (defaultSrc) infoPhoto.src = defaultSrc;
     }
-    // REMOVED: localStorage.removeItem('currentUser') - this was causing logout on navigation
+    // REMOVED: localStorage operations - Firebase Auth is single source of truth
   }
 }
 
-onAuthStateChanged(auth, (user) => {
-  console.log('[Auth State]', user ? 'Logged in' : 'Logged out');
-  updateAuthButton(user);
+// Listen for auth state changes (firebaseInit.js sets up the initial listener)
+// We listen to the custom events to update UI
+window.addEventListener('auth:ready', (e) => {
+  updateAuthButton(e.detail.user);
 });
 
-// Export auth instance for use in other modules
-window.auth = auth;
-window.firebaseApp = app;
+window.addEventListener('auth:state-changed', (e) => {
+  updateAuthButton(e.detail.user);
+});
+
+// Initial UI update when page loads (if auth is already ready)
+if (window.__authReady) {
+  updateAuthButton(window.__authUser);
+}
 
 

@@ -1,63 +1,58 @@
 // public/js/dashboard.js
+// Dashboard page - uses Firebase Auth from firebaseInit.js
 
-// Firebase CDNs (same version as before)
-import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+import { app, auth, waitForAuthReady } from "./firebaseInit.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
-
-// Project files (same names, paths relative from js folder)
-import { firebaseConfig } from "./firebaseConfig.js";
 import * as DB from "./db.js"; // addScore, listenUserScores
 
-// Initialize Firebase (check for existing app to avoid duplicate initialization)
-const app  = getApps().length ? getApp() : initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db   = getFirestore(app);
+const db = getFirestore(app);
 
 // UI elements
 const scoresList = document.getElementById("scores");
 const scoreInput = document.getElementById("score");
 const addBtn     = document.getElementById("btn-add-score");
 
-// Check authentication status - wait for initial state resolution
-let authStateResolved = false;
-let initialCheckDone = false;
-
-onAuthStateChanged(auth, (user) => {
-  // Wait for initial state resolution before redirecting
-  if (!authStateResolved) {
-    authStateResolved = true;
-    // Small delay to ensure auth state is fully resolved
-    setTimeout(() => {
-      initialCheckDone = true;
-      if (!auth.currentUser && !localStorage.getItem('currentUser')) {
-        // Only redirect if truly not authenticated after resolution
-        location.replace("/login.html");
-        return;
-      }
-    }, 100);
+// Check authentication status - wait for auth readiness
+(async () => {
+  // Wait for auth state to be ready (no timeout - waits for Firebase to resolve)
+  const isAuthenticated = await waitForAuthReady();
+  
+  if (!isAuthenticated) {
+    // Not authenticated - redirect to login
+    const loginPath = typeof window.getPath === 'function' ? window.getPath('login') : '/html/login.html';
+    const currentPath = window.location.pathname + window.location.search;
+    
+    // Add next parameter for redirect after login
+    if (currentPath && currentPath !== loginPath) {
+      const params = new URLSearchParams();
+      params.set('next', currentPath);
+      window.location.replace(`${loginPath}?${params.toString()}`);
+    } else {
+      window.location.replace(loginPath);
+    }
+    return;
   }
   
-  // Only check auth state after initial resolution
-  if (initialCheckDone && !user) {
-    // Don't redirect on every auth state change - only if user explicitly signs out
-    // This prevents logout on navigation
-    if (!localStorage.getItem('currentUser')) {
-      location.replace("/login.html");
-      return;
-    }
-  }
-
-  // Load/update scores list for this user
+  // User is authenticated - load scores
+  const user = window.__authUser;
   if (user && scoresList) {
     DB.listenUserScores(db, user.uid, scoresList);
   }
-});
+  
+  // Listen for auth state changes (logout, etc.)
+  window.addEventListener('auth:state-changed', (e) => {
+    if (!e.detail.user) {
+      // User logged out - redirect to login
+      const loginPath = typeof window.getPath === 'function' ? window.getPath('login') : '/html/login.html';
+      window.location.replace(loginPath);
+    }
+  });
+})();
 
 // Add new score
 if (addBtn && scoreInput) {
   addBtn.addEventListener("click", async () => {
-    const user = auth.currentUser;
+    const user = window.__authUser;
     const val  = scoreInput.value;
 
     if (!user) {

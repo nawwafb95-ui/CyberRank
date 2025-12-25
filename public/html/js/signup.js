@@ -42,6 +42,8 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ================== Username Validation ==================
+  // NOTE: Username is now used as display name only, not for authentication
+  // Firebase Auth uses email/password, username uniqueness is not enforced here
   function validateUsername(username) {
     const usernameRegex = /^[A-Z][a-z0-9_-]{3,}$/;
 
@@ -58,17 +60,8 @@ document.addEventListener('DOMContentLoaded', () => {
       return false;
     }
 
-    const usersNow = getUsers();
-    const lower = username.toLowerCase();
-    for (const emailKey in usersNow) {
-      const u = usersNow[emailKey];
-      if (!u) continue;
-      const uname = (u.username || emailKey.split('@')[0]).toLowerCase();
-      if (uname === lower) {
-        setError('signup-username', 'This username is already taken.');
-        return false;
-      }
-    }
+    // REMOVED: localStorage-based username uniqueness check
+    // Firebase Auth handles email uniqueness automatically
 
     return true;
   }
@@ -121,13 +114,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!email || !emailRegex.test(email)) {
       setError('signup-email', 'Enter a valid email.');
       ok = false;
-    } else {
-      const users = getUsers();
-      if (users[email]) {
-        setError('signup-email', 'An account with this email already exists.');
-        ok = false;
-      }
     }
+    // REMOVED: localStorage-based email check
+    // Firebase Auth will handle email uniqueness automatically
 
     if (!validatePassword(password)) ok = false;
 
@@ -146,17 +135,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const { ok, values } = validateSignup(signupForm);
     if (!ok) return;
 
-    const users = getUsers();
-    if (users[values.email]) {
-      setError('signup-email', 'An account with this email already exists.');
-      return;
-    }
-
     const signupStatus = document.getElementById('signup-status');
 
     // ================== OTP Bypass Logic ==================
     if (!OTP_ENABLED) {
-      console.log('[Signup] OTP disabled - creating account directly');
+      console.log('[Signup] OTP disabled - creating account with Firebase Auth');
 
       if (signupStatus) {
         signupStatus.textContent = 'Creating account...';
@@ -164,30 +147,69 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       try {
-        const { username, email, password } = values;
+        const { email, password, username } = values;
 
-        users[email] = {
-          email,
-          username,
-          password,
-          createdAt: new Date().toISOString(),
-          verified: true
-        };
-        saveUsers(users);
+        // Use Firebase Auth createUserWithEmailAndPassword
+        // Firebase Auth is the single source of truth - no localStorage needed
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
 
-        localStorage.setItem('currentUser', email);
+        // START AUTO USER DOC
+        // Automatically create user document in Firestore with default data
+        // This happens once at signup - role is hardcoded to "user"
+        try {
+          const userDocRef = doc(db, 'users', user.uid);
+          await setDoc(userDocRef, {
+            email: user.email,
+            username: username,
+            role: 'user', // Hardcoded role - never set from user input
+            createdAt: serverTimestamp(),
+            lastLoginAt: serverTimestamp(),
+            stats: {
+              totalPoints: 0,
+              attemptsCount: 0,
+              bestScore: 0
+            },
+            progress: {
+              easyCompleted: false,
+              mediumCompleted: false,
+              hardCompleted: false
+            }
+          }, { merge: true });
+          console.log('[Signup] User document created in Firestore at users/' + user.uid);
+        } catch (firestoreError) {
+          // Log Firestore error but don't block account creation
+          console.error('[Signup] Firestore profile creation error:', firestoreError);
+          // Account was created successfully, so continue with success flow
+        }
+        // END AUTO USER DOC
 
         if (signupStatus) {
           signupStatus.textContent = 'Account created successfully!';
           signupStatus.className = 'success';
         }
 
+        // Redirect to home page after successful signup
+        const homePath = typeof getPath === 'function' ? getPath('home') : '/html/index.html';
         setTimeout(() => {
-          window.location.href = '/index.html';
+          window.location.href = homePath;
         }, 300);
       } catch (err) {
-        console.error('[Signup] Error creating account:', err);
-        const errorMsg = 'Failed to create account. Please try again.';
+        console.error('[Signup] Firebase Auth error:', err);
+        let errorMsg = 'Failed to create account. Please try again.';
+        
+        // Handle Firebase Auth errors
+        if (err.code === 'auth/email-already-in-use') {
+          errorMsg = 'An account with this email already exists.';
+          setError('signup-email', errorMsg);
+        } else if (err.code === 'auth/weak-password') {
+          errorMsg = 'Password is too weak. Please use a stronger password.';
+          setError('signup-password', errorMsg);
+        } else if (err.code === 'auth/invalid-email') {
+          errorMsg = 'Invalid email address.';
+          setError('signup-email', errorMsg);
+        }
+        
         if (signupStatus) {
           signupStatus.textContent = errorMsg;
           signupStatus.className = 'error';
@@ -238,7 +260,8 @@ document.addEventListener('DOMContentLoaded', () => {
         signupStatus.className = 'success';
       }
 
-      window.location.href = '/success.html';
+      const successPath = typeof window.getPath === 'function' ? window.getPath('otp') : '/html/success.html';
+      window.location.href = successPath;
     } catch (err) {
       const errorMsg = err.message || 'Network error. Is functions emulator running?';
       if (signupStatus) {

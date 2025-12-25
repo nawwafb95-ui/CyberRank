@@ -4,6 +4,15 @@
 // NOTE: This flag must match the one in signup.js
 const OTP_ENABLED = false;
 
+// Firebase Auth OTP - uses Firebase Auth from firebaseInit.js
+import { auth, db } from './firebaseInit.js';
+import { createUserWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js';
+import {
+  doc,
+  setDoc,
+  serverTimestamp
+} from 'https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js';
+
 const FUNCTIONS_BASE_URL = "http://localhost:5001/cyberrank-a4380/us-central1";
 
 function logRequest(endpoint, payload) {
@@ -15,7 +24,8 @@ document.addEventListener('DOMContentLoaded', () => {
   // ================== Check OTP Feature Flag ==================
   if (!OTP_ENABLED) {
     console.log('[OTP] OTP is disabled - redirecting to signup');
-    window.location.href = '/signup.html';
+    const signupPath = typeof window.getPath === 'function' ? window.getPath('signup') : '/html/signup.html';
+    window.location.href = signupPath;
     return;
   }
 
@@ -34,8 +44,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const statusEl = document.getElementById('otp-status');
 
   const pendingRaw = localStorage.getItem('pendingSignup');
+  const signupPath = typeof window.getPath === 'function' ? window.getPath('signup') : '/html/signup.html';
+  
   if (!pendingRaw) {
-    window.location.href = '/signup.html';
+    window.location.href = signupPath;
     return;
   }
 
@@ -44,12 +56,12 @@ document.addEventListener('DOMContentLoaded', () => {
     pendingSignup = JSON.parse(pendingRaw);
   } catch (err) {
     console.error('Error parsing pendingSignup:', err);
-    window.location.href = '/signup.html';
+    window.location.href = signupPath;
     return;
   }
 
   if (!pendingSignup.email) {
-    window.location.href = '/signup.html';
+    window.location.href = signupPath;
     return;
   }
 
@@ -129,7 +141,8 @@ document.addEventListener('DOMContentLoaded', () => {
     resendLink.addEventListener('click', async (e) => {
       e.preventDefault();
       if (!OTP_ENABLED) {
-        window.location.href = '/signup.html';
+        const signupPath = typeof window.getPath === 'function' ? window.getPath('signup') : '/html/signup.html';
+        window.location.href = signupPath;
         return;
       }
 
@@ -165,7 +178,8 @@ document.addEventListener('DOMContentLoaded', () => {
   if (verifyBtn) {
     verifyBtn.addEventListener('click', async () => {
       if (!OTP_ENABLED) {
-        window.location.href = '/signup.html';
+        const signupPath = typeof window.getPath === 'function' ? window.getPath('signup') : '/html/signup.html';
+        window.location.href = signupPath;
         return;
       }
 
@@ -196,21 +210,62 @@ document.addEventListener('DOMContentLoaded', () => {
           return;
         }
 
-        const users = getUsers();
-        users[email] = {
-          email,
-          username,
-          password,
-          createdAt: new Date().toISOString(),
-          verified: true
-        };
-        saveUsers(users);
+        // Use Firebase Auth createUserWithEmailAndPassword
+        // Firebase Auth is the single source of truth - no localStorage needed
+        try {
+          const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+          const user = userCredential.user;
 
-        localStorage.setItem('currentUser', email);
-        localStorage.removeItem('pendingSignup');
+          // START AUTO USER DOC
+          // Automatically create user document in Firestore with default data
+          // This happens once at signup - role is hardcoded to "user"
+          try {
+            const userDocRef = doc(db, 'users', user.uid);
+            await setDoc(userDocRef, {
+              email: user.email,
+              username: username,
+              role: 'user', // Hardcoded role - never set from user input
+              createdAt: serverTimestamp(),
+              lastLoginAt: serverTimestamp(),
+              stats: {
+                totalPoints: 0,
+                attemptsCount: 0,
+                bestScore: 0
+              },
+              progress: {
+                easyCompleted: false,
+                mediumCompleted: false,
+                hardCompleted: false
+              }
+            }, { merge: true });
+            console.log('[OTP] User document created in Firestore at users/' + user.uid);
+          } catch (firestoreError) {
+            // Log Firestore error but don't block account creation
+            console.error('[OTP] Firestore profile creation error:', firestoreError);
+            // Account was created successfully, so continue with success flow
+          }
+          // END AUTO USER DOC
+          
+          localStorage.removeItem('pendingSignup');
 
-        setStatus('OTP verified! Redirecting...', 'success');
-        setTimeout(() => (window.location.href = '/index.html'), 500);
+          setStatus('OTP verified! Account created. Redirecting...', 'success');
+          const homePath = typeof getPath === 'function' ? getPath('home') : '/html/index.html';
+          setTimeout(() => (window.location.href = homePath), 500);
+        } catch (err) {
+          console.error('[OTP] Firebase Auth error:', err);
+          let errorMsg = 'Failed to create account. Please try again.';
+          
+          // Handle Firebase Auth errors
+          if (err.code === 'auth/email-already-in-use') {
+            errorMsg = 'An account with this email already exists.';
+          } else if (err.code === 'auth/weak-password') {
+            errorMsg = 'Password is too weak. Please use a stronger password.';
+          }
+          
+          setStatus(errorMsg, 'error');
+          verifyBtn.disabled = false;
+          clearOTP();
+        }
       } catch (err) {
         console.error('[OTP] Verify error:', err);
         setStatus('Network error. Is the emulator running?', 'error');

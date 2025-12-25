@@ -1,39 +1,61 @@
 // public/js/auth-guard.js
 // Shared authentication guard module
 // Firebase Auth is the single source of truth
-
-import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js';
+// Uses firebaseInit.js for auth readiness
 
 (function () {
   'use strict';
 
-  async function waitForAuthState(maxWaitMs = 3000) {
-    if (!window.auth) return false;
-
+  /**
+   * Wait for auth state to be ready (no timeout - waits for Firebase to resolve)
+   * Uses waitForAuthReady from firebaseInit.js
+   * @returns {Promise<boolean>} True if authenticated, false otherwise
+   */
+  async function waitForAuthState() {
+    // Use waitForAuthReady from firebaseInit.js
+    if (typeof window.waitForAuthReady === 'function') {
+      return await window.waitForAuthReady();
+    }
+    
+    // Fallback if firebaseInit.js hasn't loaded yet
+    // This should not happen if scripts are loaded in correct order
+    console.warn('[auth-guard] waitForAuthReady not available, waiting...');
     return new Promise((resolve) => {
-      let resolved = false;
-
-      const timeout = setTimeout(() => {
-        if (resolved) return;
-        resolved = true;
-        resolve(!!window.auth.currentUser);
-      }, maxWaitMs);
-
-      const unsubscribe = onAuthStateChanged(window.auth, (user) => {
-        if (resolved) return;
-        resolved = true;
-        clearTimeout(timeout);
-        unsubscribe();
-        resolve(!!user);
-      });
+      const checkInterval = setInterval(() => {
+        if (typeof window.waitForAuthReady === 'function') {
+          clearInterval(checkInterval);
+          window.waitForAuthReady().then(resolve);
+        } else if (window.__authReady) {
+          clearInterval(checkInterval);
+          resolve(!!window.__authUser);
+        }
+      }, 50);
+      
+      // Safety timeout after 5 seconds (should never happen)
+      setTimeout(() => {
+        clearInterval(checkInterval);
+        resolve(false);
+      }, 5000);
     });
   }
 
+  /**
+   * Synchronous auth check (may return false if auth not ready yet)
+   * Use waitForAuthState() for reliable checks
+   * @returns {boolean} True if authenticated
+   */
   function isAuthenticatedSync() {
-    return !!(window.auth && window.auth.currentUser);
+    return !!(window.__authUser);
   }
 
+  /**
+   * Guard function - waits for auth readiness before making decision
+   * @param {string|null} redirectPath - Path to redirect to if not authenticated
+   * @param {Function|null} onAuthenticated - Callback if authenticated
+   * @returns {Promise<boolean>} True if authenticated, false if redirected
+   */
   async function guard(redirectPath = null, onAuthenticated = null) {
+    // Wait for auth state to be ready (no arbitrary timeout)
     const isAuth = await waitForAuthState();
 
     if (!isAuth) {
@@ -51,7 +73,7 @@ import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.0.2/fi
       // Build login URL with next parameter (all origin-relative)
       const params = new URLSearchParams();
       params.set('next', sanitizedPath);
-      const loginPath = typeof window.getPath === 'function' ? window.getPath('login') : '/login.html';
+      const loginPath = typeof window.getPath === 'function' ? window.getPath('login') : '/html/login.html';
       
       // Use origin-relative path (no protocol/host/port) to stay on same origin
       window.location.href = `${loginPath}?${params.toString()}`;

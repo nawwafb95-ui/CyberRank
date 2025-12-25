@@ -1,18 +1,6 @@
-import {
-  initializeApp,
-  getApps,
-  getApp
-} from 'https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js';
-
-import {
-  getAuth,
-  sendPasswordResetEmail
-} from 'https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js';
-
-import { firebaseConfig } from './firebaseConfig.js';
-
-const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
-const auth = getAuth(app);
+// Forgot password page - uses Firebase Auth from firebaseInit.js
+import { auth } from './firebaseInit.js';
+import { sendPasswordResetEmail } from 'https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js';
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i;
 
@@ -108,7 +96,8 @@ document.addEventListener('DOMContentLoaded', () => {
         goToLoginBtn.style.transform = '';
       });
       goToLoginBtn.addEventListener('click', () => {
-        window.location.href = '/login.html';
+        const loginPath = typeof window.getPath === 'function' ? window.getPath('login') : '/html/login.html';
+        window.location.href = loginPath;
       });
 
       const existingBtn = form.querySelector('.go-to-login-btn');

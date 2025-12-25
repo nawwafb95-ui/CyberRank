@@ -2,6 +2,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // Flip card functionality
     document.querySelectorAll('.flip-card').forEach(card => {
       card.addEventListener('click', e => {
+        // Allow social links to work - don't prevent default or toggle card
+        if (e.target.closest('.social-link')) {
+          e.stopPropagation();
+          return; // Let the anchor handle navigation
+        }
         e.preventDefault();
         card.classList.toggle('flipped');
       });

@@ -13,7 +13,8 @@ document.addEventListener('DOMContentLoaded', () => {
     buttonClicked = true;
 
     // Navigate to challenges page
-    window.location.href = '/challenges.html';
+    const challengesPath = typeof window.getPath === 'function' ? window.getPath('challenges') : '/html/challenges.html';
+    window.location.href = challengesPath;
   };
 
   // Handle new hero CTA button
@@ -91,7 +92,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const leaderboardBtn = document.getElementById("leaderboard-btn");
   if (leaderboardBtn) {
     leaderboardBtn.addEventListener("click", () => {
-      window.location.href = "/leaderboard.html";
+      const leaderboardPath = typeof window.getPath === 'function' ? window.getPath('leaderboard') : '/html/leaderboard.html';
+      window.location.href = leaderboardPath;
     });
   }
 });

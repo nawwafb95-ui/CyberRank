@@ -4,6 +4,46 @@
 (function() {
   'use strict';
 
+  // Safe Firestore imports - try window.db first, then dynamic import
+  let db = null;
+  let auth = null;
+  let doc = null;
+  let getDoc = null;
+
+  // Try to get db/auth from window (if firebaseInit.js already loaded)
+  if (window.db) {
+    db = window.db;
+  }
+  if (window.auth) {
+    auth = window.auth;
+  }
+
+  // Dynamically import Firestore functions if not available
+  (async function() {
+    try {
+      // Import Firestore functions from CDN
+      const firestoreModule = await import('https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js');
+      doc = firestoreModule.doc;
+      getDoc = firestoreModule.getDoc;
+
+      // If db not available from window, try importing from firebaseInit
+      if (!db) {
+        try {
+          const firebaseInit = await import('../js/firebaseInit.js');
+          db = firebaseInit.db || window.db;
+          auth = firebaseInit.auth || window.auth;
+        } catch (e) {
+          // Fallback to window if import fails
+          db = window.db;
+          auth = window.auth;
+        }
+      }
+    } catch (e) {
+      // Silently fail - sidebar will work without Firestore integration
+      console.warn('Firestore not available for sidebar:', e.message);
+    }
+  })();
+
   // Wait for sidebar to be injected (if using sidebar-inject.js)
   function initSidebar() {
     const sidebar = document.getElementById('socxSidebar');
@@ -69,24 +109,16 @@
 
     // Check authentication status
     function checkAuthState() {
-      let isAuthenticated = false;
-
-      // Try to use existing auth check functions
+      // REFACTORED: Use Firebase Auth only - removed localStorage fallback
+      // Firebase Auth is the single source of truth
       if (typeof window.isLoggedIn === 'function') {
-        isAuthenticated = window.isLoggedIn();
+        return window.isLoggedIn();
+      } else if (window.__authUser) {
+        return true;
       } else if (window.auth && window.auth.currentUser) {
-        isAuthenticated = true;
-      } else {
-        // Fallback: check localStorage
-        try {
-          const currentUser = localStorage.getItem('currentUser');
-          isAuthenticated = !!currentUser;
-        } catch (e) {
-          // Ignore
-        }
+        return true;
       }
-
-      return isAuthenticated;
+      return false;
     }
 
     // Update logout/login/signup button visibility
@@ -119,17 +151,15 @@
         logoutBtn.disabled = true;
 
         try {
-          // Clear localStorage (matching existing logout logic)
-          try {
-            localStorage.removeItem('currentUser');
-            localStorage.removeItem('user');
-          } catch (err) {
-            console.warn('Error clearing localStorage:', err);
-          }
-
-          // Sign out from Firebase if available
-          if (window.auth && typeof window.auth.signOut === 'function') {
-            await window.auth.signOut();
+          // REFACTORED: Use Firebase signOut only - removed localStorage clearing
+          // Firebase Auth manages session state, no need to clear localStorage
+          if (window.auth) {
+            // Import signOut if available
+            if (typeof signOut === 'function') {
+              await signOut(window.auth);
+            } else if (typeof window.auth.signOut === 'function') {
+              await window.auth.signOut();
+            }
           }
 
           // Update buttons after logout (show Login and Sign Up, hide Logout)
@@ -160,22 +190,10 @@
           }
         }
         
-        // Fallback: check Firebase auth
-        if (displayName === 'Guest' && window.auth && window.auth.currentUser) {
-          const user = window.auth.currentUser;
+        // REFACTORED: Use Firebase auth only - removed localStorage fallback
+        const user = window.__authUser || (window.auth && window.auth.currentUser);
+        if (displayName === 'Guest' && user) {
           displayName = user.displayName || user.email?.split('@')[0] || 'Guest';
-        }
-        
-        // Fallback: check localStorage
-        if (displayName === 'Guest') {
-          try {
-            const currentUser = localStorage.getItem('currentUser');
-            if (currentUser) {
-              displayName = currentUser.includes('@') ? currentUser.split('@')[0] : currentUser;
-            }
-          } catch (e) {
-            // Ignore
-          }
         }
         
         nameEl.textContent = displayName;
@@ -194,8 +212,8 @@
         }
         
         // Fallback: check Firebase auth
-        if (avatarSrc === '../../images/default-avatar.jpeg' && window.auth && window.auth.currentUser) {
-          const user = window.auth.currentUser;
+        const user = window.__authUser || (window.auth && window.auth.currentUser);
+        if (avatarSrc === '../../images/default-avatar.jpeg' && user) {
           if (user.photoURL) {
             avatarSrc = user.photoURL;
           }
@@ -204,37 +222,96 @@
         avatarEl.src = avatarSrc;
       }
 
-      // Update points (placeholder for now - can be extended later)
+      // Update points from Firestore userStats
       const pointsEl = document.getElementById('socxSidebarPoints');
       if (pointsEl) {
         const valueEl = pointsEl.querySelector('.socx-stat-value');
         if (valueEl) {
-          // Calculate points from completed levels (if needed)
-          let points = 0;
-          try {
-            if (localStorage.getItem('socyberx_easy_completed') === 'true') points += 100;
-            if (localStorage.getItem('socyberx_medium_completed') === 'true') points += 200;
-            if (localStorage.getItem('socyberx_hard_completed') === 'true') points += 300;
-          } catch (e) {
-            // Ignore
+          // Get current user
+          const user = window.__authUser || (auth && auth.currentUser);
+          
+          if (user && db && doc && getDoc) {
+            // Read from Firestore userStats collection
+            (async function() {
+              try {
+                const userStatsRef = doc(db, 'userStats', user.uid);
+                const userStatsSnap = await getDoc(userStatsRef);
+                
+                let points = 0;
+                if (userStatsSnap.exists()) {
+                  const data = userStatsSnap.data();
+                  points = data.totalScore ?? 0;
+                }
+                
+                valueEl.textContent = points || '0';
+              } catch (e) {
+                // Fail silently, fallback to 0
+                console.warn('Failed to load points from Firestore:', e.message);
+                valueEl.textContent = '0';
+              }
+            })();
+          } else {
+            // Not logged in or Firestore not available - show 0
+            valueEl.textContent = '0';
           }
-          valueEl.textContent = points || '0';
         }
       }
 
-      // Update progress bar (placeholder)
+      // Update progress bar from Firestore userStats
       const progressFill = document.querySelector('.socx-progress-fill');
-      if (progressFill) {
-        let completed = 0;
-        try {
-          if (localStorage.getItem('socyberx_easy_completed') === 'true') completed++;
-          if (localStorage.getItem('socyberx_medium_completed') === 'true') completed++;
-          if (localStorage.getItem('socyberx_hard_completed') === 'true') completed++;
-        } catch (e) {
-          // Ignore
+      const levelLabel = document.querySelector('.socx-level-label');
+      
+      if (progressFill || levelLabel) {
+        // Get current user
+        const user = window.__authUser || (auth && auth.currentUser);
+        
+        if (user && db && doc && getDoc) {
+          // Read from Firestore userStats collection
+          (async function() {
+            try {
+              const userStatsRef = doc(db, 'userStats', user.uid);
+              const userStatsSnap = await getDoc(userStatsRef);
+              
+              let currentLevel = 1;
+              let levelProgress = 0;
+              
+              if (userStatsSnap.exists()) {
+                const data = userStatsSnap.data();
+                currentLevel = data.currentLevel ?? 1;
+                levelProgress = data.levelProgress ?? 0;
+                // Clamp progress to 0-100
+                levelProgress = Math.max(0, Math.min(100, levelProgress));
+              }
+              
+              // Update level label if element exists
+              if (levelLabel) {
+                levelLabel.textContent = `Level ${currentLevel}`;
+              }
+              
+              // Update progress bar width
+              if (progressFill) {
+                progressFill.style.width = `${levelProgress}%`;
+              }
+            } catch (e) {
+              // Fail silently, fallback to defaults
+              console.warn('Failed to load progress from Firestore:', e.message);
+              if (levelLabel) {
+                levelLabel.textContent = 'Level 1';
+              }
+              if (progressFill) {
+                progressFill.style.width = '0%';
+              }
+            }
+          })();
+        } else {
+          // Not logged in or Firestore not available - reset to defaults
+          if (levelLabel) {
+            levelLabel.textContent = 'Level 1';
+          }
+          if (progressFill) {
+            progressFill.style.width = '0%';
+          }
         }
-        const progress = (completed / 3) * 100;
-        progressFill.style.width = progress + '%';
       }
     }
 
