@@ -23,17 +23,20 @@
 
         <!-- Very important: id + name must match login.js code -->
         <form id="login-form">
+          <!-- Form-level error box (hidden by default, shown on error) -->
+          <div class="error-box"></div>
+          
           <div class="form-group">
             <div class="field">
               <input
                 type="text"
                 id="login-username"
-                name="username"
+                name="email"
                 class="floating-input"
                 placeholder=" "
                 required
               />
-              <label for="login-email" class="floating-label">
+              <label for="login-username" class="floating-label">
                 Email
               </label>
               
@@ -67,7 +70,7 @@
           </div>
 
           <div class="form-group" style="margin-bottom: 8px;">
-            <a href="/forgot-password.html" class="forgot-password-link">Forgot Password?</a>
+            <a href="/html/forgot-password.html" class="forgot-password-link">Forgot Password?</a>
           </div>
 
           <button type="submit">Login</button>
@@ -75,7 +78,7 @@
 
         <p class="switch">
           Don't have an account?
-          <a href="/signup.html">Sign up</a>
+          <a href="/html/signup.html">Sign up</a>
         </p>
       </div>
     </div>

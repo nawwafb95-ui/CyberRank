@@ -161,16 +161,8 @@
       }
     </style>
 
-    <script>
-      // ================== OTP Feature Flag Check ==================
-      // Keep this consistent with signup.js + otp.js
-      const OTP_ENABLED = false;
-
-      if (!OTP_ENABLED) {
-        // Stop loading OTP page when disabled
-        window.location.replace('./signup.html');
-      }
-    </script>
+    <!-- OTP verification page - always loads -->
+    <!-- OTP enable/disable is controlled by signup.js and otp.js -->
   </head>
 
   <body class="otp-page" data-page="success">
@@ -199,6 +191,7 @@
       <div id="otp-status" class="otp-status"></div>
     </div>
 
+    <script src="../js/config.js"></script>
     <script src="../js/core.js"></script>
     <script src="../js/main.js"></script>
     <script type="module" src="../js/navAuth.js"></script>

@@ -1,11 +1,34 @@
 // ================== OTP Feature Flag ==================
-// Set to false to bypass OTP verification during development
-// Set to true to re-enable OTP email verification flow
-const OTP_ENABLED = false;
+// OTP verification is now ENABLED by default for security
+// Controlled by config.js - can be overridden via window.__SOCYBERX_CONFIG__
+const OTP_ENABLED = window.SOCYBERX_CONFIG?.OTP_ENABLED ?? 
+  window.__SOCYBERX_CONFIG__?.OTP_ENABLED ?? true;
+
+// Cloud Functions base URL from config.js
+const FUNCTIONS_BASE_URL = window.SOCYBERX_CONFIG?.FUNCTIONS_BASE_URL ?? 
+  window.__SOCYBERX_CONFIG__?.FUNCTIONS_BASE_URL ?? 
+  (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? 'http://localhost:5001/cyberrank-a4380/us-central1'
+    : 'https://us-central1-cyberrank-a4380.cloudfunctions.net');
+
+// Import Firebase modules
+import { auth, db } from './firebaseInit.js';
+import { createUserWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js';
+import {
+  doc,
+  setDoc,
+  serverTimestamp
+} from 'https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js';
+
+// Import error handling utilities
+import { handleError, clearAllErrors } from './errorMessages.js';
 
 document.addEventListener('DOMContentLoaded', () => {
   const signupForm = document.getElementById('signup-form');
   if (!signupForm) return;
+
+  // Access window globals from core.js (module-safe)
+  const { setError, clearErrors, emailRegex } = window;
 
   const usernameInput        = document.getElementById('signup-username');
   const emailInput           = document.getElementById('signup-email');
@@ -48,12 +71,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const usernameRegex = /^[A-Z][a-z0-9_-]{3,}$/;
 
     if (!username) {
-      setError('signup-username', 'Username is required.');
+      if (setError) setError('signup-username', 'Username is required.');
       return false;
     }
 
     if (!usernameRegex.test(username)) {
-      setError(
+      if (setError) setError(
         'signup-username',
         'Username must start with a capital letter and can contain lowercase letters, numbers, "-" or "_". Minimum 4 characters.'
       );
@@ -69,7 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // ================== Password Validation ==================
   function validatePassword(password) {
     if (!password) {
-      setError('signup-password', 'Password is required.');
+      if (setError) setError('signup-password', 'Password is required.');
       return false;
     }
 
@@ -77,7 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
       /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()[\]{};:,.?/~_+\-=|<>]).{8,}$/;
 
     if (!passwordRegex.test(password)) {
-      setError(
+      if (setError) setError(
         'signup-password',
         'Password must be at least 8 characters and include at least 1 uppercase letter, 1 number, and 1 symbol.'
       );
@@ -89,11 +112,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function validateConfirmPassword(password, confirmPassword) {
     if (!confirmPassword) {
-      setError('signup-confirm', 'Please confirm your password.');
+      if (setError) setError('signup-confirm', 'Please confirm your password.');
       return false;
     }
     if (password !== confirmPassword) {
-      setError('signup-confirm', 'Passwords do not match.');
+      if (setError) setError('signup-confirm', 'Passwords do not match.');
       return false;
     }
     return true;
@@ -101,7 +124,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ================== Form Validation ==================
   function validateSignup(form) {
-    clearErrors(form);
+    if (clearErrors) clearErrors(form);
+    clearAllErrors(form);
     let ok = true;
 
     const username        = form.username?.value.trim();
@@ -111,8 +135,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (!validateUsername(username)) ok = false;
 
-    if (!email || !emailRegex.test(email)) {
-      setError('signup-email', 'Enter a valid email.');
+    if (!email || (emailRegex && !emailRegex.test(email))) {
+      if (setError) setError('signup-email', 'Enter a valid email.');
       ok = false;
     }
     // REMOVED: localStorage-based email check
@@ -179,7 +203,12 @@ document.addEventListener('DOMContentLoaded', () => {
           console.log('[Signup] User document created in Firestore at users/' + user.uid);
         } catch (firestoreError) {
           // Log Firestore error but don't block account creation
-          console.error('[Signup] Firestore profile creation error:', firestoreError);
+          // Use error handler to log technical details while showing nothing to user
+          handleError('signup-form', firestoreError, {
+            errorType: 'form',
+            logToConsole: true,
+            fallbackMessage: null // Don't show Firestore errors to user during signup
+          });
           // Account was created successfully, so continue with success flow
         }
         // END AUTO USER DOC
@@ -195,81 +224,118 @@ document.addEventListener('DOMContentLoaded', () => {
           window.location.href = homePath;
         }, 300);
       } catch (err) {
-        console.error('[Signup] Firebase Auth error:', err);
-        let errorMsg = 'Failed to create account. Please try again.';
+        // Use centralized error handling
+        const friendlyMsg = handleError('signup-form', err, {
+          errorType: 'form',
+          logToConsole: true
+        });
         
-        // Handle Firebase Auth errors
+        // Also set field-specific errors for better UX
         if (err.code === 'auth/email-already-in-use') {
-          errorMsg = 'An account with this email already exists.';
-          setError('signup-email', errorMsg);
+          handleError('signup-email', err, { errorType: 'field' });
         } else if (err.code === 'auth/weak-password') {
-          errorMsg = 'Password is too weak. Please use a stronger password.';
-          setError('signup-password', errorMsg);
+          handleError('signup-password', err, { errorType: 'field' });
         } else if (err.code === 'auth/invalid-email') {
-          errorMsg = 'Invalid email address.';
-          setError('signup-email', errorMsg);
+          handleError('signup-email', err, { errorType: 'field' });
         }
         
+        // Update status element if it exists
         if (signupStatus) {
-          signupStatus.textContent = errorMsg;
+          signupStatus.textContent = friendlyMsg;
           signupStatus.className = 'error';
-        } else {
-          alert(errorMsg);
         }
       }
       return;
     }
 
-    // ================== OTP Enabled Flow (kept for later) ==================
-    try {
-      localStorage.setItem('pendingSignup', JSON.stringify(values));
-    } catch (err) {
-      console.error('Error saving pending signup', err);
-    }
-
-    const functionsUrl = 'http://localhost:5001/cyberrank-a4380/us-central1';
-    const endpoint = `${functionsUrl}/sendOtp`;
+    // ================== SECURE OTP FLOW ==================
+    // Step 1: Validate inputs locally
+    // Step 2: Request OTP from backend (NO account creation yet)
+    // Step 3: Redirect to OTP verification page
+    // Step 4: Account creation happens ONLY after OTP verification (in otp.js)
 
     if (signupStatus) {
-      signupStatus.textContent = 'Sending OTP...';
+      signupStatus.textContent = 'Sending verification code...';
+      signupStatus.className = '';
     }
 
+    // Store signup data temporarily (will be used after OTP verification)
     try {
+      localStorage.setItem('pendingSignup', JSON.stringify({
+        ...values,
+        timestamp: Date.now()
+      }));
+    } catch (err) {
+      console.error('[Signup] Error saving pending signup:', err);
+      handleError('signup-form', new Error('Failed to save signup data. Please try again.'), {
+        errorType: 'form',
+        logToConsole: true
+      });
+      return;
+    }
+
+    // Request OTP from secure backend
+    try {
+      const endpoint = `${FUNCTIONS_BASE_URL}/requestOtp`;
       const res = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: values.email }),
+        body: JSON.stringify({
+          email: values.email,
+          purpose: 'signup'
+        }),
       });
 
-      const text = await res.text();
+      const data = await res.json().catch(() => ({ 
+        success: false, 
+        error: res.statusText || 'Unknown error' 
+      }));
 
-      if (!res.ok) {
-        const errorMsg = text || `Failed to send OTP (${res.status}).`;
+      if (!res.ok || !data.success) {
+        const error = new Error(data.error || `Failed to send OTP (${res.status})`);
+        error.code = 'otp-send-failed';
+        const friendlyMsg = handleError('signup-form', error, {
+          errorType: 'form',
+          logToConsole: true,
+          fallbackMessage: data.error || 'Failed to send verification code. Please try again.'
+        });
+        
         if (signupStatus) {
-          signupStatus.textContent = errorMsg;
+          signupStatus.textContent = friendlyMsg;
           signupStatus.className = 'error';
-        } else {
-          alert(errorMsg);
         }
+        
+        // Clear pending signup on error
         localStorage.removeItem('pendingSignup');
         return;
       }
 
+      // OTP sent successfully - redirect to verification page
       if (signupStatus) {
-        signupStatus.textContent = 'OTP sent. Check your email.';
+        signupStatus.textContent = 'Verification code sent! Check your email.';
         signupStatus.className = 'success';
       }
 
-      const successPath = typeof window.getPath === 'function' ? window.getPath('otp') : '/html/success.html';
-      window.location.href = successPath;
+      // Redirect to OTP verification page
+      const otpPath = typeof window.getPath === 'function' ? window.getPath('otp') : '/html/success.html';
+      setTimeout(() => {
+        window.location.href = otpPath;
+      }, 1000);
+      
     } catch (err) {
-      const errorMsg = err.message || 'Network error. Is functions emulator running?';
+      console.error('[Signup] Error requesting OTP:', err);
+      const friendlyMsg = handleError('signup-form', err, {
+        errorType: 'form',
+        logToConsole: true,
+        fallbackMessage: 'Network error. Please check your connection and try again. (خطأ في الشبكة، يرجى التحقق من اتصالك والمحاولة مرة أخرى)'
+      });
+      
       if (signupStatus) {
-        signupStatus.textContent = errorMsg;
+        signupStatus.textContent = friendlyMsg;
         signupStatus.className = 'error';
-      } else {
-        alert(errorMsg);
       }
+      
+      // Clear pending signup on error
       localStorage.removeItem('pendingSignup');
     }
   });

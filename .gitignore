@@ -69,3 +69,15 @@ node_modules/
 
 # dataconnect generated files
 .dataconnect
+
+# Build output
+dist/
+build/
+
+# Deployment packages (should not include node_modules)
+*.zip
+*.tar.gz
+*.rar
+
+# Exclude node_modules from any deployment packages
+node_modules/

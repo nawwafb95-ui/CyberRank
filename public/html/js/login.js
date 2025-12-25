@@ -3,13 +3,19 @@
 // Import auth from unified firebaseInit module
 import { auth } from './firebaseInit.js';
 import { signInWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js';
+import { handleError, clearAllErrors } from './errorMessages.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     const loginForm = document.getElementById('login-form');
     if (!loginForm) return;
   
+    // Access window globals from core.js (module-safe)
+    const { setError, clearErrors, emailRegex, getPath, sanitizePath, sanitizeNextPath, normalizeNextPath } = window;
+  
     function validateLogin(form) {
-      clearErrors(form);
+      // Use window globals safely
+      if (clearErrors) clearErrors(form);
+      clearAllErrors(form);
       let ok = true;
       // Firebase Auth requires email - accept both email and username fields from form
       // but validate that input is actually an email (no username-to-email hacks)
@@ -17,15 +23,15 @@ document.addEventListener('DOMContentLoaded', () => {
       const password = form.password?.value;
       
       if (!emailOrUsername) { 
-        setError('login-username', 'Email is required.'); 
+        if (setError) setError('login-username', 'Email is required.'); 
         ok = false; 
-      } else if (!emailRegex.test(emailOrUsername)) {
-        setError('login-username', 'Enter a valid email address.'); 
+      } else if (emailRegex && !emailRegex.test(emailOrUsername)) {
+        if (setError) setError('login-username', 'Enter a valid email address.'); 
         ok = false; 
       }
       
       if (!password) { 
-        setError('login-password', 'Password is required.');  
+        if (setError) setError('login-password', 'Password is required.');  
         ok = false; 
       }
       
@@ -65,9 +71,9 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Sanitize next path: reject external URLs, fix duplicates, prevent loops
         let nextSafe;
-        if (typeof sanitizeNextPath === 'function') {
+        if (sanitizeNextPath && typeof sanitizeNextPath === 'function') {
           nextSafe = sanitizeNextPath(nextRaw || '');
-        } else if (typeof normalizeNextPath === 'function') {
+        } else if (normalizeNextPath && typeof normalizeNextPath === 'function') {
           nextSafe = normalizeNextPath(nextRaw || '');
         } else {
         // Fallback: basic sanitization
@@ -77,9 +83,9 @@ document.addEventListener('DOMContentLoaded', () => {
             nextDecoded === '/html/signup.html' || nextDecoded === '/login.html' || 
             nextDecoded === '/signup.html') {
           // Prevent redirect loops to login/signup pages
-          nextSafe = typeof getPath === 'function' ? getPath('home') : '/html/index.html';
+          nextSafe = (getPath && typeof getPath === 'function') ? getPath('home') : '/html/index.html';
         } else {
-          const sanitized = typeof sanitizePath === 'function' ? sanitizePath(nextDecoded) : nextDecoded;
+          const sanitized = (sanitizePath && typeof sanitizePath === 'function') ? sanitizePath(nextDecoded) : nextDecoded;
           // Ensure path has /html/ prefix - sanitizePath should handle this, but ensure it
           if (sanitized.startsWith('/') && !sanitized.startsWith('/html/')) {
             // Absolute path without /html/: add it
@@ -99,26 +105,23 @@ document.addEventListener('DOMContentLoaded', () => {
         // This ensures we stay on the same origin and preserve Firebase auth state
         window.location.replace(nextSafe);
       } catch (err) {
-        console.error('[Login] Firebase Auth error:', err);
-        let errorMsg = 'Invalid email or password.';
+        // Use centralized error handling
+        const friendlyMsg = handleError('login-form', err, {
+          errorType: 'form',
+          logToConsole: true
+        });
         
-        // Handle Firebase Auth errors
-        if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {
-          errorMsg = 'Invalid email or password.';
-          setError('login-password', errorMsg);
-        } else if (err.code === 'auth/invalid-email') {
-          errorMsg = 'Invalid email address.';
-          setError('login-username', errorMsg);
-        } else if (err.code === 'auth/too-many-requests') {
-          errorMsg = 'Too many failed attempts. Please try again later.';
-          setError('login-password', errorMsg);
+        // Also set field-specific errors for better UX
+        if (err.code === 'auth/invalid-email') {
+          handleError('login-username', err, { errorType: 'field' });
+        } else if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
+          handleError('login-password', err, { errorType: 'field' });
         }
         
+        // Update status element if it exists
         if (loginStatus) {
-          loginStatus.textContent = errorMsg;
+          loginStatus.textContent = friendlyMsg;
           loginStatus.className = 'error';
-        } else {
-          setError('login-password', errorMsg);
         }
       }
     });

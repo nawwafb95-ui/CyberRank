@@ -1,40 +1,60 @@
 // public/js/challenges.js
+// SERVER-SIDE ENFORCED: Uses Cloud Functions to check level access
 
-document.addEventListener('DOMContentLoaded', () => {
-  // localStorage keys for tracking level completion
-  const STORAGE_KEYS = {
-    easy: 'socyberx_easy_completed',
-    medium: 'socyberx_medium_completed',
-    hard: 'socyberx_hard_completed'
-  };
+import { auth, db, waitForAuthReady, app } from './firebaseInit.js';
+import { getFunctions, httpsCallable } from 'https://www.gstatic.com/firebasejs/11.0.2/firebase-functions.js';
 
-  // Get completion status from localStorage
-  function isLevelCompleted(level) {
-    return localStorage.getItem(STORAGE_KEYS[level]) === 'true';
+document.addEventListener('DOMContentLoaded', async () => {
+  // Check authentication first
+  const isAuthenticated = await waitForAuthReady();
+  if (!isAuthenticated || !auth.currentUser) {
+    // Redirect to login with message
+    const loginPath = typeof window.getPath === 'function' ? window.getPath('login') : '/html/login.html';
+    window.location.href = `${loginPath}?next=${encodeURIComponent('/html/challenges.html')}&message=${encodeURIComponent('Login required to start challenges.')}`;
+    return;
   }
 
-  // Update UI based on completion status
-  function updateLevelUI() {
-    const easyCompleted = isLevelCompleted('easy');
-    const mediumCompleted = isLevelCompleted('medium');
-    const hardCompleted = isLevelCompleted('hard');
+  // Cloud Function references
+  const functions = getFunctions(app);
+  const canStartLevel = httpsCallable(functions, 'canStartLevel');
 
-    // Easy is always enabled
+  // Helper to check level access via Cloud Function
+  async function checkLevelAccess(level) {
+    try {
+      const result = await canStartLevel({ level });
+      return result.data;
+    } catch (error) {
+      console.error(`[challenges] Error checking level access for ${level}:`, error);
+      return { allowed: false, reason: 'Failed to check level access. Please try again.' };
+    }
+  }
+
+  // Update UI based on server-side access checks
+  async function updateLevelUI() {
+    // Easy is always enabled (but still check server-side)
     const easyCard = document.getElementById('level-easy');
     const easyBtn = document.getElementById('btn-easy');
     if (easyCard && easyBtn) {
-      easyCard.classList.remove('level-locked');
-      easyBtn.disabled = false;
+      const easyAccess = await checkLevelAccess('easy');
+      if (easyAccess.allowed) {
+        easyCard.classList.remove('level-locked');
+        easyBtn.disabled = false;
+      } else {
+        easyCard.classList.add('level-locked');
+        easyBtn.disabled = true;
+        console.warn('[challenges] Easy level not accessible:', easyAccess.reason);
+      }
     }
 
-    // Medium: enabled if easy is completed
+    // Medium: check server-side access
     const mediumCard = document.getElementById('level-medium');
     const mediumBtn = document.getElementById('btn-medium');
     const mediumBadge = mediumCard?.querySelector('.level-locked-badge');
     const mediumHint = mediumCard?.querySelector('p:last-of-type');
     
     if (mediumCard && mediumBtn) {
-      if (easyCompleted) {
+      const mediumAccess = await checkLevelAccess('medium');
+      if (mediumAccess.allowed) {
         mediumCard.classList.remove('level-locked');
         mediumBtn.disabled = false;
         if (mediumBadge) mediumBadge.style.display = 'none';
@@ -43,18 +63,22 @@ document.addEventListener('DOMContentLoaded', () => {
         mediumCard.classList.add('level-locked');
         mediumBtn.disabled = true;
         if (mediumBadge) mediumBadge.style.display = 'block';
-        if (mediumHint) mediumHint.style.display = 'block';
+        if (mediumHint) {
+          mediumHint.textContent = mediumAccess.reason || 'Complete Easy level to unlock';
+          mediumHint.style.display = 'block';
+        }
       }
     }
 
-    // Hard: enabled if medium is completed
+    // Hard: check server-side access
     const hardCard = document.getElementById('level-hard');
     const hardBtn = document.getElementById('btn-hard');
     const hardBadge = hardCard?.querySelector('.level-locked-badge');
     const hardHint = hardCard?.querySelector('p:last-of-type');
     
     if (hardCard && hardBtn) {
-      if (mediumCompleted) {
+      const hardAccess = await checkLevelAccess('hard');
+      if (hardAccess.allowed) {
         hardCard.classList.remove('level-locked');
         hardBtn.disabled = false;
         if (hardBadge) hardBadge.style.display = 'none';
@@ -63,32 +87,26 @@ document.addEventListener('DOMContentLoaded', () => {
         hardCard.classList.add('level-locked');
         hardBtn.disabled = true;
         if (hardBadge) hardBadge.style.display = 'block';
-        if (hardHint) hardHint.style.display = 'block';
+        if (hardHint) {
+          hardHint.textContent = hardAccess.reason || 'Complete Medium level to unlock';
+          hardHint.style.display = 'block';
+        }
       }
     }
   }
 
-  // Open a level (redirect to question page with level parameter)
-  function openLevel(level) {
-    // Check if level is allowed
-    if (level === 'easy') {
-      // Easy is always allowed
-      window.location.href = `/html/question.html?level=${level}&q=1`;
-    } else if (level === 'medium') {
-      // Medium requires easy to be completed
-      if (!isLevelCompleted('easy')) {
-        alert('Complete the Easy level first to unlock Medium.');
-        return;
-      }
-      window.location.href = `/html/question.html?level=${level}&q=1`;
-    } else if (level === 'hard') {
-      // Hard requires medium to be completed
-      if (!isLevelCompleted('medium')) {
-        alert('Complete the Medium level first to unlock Hard.');
-        return;
-      }
-      window.location.href = `/html/question.html?level=${level}&q=1`;
+  // Open a level (with server-side verification)
+  async function openLevel(level) {
+    // Check server-side access before redirecting
+    const access = await checkLevelAccess(level);
+    
+    if (!access.allowed) {
+      alert(access.reason || `You cannot access the ${level} level yet.`);
+      return;
     }
+
+    // Server-side check passed, redirect to question page
+    window.location.href = `/html/question.html?level=${level}&q=1`;
   }
 
   // Attach event listeners to buttons

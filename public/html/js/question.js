@@ -1,17 +1,33 @@
 // public/js/question.js
-// Import Firebase modules
-import { auth, db, waitForAuthReady } from './firebaseInit.js';
+// SERVER-SIDE ENFORCED: Questions fetched from Firestore with level gating
+// Score submission via Cloud Functions (submitQuizResult)
+
+import { auth, db, waitForAuthReady, app } from './firebaseInit.js';
 import {
   collection,
   addDoc,
   doc,
   updateDoc,
   serverTimestamp,
-  increment,
+  query,
+  where,
+  orderBy,
+  getDocs,
   getDoc
 } from 'https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js';
+import { getFunctions, httpsCallable } from 'https://www.gstatic.com/firebasejs/11.0.2/firebase-functions.js';
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+  // ================== AUTH CHECK ==================
+  const isAuthenticated = await waitForAuthReady();
+  if (!isAuthenticated || !auth.currentUser) {
+    // Redirect to login with message
+    const loginPath = typeof window.getPath === 'function' ? window.getPath('login') : '/html/login.html';
+    const currentPath = window.location.pathname + window.location.search;
+    window.location.href = `${loginPath}?next=${encodeURIComponent(currentPath)}&message=${encodeURIComponent('Login required to start challenges.')}`;
+    return;
+  }
+
   const qs = new URLSearchParams(location.search);
   
   // Support both old quiz parameter and new level parameter
@@ -19,60 +35,81 @@ document.addEventListener('DOMContentLoaded', () => {
   const quiz = qs.get('quiz'); // Legacy support
   const qNum = Number(qs.get('q') || '1');
 
-  // Questions organized by level
-  const QUESTIONS_BY_LEVEL = {
-    easy: [
-      { text: 'What does CIA triad stand for?', correct: 'Confidentiality, Integrity, Availability' },
-      { text: 'Which protocol secures web traffic?', correct: 'HTTPS' },
-      { text: 'What is phishing?', correct: 'Social engineering attempt' },
-      { text: 'What is a firewall used for?', correct: 'Network security' },
-      { text: 'What does SSL/TLS provide?', correct: 'Encryption' }
-    ],
-    medium: [
-      { text: 'Port for HTTP?', correct: '80' },
-      { text: 'SQL injection affects which layer?', correct: 'Application' },
-      { text: 'One strong password trait?', correct: 'Length' },
-      { text: 'What is a DDoS attack?', correct: 'Distributed Denial of Service' },
-      { text: 'What is the purpose of a VPN?', correct: 'Secure remote access' },
-      { text: 'What does IDS stand for?', correct: 'Intrusion Detection System' }
-    ],
-    hard: [
-      { text: 'What is MFA?', correct: 'Multi-factor authentication' },
-      { text: 'Firewall purpose?', correct: 'Traffic filtering' },
-      { text: 'TLS provides?', correct: 'Encryption' },
-      { text: 'What is a zero-day vulnerability?', correct: 'Unknown security flaw' },
-      { text: 'What is the principle of least privilege?', correct: 'Minimum necessary access' },
-      { text: 'What is APT in cybersecurity?', correct: 'Advanced Persistent Threat' },
-      { text: 'What is social engineering?', correct: 'Manipulation technique' },
-      { text: 'What does SIEM stand for?', correct: 'Security Information and Event Management' }
-    ]
-  };
-
-  // Legacy quiz-based questions (for backward compatibility)
-  const QUESTIONS_BY_QUIZ = {
-    '1': QUESTIONS_BY_LEVEL.easy,
-    '2': QUESTIONS_BY_LEVEL.medium,
-    '3': QUESTIONS_BY_LEVEL.hard
-  };
-
-  // Determine current level and questions
+  // Determine current level
   let currentLevel = level;
-  let questions = [];
-  
-  if (level && QUESTIONS_BY_LEVEL[level]) {
-    // New level-based system
-    questions = QUESTIONS_BY_LEVEL[level];
-  } else if (quiz && QUESTIONS_BY_QUIZ[quiz]) {
-    // Legacy quiz-based system
-    questions = QUESTIONS_BY_QUIZ[quiz];
-    // Map quiz to level for completion tracking
+  if (!currentLevel && quiz) {
+    // Map legacy quiz to level
     if (quiz === '1') currentLevel = 'easy';
     else if (quiz === '2') currentLevel = 'medium';
     else if (quiz === '3') currentLevel = 'hard';
-  } else {
-    // Default to easy
-    currentLevel = 'easy';
-    questions = QUESTIONS_BY_LEVEL.easy;
+  }
+  if (!currentLevel) currentLevel = 'easy'; // Default
+
+  // ================== FETCH QUESTIONS FROM FIRESTORE ==================
+  // Firestore Security Rules will enforce level gating server-side
+  let questions = [];
+  try {
+    const questionsRef = collection(db, 'questions');
+    const q = query(
+      questionsRef,
+      where('level', '==', currentLevel),
+      orderBy('order', 'asc')
+    );
+    const querySnapshot = await getDocs(q);
+    
+    if (querySnapshot.empty) {
+      // Fallback to hardcoded questions if Firestore is empty (for migration period)
+      console.warn('[question.js] No questions found in Firestore, using fallback');
+      questions = getFallbackQuestions(currentLevel);
+    } else {
+      questions = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        text: doc.data().text,
+        correct: doc.data().correct
+      }));
+    }
+  } catch (error) {
+    console.error('[question.js] Error fetching questions:', error);
+    // If error is permission denied, user doesn't have access to this level
+    if (error.code === 'permission-denied') {
+      alert(`You don't have access to the ${currentLevel} level yet. Complete the previous level first (score >= 60%).`);
+      window.location.href = typeof window.getPath === 'function' ? window.getPath('challenges') : '/html/challenges.html';
+      return;
+    }
+    // Fallback to hardcoded questions
+    questions = getFallbackQuestions(currentLevel);
+  }
+
+  // Fallback questions (for migration period or if Firestore is empty)
+  function getFallbackQuestions(level) {
+    const QUESTIONS_BY_LEVEL = {
+      easy: [
+        { id: 'easy_1', text: 'What does CIA triad stand for?', correct: 'Confidentiality, Integrity, Availability' },
+        { id: 'easy_2', text: 'Which protocol secures web traffic?', correct: 'HTTPS' },
+        { id: 'easy_3', text: 'What is phishing?', correct: 'Social engineering attempt' },
+        { id: 'easy_4', text: 'What is a firewall used for?', correct: 'Network security' },
+        { id: 'easy_5', text: 'What does SSL/TLS provide?', correct: 'Encryption' }
+      ],
+      medium: [
+        { id: 'medium_1', text: 'Port for HTTP?', correct: '80' },
+        { id: 'medium_2', text: 'SQL injection affects which layer?', correct: 'Application' },
+        { id: 'medium_3', text: 'One strong password trait?', correct: 'Length' },
+        { id: 'medium_4', text: 'What is a DDoS attack?', correct: 'Distributed Denial of Service' },
+        { id: 'medium_5', text: 'What is the purpose of a VPN?', correct: 'Secure remote access' },
+        { id: 'medium_6', text: 'What does IDS stand for?', correct: 'Intrusion Detection System' }
+      ],
+      hard: [
+        { id: 'hard_1', text: 'What is MFA?', correct: 'Multi-factor authentication' },
+        { id: 'hard_2', text: 'Firewall purpose?', correct: 'Traffic filtering' },
+        { id: 'hard_3', text: 'TLS provides?', correct: 'Encryption' },
+        { id: 'hard_4', text: 'What is a zero-day vulnerability?', correct: 'Unknown security flaw' },
+        { id: 'hard_5', text: 'What is the principle of least privilege?', correct: 'Minimum necessary access' },
+        { id: 'hard_6', text: 'What is APT in cybersecurity?', correct: 'Advanced Persistent Threat' },
+        { id: 'hard_7', text: 'What is social engineering?', correct: 'Manipulation technique' },
+        { id: 'hard_8', text: 'What does SIEM stand for?', correct: 'Security Information and Event Management' }
+      ]
+    };
+    return QUESTIONS_BY_LEVEL[level] || QUESTIONS_BY_LEVEL.easy;
   }
 
   const question = questions[qNum - 1];
@@ -145,30 +182,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Initialize attempt tracker
   ATTEMPT_TRACKER.init();
 
-  // Check if level is completed (all questions answered)
-  function markLevelCompleted(level) {
-    if (!level) return;
-    
-    if (level === 'easy') {
-      localStorage.setItem('socyberx_easy_completed', 'true');
-    } else if (level === 'medium') {
-      localStorage.setItem('socyberx_medium_completed', 'true');
-    } else if (level === 'hard') {
-      localStorage.setItem('socyberx_hard_completed', 'true');
-    }
-  }
-
-  // Check if all questions for current level are completed
-  function checkLevelCompletion(level, questionNum, totalQuestions) {
-    if (questionNum >= totalQuestions) {
-      // All questions completed for this level
-      markLevelCompleted(level);
-      return true;
-    }
-    return false;
-  }
-
-  // ================== Finalize Attempt and Update User Stats ==================
+  // ================== Finalize Attempt and Submit Score via Cloud Function ==================
   async function finalizeAttempt() {
     if (!ATTEMPT_TRACKER.attemptId) {
       console.log('[Attempt Tracker] No attempt ID, skipping finalization');
@@ -187,6 +201,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const finalScore = ATTEMPT_TRACKER.answersBuffer.reduce((sum, ans) => sum + ans.points, 0);
       const correctCount = ATTEMPT_TRACKER.answersBuffer.filter(ans => ans.isCorrect).length;
       const maxScore = ATTEMPT_TRACKER.pointsPerQuestion * ATTEMPT_TRACKER.totalQuestions;
+      const scorePercent = maxScore > 0 ? Math.round((finalScore / maxScore) * 100) : 0;
       
       // Update attempt document
       const attemptRef = doc(db, 'attempts', ATTEMPT_TRACKER.attemptId);
@@ -202,40 +217,35 @@ document.addEventListener('DOMContentLoaded', () => {
       
       console.log('[Attempt Tracker] Attempt finalized:', ATTEMPT_TRACKER.attemptId);
       
-      // Update user stats
-      const userRef = doc(db, 'users', auth.currentUser.uid);
+      // Submit score via Cloud Function (SERVER-SIDE ENFORCED)
+      const functions = getFunctions(app);
+      const submitQuizResult = httpsCallable(functions, 'submitQuizResult');
       
-      // Read current user data first (for bestScore calculation)
-      let currentBestScore = 0;
-      let currentStats = {};
-      let currentProgress = {};
       try {
-        const userSnap = await getDoc(userRef);
-        if (userSnap.exists()) {
-          const userData = userSnap.data();
-          currentStats = userData?.stats || {};
-          currentProgress = userData?.progress || {};
-          currentBestScore = currentStats.bestScore || 0;
+        const result = await submitQuizResult({
+          level: ATTEMPT_TRACKER.level,
+          score: scorePercent,
+          attemptId: ATTEMPT_TRACKER.attemptId
+        });
+        
+        console.log('[Attempt Tracker] Score submitted via Cloud Function:', result.data);
+        
+        // Show success message if level was unlocked
+        if (result.data.levelUnlocked) {
+          const nextLevel = ATTEMPT_TRACKER.level === 'easy' ? 'Medium' : ATTEMPT_TRACKER.level === 'medium' ? 'Hard' : null;
+          if (nextLevel) {
+            console.log(`[Attempt Tracker] ${nextLevel} level unlocked!`);
+          }
         }
-      } catch (readError) {
-        console.warn('[Attempt Tracker] Failed to read user data, using defaults:', readError);
+      } catch (submitError) {
+        console.error('[Attempt Tracker] Failed to submit score via Cloud Function:', submitError);
+        // Non-blocking - show error but don't block UI
+        const statusEl = document.getElementById('quiz-status');
+        if (statusEl) {
+          statusEl.textContent = 'Quiz completed, but saving results failed. Please try again.';
+          statusEl.className = 'error';
+        }
       }
-      
-      // Prepare update object with nested field paths
-      const userUpdate = {
-        'stats.attemptsCount': increment(1),
-        'stats.totalPoints': increment(finalScore),
-        'stats.bestScore': Math.max(currentBestScore, finalScore)
-      };
-      
-      // Mark level as completed in progress
-      const progressField = `progress.${ATTEMPT_TRACKER.level}Completed`;
-      userUpdate[progressField] = true;
-      
-      // Update user document (updateDoc handles nested paths)
-      await updateDoc(userRef, userUpdate);
-      
-      console.log('[Attempt Tracker] User stats updated');
       
       // Clear attempt tracker
       ATTEMPT_TRACKER.clear();
@@ -243,7 +253,6 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (error) {
       console.error('[Attempt Tracker] Failed to finalize attempt:', error);
       // Non-blocking - quiz completion UI still shows
-      // Show non-blocking message if status element exists
       const statusEl = document.getElementById('quiz-status');
       if (statusEl) {
         statusEl.textContent = 'Quiz completed, but saving results failed. Please try again.';
@@ -271,11 +280,6 @@ document.addEventListener('DOMContentLoaded', () => {
       };
     }
     if (btnSkip) btnSkip.style.display = 'none';
-    
-    // Mark level as completed if we just finished the last question
-    if (currentLevel && qNum > questions.length) {
-      markLevelCompleted(currentLevel);
-    }
     
     return;
   }
@@ -349,9 +353,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const isCorrect = status === 'answered';
     const points = isCorrect ? ATTEMPT_TRACKER.pointsPerQuestion : 0;
     
-    // Generate question ID (use level + question index since questions are hardcoded)
-    // If questions are fetched from Firestore in the future, use question.id instead
-    const qId = `${currentLevel || 'unknown'}_q${qNum}`;
+    // Use question ID from Firestore or fallback
+    const qId = question.id || `${currentLevel || 'unknown'}_q${qNum}`;
     
     // Add to answers buffer
     ATTEMPT_TRACKER.answersBuffer.push({
@@ -363,27 +366,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     
     ATTEMPT_TRACKER.persist();
-    
-    // Save answer with level context (existing localStorage logic)
-    const key = level 
-      ? `cr_answers_${level}_${qNum}` 
-      : `cr_answers_${quiz || 'default'}_${qNum}`;
-    
-    const answerData = {
-      q: qNum,
-      status,
-      ms: elapsedMs,
-      level: currentLevel || null
-    };
-    
-    try {
-      const existing = JSON.parse(localStorage.getItem(key) || 'null');
-      if (!existing) {
-        localStorage.setItem(key, JSON.stringify(answerData));
-      }
-    } catch (e) {
-      console.warn('Failed to save answer:', e);
-    }
     
     return { elapsedMs };
   }
@@ -408,7 +390,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const totalQuestions = questions.length;
     
     // Check if this was the last question
-    if (checkLevelCompletion(currentLevel, next, totalQuestions)) {
+    if (next > totalQuestions) {
       // Level completed - finalize attempt and show completion message
       finalizeAttempt(); // Fire and forget - non-blocking
       
@@ -419,7 +401,7 @@ document.addEventListener('DOMContentLoaded', () => {
         btnNext.textContent = 'Back to Challenges';
         btnNext.onclick = () => {
           const challengesPath = typeof window.getPath === 'function' ? window.getPath('challenges') : '/html/challenges.html';
-        window.location.href = challengesPath;
+          window.location.href = challengesPath;
         };
       }
       if (btnSkip) btnSkip.style.display = 'none';
@@ -427,12 +409,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Continue to next question - use absolute path
-    let nextUrl = '/question.html?';
+    let nextUrl = '/html/question.html?';
     
     if (level) {
       nextUrl += `level=${encodeURIComponent(level)}&q=${next}`;
+    } else if (quiz) {
+      nextUrl += `quiz=${encodeURIComponent(quiz)}&q=${next}`;
     } else {
-      nextUrl += `quiz=${encodeURIComponent(quiz || '1')}&q=${next}`;
+      nextUrl += `level=${encodeURIComponent(currentLevel)}&q=${next}`;
     }
     
     location.href = nextUrl;
@@ -447,10 +431,6 @@ document.addEventListener('DOMContentLoaded', () => {
       // Check if this is the last question
       const isLastQuestion = qNum >= questions.length;
       if (isLastQuestion) {
-        // Mark level as completed before showing completion
-        if (currentLevel) {
-          markLevelCompleted(currentLevel);
-        }
         // Finalize attempt before redirecting
         await finalizeAttempt();
         setTimeout(goNext, 1000); // Give time to show completion message
@@ -469,10 +449,6 @@ document.addEventListener('DOMContentLoaded', () => {
       // Check if this is the last question
       const isLastQuestion = qNum >= questions.length;
       if (isLastQuestion) {
-        // Mark level as completed even if skipped
-        if (currentLevel) {
-          markLevelCompleted(currentLevel);
-        }
         // Finalize attempt before redirecting
         await finalizeAttempt();
         setTimeout(goNext, 1000);

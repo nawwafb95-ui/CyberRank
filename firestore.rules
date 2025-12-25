@@ -1,0 +1,115 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ==================== OTP REQUESTS (SECURE) ====================
+    // Clients CANNOT read or write OTP requests
+    // Only backend Cloud Functions can manage OTP docs
+    match /otpRequests/{otpRequestId} {
+      allow read, write: if false; // Deny all client access
+    }
+
+    // ==================== USERS ====================
+    match /users/{userId} {
+      // Users can read their own data
+      allow read: if request.auth != null && request.auth.uid == userId;
+      
+      // Users can update their own data (except role)
+      allow update: if request.auth != null 
+        && request.auth.uid == userId
+        && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role']);
+      
+      // Only backend can create user docs (during signup)
+      allow create: if false; // Deny client creation - handled by Cloud Functions
+    }
+
+    // ==================== USER STATS ====================
+    match /userStats/{userId} {
+      // Users can read their own stats
+      allow read: if request.auth != null && request.auth.uid == userId;
+      
+      // Only backend can write stats (via Cloud Functions)
+      allow write: if false;
+    }
+
+    // ==================== ATTEMPTS ====================
+    match /attempts/{attemptId} {
+      // Users can read their own attempts
+      allow read: if request.auth != null && request.auth.uid == resource.data.userId;
+      
+      // Users can create their own attempts
+      allow create: if request.auth != null 
+        && request.auth.uid == request.resource.data.userId;
+      
+      // Users cannot update or delete attempts
+      allow update, delete: if false;
+    }
+
+    // ==================== POINT TRANSACTIONS ====================
+    match /pointTransactions/{transactionId} {
+      // Users can read their own transactions
+      allow read: if request.auth != null && request.auth.uid == resource.data.userId;
+      
+      // Only backend can create transactions
+      allow write: if false;
+    }
+
+    // ==================== LOGS ====================
+    match /logs/{logId} {
+      // Only backend can read/write logs
+      allow read, write: if false;
+    }
+
+    // ==================== HELPER FUNCTIONS ====================
+    // Get user stats document
+    function getUserStats() {
+      return get(/databases/$(database)/documents/userStats/$(request.auth.uid)).data;
+    }
+
+    // Check if user can access a quiz level
+    function canAccessQuizLevel(level) {
+      // Easy: always accessible if authenticated
+      if (level == "easy") {
+        return true;
+      }
+      
+      let userStats = getUserStats();
+      
+      // Medium: requires bestScoreEasy >= 60
+      if (level == "medium") {
+        return userStats.bestScoreEasy != null && userStats.bestScoreEasy >= 60;
+      }
+      
+      // Hard: requires bestScoreMedium >= 60
+      if (level == "hard") {
+        return userStats.bestScoreMedium != null && userStats.bestScoreMedium >= 60;
+      }
+      
+      return false;
+    }
+
+    // Check if user is admin
+    function isAdmin() {
+      let userDoc = get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+      return userDoc != null && userDoc.role == "admin";
+    }
+
+    // ==================== QUIZZES (LEVEL-GATED) ====================
+    match /quizzes/{quizId} {
+      // Read: Only authenticated users, and only if they have access to the quiz's level
+      // OR if user is admin (admins can read all quizzes)
+      allow read: if request.auth != null 
+        && (canAccessQuizLevel(resource.data.level) || isAdmin());
+      
+      // Write: Only backend (Cloud Functions) or admins
+      allow write: if isAdmin() || false; // Admins can write, clients cannot
+    }
+
+    // ==================== ADMIN COLLECTIONS ====================
+    // Deny all client access to admin collections
+    match /admin/{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
+
