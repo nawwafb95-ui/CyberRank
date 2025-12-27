@@ -14,13 +14,13 @@ service cloud.firestore {
       // Users can read their own data
       allow read: if request.auth != null && request.auth.uid == userId;
       
+      // Users can create their own document (during signup after auth is created)
+      allow create: if request.auth != null && request.auth.uid == userId;
+      
       // Users can update their own data (except role)
       allow update: if request.auth != null 
         && request.auth.uid == userId
         && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role']);
-      
-      // Only backend can create user docs (during signup)
-      allow create: if false; // Deny client creation - handled by Cloud Functions
     }
 
     // ==================== USER STATS ====================

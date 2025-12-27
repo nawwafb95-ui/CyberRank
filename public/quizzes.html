@@ -1,0 +1,58 @@
+﻿<!doctype html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SOCyberX | Quizzes</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+
+    <link rel="stylesheet" href="/css/base.css" />
+    <link rel="stylesheet" href="/css/components.css" />
+    <link rel="stylesheet" href="/css/pages.css" />
+    <link rel="stylesheet" href="/css/pages/quizzes.css" />
+    <link rel="stylesheet" href="/css/sidebar.css" />
+
+    <!-- Favicon inside public/images -->
+    <link rel="icon" type="image/png" href="/images/favicon.png" />
+  </head>
+
+  <body data-theme="night" data-page="quizzes">
+    <div class="background">
+      <div class="bg-gradient"></div>
+      <div class="bg-blobs">
+        <span class="blob b1"></span>
+        <span class="blob b2"></span>
+        <span class="blob b3"></span>
+      </div>
+      <div class="bg-grid"></div>
+    </div>
+
+    <main class="container" style="padding:0 16px 24px 16px; display:flex; justify-content:center;">
+      <div class="card" style="max-width:640px; width:100%; text-align:center;">
+        <h2 style="margin-top:0;">Choose a Quiz</h2>
+
+        <div class="quiz-buttons">
+          <!-- Buttons instead of links, let JS handle them -->
+          <button class="btn primary" id="quiz-1">Quiz 1</button>
+          <button class="btn primary" id="quiz-2">Quiz 2</button>
+          <button class="btn primary" id="quiz-3">Quiz 3</button>
+        </div>
+      </div>
+    </main>
+
+    <!-- Scripts -->
+    <script src="/js/core.js"></script>
+    <script src="/js/main.js"></script>
+    <script type="module" src="/js/navAuth.js"></script>
+    <script src="/js/sidebar-inject.js"></script>
+    <script src="/js/sidebar.js"></script>
+    <script src="/js/quizzes.js"></script>
+  </body>
+</html>
+

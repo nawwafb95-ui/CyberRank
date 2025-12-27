@@ -1,0 +1,154 @@
+/* ===========================
+   Shared Page Utilities
+   =========================== */
+
+/* Cyber Side Menu (Minimal) - Shared across pages */
+.cyber-side-menu {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  z-index: 50;
+}
+
+.cyber-side-dot {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 1px solid var(--border, rgba(148, 163, 184, 0.4));
+  background: radial-gradient(
+    circle at 30% 20%,
+    var(--glow, rgba(56, 189, 248, 0.25)),
+    var(--card)
+  );
+  box-shadow:
+    0 0 0 4px var(--glow, rgba(56, 189, 248, 0.2)),
+    0 0 20px var(--glow, rgba(56, 189, 248, 0.15)),
+    0 4px 12px rgba(15, 23, 42, 0.8);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.25s ease;
+  outline: none;
+}
+
+.cyber-side-dot:hover {
+  border-color: var(--glow, rgba(56, 189, 248, 0.7));
+  box-shadow:
+    0 0 0 4px var(--glow, rgba(56, 189, 248, 0.35)),
+    0 0 30px var(--glow, rgba(56, 189, 248, 0.25)),
+    0 6px 16px rgba(15, 23, 42, 0.9);
+  transform: scale(1.05);
+}
+
+.cyber-side-dot:active {
+  transform: scale(0.98);
+}
+
+.dot-inner {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 20%, #f9fafb, var(--accent-strong));
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.6);
+}
+
+.cyber-side-panel {
+  position: absolute;
+  top: calc(100% + 12px);
+  right: 0;
+  min-width: 200px;
+  padding: 14px 12px;
+  background: var(--card);
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  box-shadow: 0 30px 80px var(--shadow, rgba(15, 23, 42, 0.9));
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-8px);
+  transition: all 0.25s ease;
+  pointer-events: none;
+}
+
+.cyber-side-menu.open .cyber-side-panel {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  pointer-events: all;
+}
+
+.side-menu-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.side-menu-item {
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--text);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s ease;
+}
+
+.side-menu-item:hover {
+  background: var(--surface);
+}
+
+.side-menu-link {
+  display: block;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--text);
+  text-decoration: none;
+  transition: background 0.15s ease;
+}
+
+.side-menu-link:hover {
+  background: var(--surface);
+}
+  
+  /* ===========================
+     Responsive (Pages)
+     =========================== */
+  
+  @media (max-width: 900px) {
+    .cyber-side-menu {
+      top: 20px;
+      right: 20px;
+    }
+
+    .cyber-side-dot {
+      width: 44px;
+      height: 44px;
+    }
+  }
+  
+  @media (max-width: 640px) {
+    .cyber-side-menu {
+      top: 16px;
+      right: 16px;
+    }
+
+    .cyber-side-dot {
+      width: 40px;
+      height: 40px;
+    }
+
+    .dot-inner {
+      width: 10px;
+      height: 10px;
+    }
+
+    .cyber-side-panel {
+      min-width: 180px;
+      padding: 12px 10px;
+    }
+  }

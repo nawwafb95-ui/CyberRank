@@ -1,0 +1,217 @@
+/* ===========================
+   Challenges Page - Level Cards
+   =========================== */
+
+body[data-page="challenges"] .level-card {
+  transition: opacity 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+  position: relative;
+}
+
+body[data-page="challenges"] .level-card:hover:not(.level-locked) {
+  transform: translateY(-4px);
+}
+
+body[data-page="challenges"] .level-locked {
+  opacity: 0.5;
+  pointer-events: none;
+  position: relative;
+}
+
+body[data-page="challenges"] .level-locked .btn {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+body[data-page="challenges"] .level-locked-badge {
+  display: inline-block;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+body[data-page="challenges"] .level-card h2 {
+  text-transform: capitalize;
+}
+
+/* ===========================
+   SOCyberX Animated Neon Border Cards
+   Moving neon border glow (edge-only, no interior gradients)
+   =========================== */
+
+.socx-neon-card {
+  position: relative;
+  background: rgba(11, 18, 32, 0.95) !important; /* Dark base - no gradient overlay */
+  border: 1px solid transparent; /* Replaced by animated border */
+  border-radius: var(--radius-lg, 20px);
+  overflow: hidden; /* Clip the animated border to card edges */
+  transition: transform 0.3s ease;
+  isolation: isolate; /* Create stacking context */
+  z-index: 1;
+}
+
+/* Animated border pseudo-element - creates rotating border ring */
+.socx-neon-card::before {
+  content: '';
+  position: absolute;
+  inset: -6px; /* Extend beyond card for 6px border (thicker) */
+  border-radius: var(--radius-lg, 20px);
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    transparent 250deg,
+    currentColor 280deg,
+    currentColor 320deg,
+    transparent 360deg
+  );
+  /* Create border ring using mask - show only the border area */
+  /* Technique: mask with padding-box excludes the inner content */
+  padding: 6px; /* Border thickness (increased from 4px) */
+  -webkit-mask: 
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: exclude;
+  mask: 
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  z-index: -1;
+  animation: socx-border-rotate 6.5s linear infinite; /* Slightly slower for smoother visibility */
+  opacity: 1; /* Full brightness (increased from 0.95) */
+}
+
+/* Stronger outer glow using box-shadow */
+.socx-neon-card::after {
+  content: '';
+  position: absolute;
+  inset: -6px; /* Match border thickness */
+  border-radius: var(--radius-lg, 20px);
+  pointer-events: none;
+  z-index: -2;
+  opacity: 0.85; /* Increased from 0.7 for better visibility */
+  transition: opacity 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Easy - Cyan/Blue neon */
+.socx-neon-card.socx-neon-easy::before {
+  color: rgba(0, 229, 255, 1); /* Bright cyan */
+}
+
+.socx-neon-card.socx-neon-easy::after {
+  box-shadow: 
+    0 0 25px rgba(0, 229, 255, 0.8), /* Reduced blur, higher opacity for clarity */
+    0 0 50px rgba(0, 229, 255, 0.6), /* Stronger middle glow */
+    0 0 80px rgba(0, 229, 255, 0.4), /* Extended outer glow */
+    0 0 120px rgba(0, 229, 255, 0.2); /* Additional far glow layer */
+}
+
+.socx-neon-card.socx-neon-easy:hover:not(.level-locked)::after {
+  opacity: 1; /* Full brightness on hover */
+  box-shadow: 
+    0 0 35px rgba(0, 229, 255, 1), /* Maximum intensity inner glow */
+    0 0 70px rgba(0, 229, 255, 0.8), /* Strong middle glow */
+    0 0 110px rgba(0, 229, 255, 0.6), /* Extended glow */
+    0 0 150px rgba(0, 229, 255, 0.4); /* Far-reaching glow */
+}
+
+/* Medium - Purple/Pink neon */
+.socx-neon-card.socx-neon-medium::before {
+  color: rgba(168, 85, 247, 1); /* Bright purple */
+}
+
+.socx-neon-card.socx-neon-medium::after {
+  box-shadow: 
+    0 0 25px rgba(168, 85, 247, 0.8), /* Reduced blur, higher opacity for clarity */
+    0 0 50px rgba(168, 85, 247, 0.6), /* Stronger middle glow */
+    0 0 80px rgba(168, 85, 247, 0.4), /* Extended outer glow */
+    0 0 120px rgba(168, 85, 247, 0.2); /* Additional far glow layer */
+}
+
+.socx-neon-card.socx-neon-medium:hover:not(.level-locked)::after {
+  opacity: 1; /* Full brightness on hover */
+  box-shadow: 
+    0 0 35px rgba(168, 85, 247, 1), /* Maximum intensity inner glow */
+    0 0 70px rgba(168, 85, 247, 0.8), /* Strong middle glow */
+    0 0 110px rgba(168, 85, 247, 0.6), /* Extended glow */
+    0 0 150px rgba(168, 85, 247, 0.4); /* Far-reaching glow */
+}
+
+/* Hard - Muted when locked, Orange when unlocked */
+.socx-neon-card.socx-neon-hard::before {
+  color: rgba(148, 163, 184, 0.5); /* Muted gray for locked */
+  animation-duration: 12s; /* Slower animation when locked */
+}
+
+.socx-neon-card.socx-neon-hard:not(.level-locked)::before {
+  color: rgba(251, 146, 60, 1); /* Orange when unlocked */
+  animation-duration: 6.5s; /* Normal speed when unlocked (matches base) */
+}
+
+.socx-neon-card.socx-neon-hard::after {
+  box-shadow: 
+    0 0 20px rgba(148, 163, 184, 0.4), /* Slightly brighter for locked state */
+    0 0 40px rgba(148, 163, 184, 0.25),
+    0 0 60px rgba(148, 163, 184, 0.15);
+}
+
+.socx-neon-card.socx-neon-hard:not(.level-locked)::after {
+  box-shadow: 
+    0 0 25px rgba(251, 146, 60, 0.7), /* Reduced blur, higher opacity for clarity */
+    0 0 50px rgba(251, 146, 60, 0.5), /* Stronger middle glow */
+    0 0 80px rgba(251, 146, 60, 0.35), /* Extended outer glow */
+    0 0 120px rgba(251, 146, 60, 0.2); /* Additional far glow layer */
+}
+
+.socx-neon-card.socx-neon-hard:hover:not(.level-locked)::after {
+  opacity: 1; /* Full brightness on hover */
+  box-shadow: 
+    0 0 35px rgba(251, 146, 60, 1), /* Maximum intensity inner glow */
+    0 0 70px rgba(251, 146, 60, 0.8), /* Strong middle glow */
+    0 0 110px rgba(251, 146, 60, 0.6), /* Extended glow */
+    0 0 150px rgba(251, 146, 60, 0.4); /* Far-reaching glow */
+}
+
+/* Locked state - reduced visibility and slower animation */
+.socx-neon-card.level-locked::before {
+  opacity: 0.4;
+  animation-duration: 12s;
+}
+
+.socx-neon-card.level-locked::after {
+  opacity: 0.3;
+}
+
+/* Animation keyframes - rotate the conic gradient */
+@keyframes socx-border-rotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Reduced Motion Support - disable animation */
+@media (prefers-reduced-motion: reduce) {
+  .socx-neon-card::before {
+    animation: none;
+    /* Show static border instead */
+    background: currentColor;
+    opacity: 0.7;
+  }
+  
+  .socx-neon-card {
+    transition: none;
+  }
+  
+  .socx-neon-card::after {
+    transition: none;
+  }
+}
+

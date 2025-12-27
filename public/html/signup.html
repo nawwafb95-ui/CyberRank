@@ -1,12 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8" />
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="stylesheet" href="../css/base.css" />
-    <link rel="stylesheet" href="../css/auth.css" />
-    <link rel="stylesheet" href="../css/sidebar.css" />
-    <title>Sign Up</title>
+
+    <link rel="stylesheet" href="/css/base.css" />
+    <link rel="stylesheet" href="/css/auth.css" />
+    <link rel="stylesheet" href="/css/sidebar.css" />
+    <link rel="icon" type="image/png" href="/images/favicon.png" />
+    <title>SOCyberX | Sign Up</title>
   </head>
 
   <body class="auth-page" data-page="signup">
@@ -16,10 +18,10 @@
         <h2>Create Account</h2>
         <p>Join SOCyberX and start learning securely</p>
 
-        <form id="signup-form">
-          <!-- Form-level error box (hidden by default, shown on error) -->
-          <div class="error-box"></div>
-          
+        <form id="signup-form" novalidate>
+          <!-- Form-level error box -->
+          <div id="signup-alert" class="error-box" aria-live="polite"></div>
+
           <!-- User Name -->
           <div class="form-group">
             <div class="field">
@@ -32,9 +34,7 @@
                 autocomplete="username"
                 required
               />
-              <label for="signup-username" class="floating-label">
-                User Name
-              </label>
+              <label for="signup-username" class="floating-label">User Name</label>
             </div>
             <small id="username-hint" class="field-hint">
               Ex: <strong>Cyber_123</strong>
@@ -54,9 +54,7 @@
                 autocomplete="email"
                 required
               />
-              <label for="signup-email" class="floating-label">
-                Email
-              </label>
+              <label for="signup-email" class="floating-label">Email</label>
             </div>
             <small class="field-hint">
               Ex: <strong>Cyber@gmail.com</strong>
@@ -76,9 +74,7 @@
                 autocomplete="new-password"
                 required
               />
-              <label for="signup-password" class="floating-label">
-                Password
-              </label>
+              <label for="signup-password" class="floating-label">Password</label>
               <button
                 type="button"
                 class="toggle-visibility"
@@ -89,12 +85,12 @@
               </button>
             </div>
             <small id="password-hint" class="field-hint">
-              Ex: <strong>Cyber@123</strong> 
+              Ex: <strong>Cyber@123</strong>
             </small>
             <p class="error" data-error-for="signup-password"></p>
           </div>
 
-          <!-- Confirm Password (no example) -->
+          <!-- Confirm Password -->
           <div class="form-group">
             <div class="field password-wrapper">
               <input
@@ -106,9 +102,7 @@
                 autocomplete="new-password"
                 required
               />
-              <label for="signup-confirm" class="floating-label">
-                Confirm Password
-              </label>
+              <label for="signup-confirm" class="floating-label">Confirm Password</label>
               <button
                 type="button"
                 class="toggle-visibility"
@@ -121,25 +115,30 @@
             <p class="error" data-error-for="signup-confirm"></p>
           </div>
 
-          <button type="submit">Sign Up</button>
-          
-          <!-- Status message for OTP sending feedback -->
-          <div id="signup-status" class="error" style="margin-top: 12px; min-height: 20px; text-align: center; font-size: 14px;"></div>
+          <button type="submit" id="signup-submit">Sign Up</button>
+
+          <!-- Status message -->
+          <div
+            id="signup-status"
+            class="error"
+            style="margin-top: 12px; min-height: 20px; text-align: center; font-size: 14px;"
+          ></div>
         </form>
 
         <p class="switch">
           Already have an account?
-          <a href="/login.html">Login</a>
+          <!-- ✅ IMPORTANT: use rewrite route, not /login.html -->
+          <a href="/login">Login</a>
         </p>
       </div>
 
       <!-- Image on the right -->
       <div class="auth-image">
-        <img src="../images/signup.jpeg" alt="Signup Image" />
+        <img src="/images/signup.jpeg" alt="Signup Image" />
       </div>
     </div>
 
-    <!-- Success Popup -->
+    <!-- Success Popup (optional) -->
     <div id="successPopup" class="popup-overlay">
       <div class="popup-box">
         <h3>Account Created ✔️</h3>
@@ -148,12 +147,17 @@
       </div>
     </div>
 
-    <script src="../js/config.js"></script>
-    <script src="../js/core.js"></script>
-    <script src="../js/main.js"></script>
-    <script type="module" src="../js/navAuth.js"></script>
-    <script src="../js/sidebar-inject.js"></script>
-    <script src="../js/sidebar.js"></script>
-    <script type="module" src="../js/signup.js"></script>
+    <!-- ✅ Load globals first (defer so DOM is safe) -->
+    <script src="/js/config.js" defer></script>
+    <script src="/js/core.js" defer></script>
+    <script src="/js/main.js" defer></script>
+
+    <!-- Optional sidebar -->
+    <script src="/js/sidebar-inject.js" defer></script>
+    <script src="/js/sidebar.js" defer></script>
+
+    <!-- ✅ Modules last -->
+    <script type="module" src="/js/navAuth.js"></script>
+    <script type="module" src="/js/signup.js"></script>
   </body>
 </html>

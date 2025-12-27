@@ -1,0 +1,46 @@
+﻿<!doctype html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SOCyberX | Dashboard</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+
+    <link rel="stylesheet" href="/css/base.css" />
+    <link rel="stylesheet" href="/css/components.css" />
+    <link rel="stylesheet" href="/css/pages.css" />
+    <link rel="stylesheet" href="/css/pages/dashboard.css" />
+    <link rel="stylesheet" href="/css/sidebar.css" />
+
+    <!-- Favicon from public/images -->
+    <link rel="icon" type="image/png" href="/images/favicon.png" />
+  </head>
+
+  <body data-theme="colors" data-page="dashboard">
+    <main class="dash">
+      <h2>Your Scores</h2>
+
+      <div class="add-score">
+        <input id="score" type="number" placeholder="Enter score" />
+        <button id="btn-add-score" class="btn">Add</button>
+      </div>
+
+      <ul id="scores"></ul>
+    </main>
+
+    <!-- Scripts -->
+    <script src="/js/core.js"></script>
+    <script src="/js/main.js"></script>
+    <script type="module" src="/js/navAuth.js"></script>
+    <script src="/js/sidebar-inject.js"></script>
+    <script src="/js/sidebar.js"></script>
+    <script type="module" src="/js/dashboard.js"></script>
+  </body>
+</html>
+

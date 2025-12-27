@@ -1,0 +1,83 @@
+/* ===========================
+   Success Page Styles
+   =========================== */
+
+body[data-page="success"] .success,
+body.otp-page .success {
+  min-height: calc(100vh - 72px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 30px 16px;
+}
+
+body[data-page="success"] .success-card,
+body.otp-page .success-card {
+  position: relative;
+  max-width: 640px;
+  width: 100%;
+  padding: 26px 24px;
+  border-radius: 22px;
+  background: radial-gradient(circle at top left, rgba(56, 189, 248, 0.15), transparent 55%),
+    radial-gradient(circle at bottom right, rgba(251, 191, 36, 0.15), transparent 50%),
+    var(--card);
+  border: 1px solid var(--border);
+  box-shadow: 0 28px 60px var(--shadow, rgba(15, 23, 42, 0.9));
+  text-align: center;
+  color: var(--text);
+}
+
+body[data-page="success"] .success-title,
+body.otp-page .success-title {
+  font-size: 26px;
+  margin-bottom: 8px;
+  color: var(--text);
+}
+
+body[data-page="success"] .success-sub,
+body.otp-page .success-sub {
+  color: var(--muted);
+  margin-bottom: 18px;
+}
+
+body[data-page="success"] .confetti,
+body.otp-page .confetti {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  border-radius: inherit;
+  z-index: -1;
+}
+
+body[data-page="success"] .confetti span,
+body.otp-page .confetti span {
+  position: absolute;
+  width: 6px;
+  height: 14px;
+  border-radius: 999px;
+  animation: confettiFall 2s linear infinite;
+}
+
+@keyframes confettiFall {
+  from {
+    transform: translateY(-40px) rotate(0deg);
+    opacity: 0;
+  }
+  30% {
+    opacity: 1;
+  }
+  to {
+    transform: translateY(260px) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  body[data-page="success"] .success-card,
+  body.otp-page .success-card {
+    padding: 22px 18px;
+  }
+}
+

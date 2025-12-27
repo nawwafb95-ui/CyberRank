@@ -1,0 +1,127 @@
+﻿<!doctype html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SOCyberX | Challenges</title>
+
+    <!-- Google Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="/css/base.css" />
+    <link rel="stylesheet" href="/css/components.css" />
+    <link rel="stylesheet" href="/css/pages.css" />
+    <link rel="stylesheet" href="/css/pages/challenges.css" />
+    <link rel="stylesheet" href="/css/sidebar.css" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/images/favicon.png" />
+  </head>
+
+  <body data-theme="night" data-page="challenges">
+    <!-- Background -->
+    <div class="background">
+      <div class="bg-gradient"></div>
+
+      <div class="bg-blobs">
+        <span class="blob b1"></span>
+        <span class="blob b2"></span>
+        <span class="blob b3"></span>
+      </div>
+
+      <div class="bg-grid"></div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="container" style="padding-top: 100px; padding-bottom: 48px;">
+      <!-- Back Link -->
+      <div style="margin-bottom: 24px;">
+        <a href="/" class="link-btn" style="text-decoration: none;">
+          â† Back to Home
+        </a>
+      </div>
+
+      <!-- Title -->
+      <h1 style="text-align: center; margin-bottom: 48px; font-size: 32px; font-weight: 700;">
+        Choose Your Challenge Level
+      </h1>
+
+      <!-- Level Cards -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 32px; max-width: 1000px; margin: 0 auto;">
+
+        <!-- Easy Level Card -->
+        <div class="card level-card socx-neon-card socx-neon-easy" id="level-easy">
+          <div style="text-align: center;">
+            <h2 style="margin-top: 0; margin-bottom: 12px; font-size: 24px; font-weight: 700; color: var(--accent-strong);">
+              Easy
+            </h2>
+            <p style="color: var(--muted); margin-bottom: 24px; line-height: 1.6;">
+              Basic SOC alerts and fundamental security concepts. Perfect for beginners.
+            </p>
+            <button class="btn primary" id="btn-easy" style="width: 100%; padding: 12px;">
+              Start Easy
+            </button>
+          </div>
+        </div>
+
+        <!-- Medium Level Card -->
+        <div class="card level-card socx-neon-card socx-neon-medium level-locked" id="level-medium">
+          <div style="text-align: center; position: relative;">
+            <span class="level-locked-badge" style="position: absolute; top: -12px; right: -12px; background: rgba(148, 163, 184, 0.3); color: var(--muted); padding: 4px 12px; border-radius: 999px; font-size: 12px; font-weight: 600; border: 1px solid rgba(148, 163, 184, 0.4);">
+              ðŸ”’ Locked
+            </span>
+            <h2 style="margin-top: 0; margin-bottom: 12px; font-size: 24px; font-weight: 700; color: var(--accent-strong);">
+              Medium
+            </h2>
+            <p style="color: var(--muted); margin-bottom: 24px; line-height: 1.6;">
+              More complex alerts and intermediate scenarios. Complete Easy level first.
+            </p>
+            <button class="btn primary" id="btn-medium" disabled style="width: 100%; padding: 12px;">
+              Start Medium
+            </button>
+            <p style="font-size: 12px; color: var(--muted); margin-top: 12px; margin-bottom: 0;">
+              Complete Easy level to unlock
+            </p>
+          </div>
+        </div>
+
+        <!-- Hard Level Card -->
+        <div class="card level-card socx-neon-card socx-neon-hard level-locked" id="level-hard">
+          <div style="text-align: center; position: relative;">
+            <span class="level-locked-badge" style="position: absolute; top: -12px; right: -12px; background: rgba(148, 163, 184, 0.3); color: var(--muted); padding: 4px 12px; border-radius: 999px; font-size: 12px; font-weight: 600; border: 1px solid rgba(148, 163, 184, 0.4);">
+              ðŸ”’ Locked
+            </span>
+            <h2 style="margin-top: 0; margin-bottom: 12px; font-size: 24px; font-weight: 700; color: var(--accent-strong);">
+              Hard
+            </h2>
+            <p style="color: var(--muted); margin-bottom: 24px; line-height: 1.6;">
+              Advanced SOC scenarios and multi-stage incidents. Complete Medium level first.
+            </p>
+            <button class="btn primary" id="btn-hard" disabled style="width: 100%; padding: 12px;">
+              Start Hard
+            </button>
+            <p style="font-size: 12px; color: var(--muted); margin-top: 12px; margin-bottom: 0;">
+              Complete Medium level to unlock
+            </p>
+          </div>
+        </div>
+
+      </div>
+    </main>
+
+    <!-- Scripts (IMPORTANT: defer prevents freezing / DOM null issues) -->
+    <script defer src="/js/core.js"></script>
+    <script defer src="/js/main.js"></script>
+    <script type="module" src="/js/navAuth.js"></script>
+    <script defer src="/js/sidebar-inject.js"></script>
+    <script defer src="/js/sidebar.js"></script>
+    <script defer src="/js/challenges.js"></script>
+  </body>
+</html>
+

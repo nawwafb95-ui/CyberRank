@@ -1,5 +1,8 @@
 {
   "projects": {
-    "default": "cyberrank-a4380"
-  }
+    "default": "cyberrank-a4380",
+    "socyberx": "cyberrank-a4380"
+  },
+  "targets": {},
+  "etags": {}
 }

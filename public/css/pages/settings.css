@@ -1,0 +1,29 @@
+/* ===========================
+   Settings Page Styles
+   =========================== */
+
+body[data-page="settings"] .section {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 96px 24px 40px;
+}
+
+body[data-page="settings"] .section h1,
+body[data-page="settings"] .section h2 {
+  font-weight: 700;
+  margin-bottom: 12px;
+  color: var(--text);
+}
+
+body[data-page="settings"] .section p {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  body[data-page="settings"] .section {
+    padding-top: 88px;
+  }
+}
+

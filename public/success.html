@@ -1,0 +1,203 @@
+﻿<!doctype html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SOCyberX | Verify OTP</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <link rel="stylesheet" href="/css/base.css" />
+    <link rel="stylesheet" href="/css/components.css" />
+    <link rel="stylesheet" href="/css/pages.css" />
+    <link rel="stylesheet" href="/css/pages/success.css" />
+    <link rel="stylesheet" href="/css/sidebar.css" />
+
+    <link rel="icon" type="image/png" href="/images/favicon.png" />
+
+    <style>
+      body.otp-page {
+        font-family: "Inter", Arial, sans-serif;
+        background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        margin: 0;
+      }
+
+      .otp-container {
+        background: #ffffff;
+        border-radius: 24px;
+        padding: 48px 40px;
+        max-width: 480px;
+        width: 100%;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        text-align: center;
+      }
+
+      .otp-icon {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 24px;
+        font-size: 36px;
+      }
+
+      .otp-title {
+        font-size: 28px;
+        font-weight: 700;
+        color: #1e293b;
+        margin: 0 0 12px;
+      }
+
+      .otp-subtitle {
+        font-size: 15px;
+        color: #64748b;
+        margin: 0 0 32px;
+        line-height: 1.5;
+      }
+
+      .otp-subtitle strong {
+        color: #1e293b;
+        font-weight: 600;
+      }
+
+      .otp-inputs {
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+        margin-bottom: 24px;
+      }
+
+      .otp-input {
+        width: 56px;
+        height: 56px;
+        border: 2px solid #e2e8f0;
+        border-radius: 12px;
+        text-align: center;
+        font-size: 24px;
+        font-weight: 600;
+        color: #1e293b;
+        background: #ffffff;
+        outline: none;
+        transition: all 0.2s;
+      }
+
+      .otp-input:focus {
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+      }
+
+      .otp-input:disabled {
+        background: #f1f5f9;
+        cursor: not-allowed;
+      }
+
+      .otp-resend {
+        font-size: 14px;
+        color: #64748b;
+        margin-bottom: 32px;
+      }
+
+      .otp-resend a {
+        color: #3b82f6;
+        text-decoration: none;
+        font-weight: 600;
+        cursor: pointer;
+      }
+
+      .otp-resend a:hover {
+        text-decoration: underline;
+      }
+
+      .otp-verify-btn {
+        width: 100%;
+        padding: 14px 24px;
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        color: #ffffff;
+        border: none;
+        border-radius: 12px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        margin-bottom: 16px;
+      }
+
+      .otp-verify-btn:hover:not(:disabled) {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+      }
+
+      .otp-verify-btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+
+      .otp-status {
+        font-size: 14px;
+        color: #64748b;
+        min-height: 20px;
+        margin-top: 8px;
+      }
+
+      .otp-status.error {
+        color: #ef4444;
+      }
+
+      .otp-status.success {
+        color: #10b981;
+      }
+    </style>
+
+    <!-- OTP verification page - always loads -->
+    <!-- OTP enable/disable is controlled by signup.js and otp.js -->
+  </head>
+
+  <body class="otp-page" data-page="success">
+    <div class="otp-container">
+      <div class="otp-icon">ðŸ”</div>
+      <h1 class="otp-title">Verify OTP</h1>
+      <p class="otp-subtitle">
+        Enter the 6-digit code sent to <strong id="otp-email">your email</strong>
+      </p>
+
+      <div class="otp-inputs">
+        <input type="text" id="otp-0" class="otp-input" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="off" />
+        <input type="text" id="otp-1" class="otp-input" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="off" />
+        <input type="text" id="otp-2" class="otp-input" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="off" />
+        <input type="text" id="otp-3" class="otp-input" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="off" />
+        <input type="text" id="otp-4" class="otp-input" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="off" />
+        <input type="text" id="otp-5" class="otp-input" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="off" />
+      </div>
+
+      <p class="otp-resend">
+        Didn't receive code? <a id="resend-otp" href="#">Resend OTP</a>
+      </p>
+
+      <button type="button" id="verify-otp" class="otp-verify-btn">Verify OTP</button>
+
+      <div id="otp-status" class="otp-status"></div>
+    </div>
+
+    <script src="/js/config.js"></script>
+    <script src="/js/core.js"></script>
+    <script src="/js/main.js"></script>
+    <script type="module" src="/js/navAuth.js"></script>
+    <script src="/js/sidebar-inject.js"></script>
+    <script src="/js/sidebar.js"></script>
+    <script type="module" src="/js/otp.js"></script>
+  </body>
+</html>
+

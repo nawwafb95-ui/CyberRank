@@ -195,6 +195,48 @@ body.auth-page {
   box-shadow: 0 2px 8px rgba(239, 68, 68, 0.15);
 }
 
+.error-box {
+  display: none;               /* hide by default */
+}
+
+.error-box.visible {
+  display: block;              /* show when needed */
+}
+
+/* Types */
+.error-box.success {
+  background: rgba(16, 185, 129, 0.12);
+  border-color: rgba(16, 185, 129, 0.35);
+  color: #a7f3d0;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.12);
+}
+
+.error-box.warning {
+  background: rgba(245, 158, 11, 0.12);
+  border-color: rgba(245, 158, 11, 0.35);
+  color: #fde68a;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.12);
+}
+
+.error-box.info {
+  background: rgba(56, 189, 248, 0.12);
+  border-color: rgba(56, 189, 248, 0.35);
+  color: #bae6fd;
+  box-shadow: 0 2px 8px rgba(56, 189, 248, 0.12);
+}
+
+/* icon per type */
+.error-box::before {
+  content: "";
+  margin-right: 6px;
+  font-size: 16px;
+}
+
+.error-box.error::before   { content: "❌ "; }
+.error-box.success::before { content: "✅ "; }
+.error-box.warning::before { content: "⚠️ "; }
+.error-box.info::before    { content: "⏳ "; }
+
 .error-box.visible {
   opacity: 1;
   max-height: 200px;

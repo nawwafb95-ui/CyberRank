@@ -20,8 +20,8 @@
     FUNCTIONS_BASE_URL: (function() {
       const hostname = window.location.hostname;
       
-      // Production domain (replace with your actual domain)
-      if (hostname === 'yourdomain.com' || hostname === 'www.yourdomain.com') {
+      // Production domain
+      if (hostname === 'socyberx.com' || hostname === 'www.socyberx.com') {
         return 'https://us-central1-cyberrank-a4380.cloudfunctions.net';
       }
       
@@ -35,7 +35,8 @@
     })(),
     
     // OTP enabled by default (for security)
-    OTP_ENABLED: true
+    // Set to false to disable OTP verification (signup will work without Cloud Functions)
+    OTP_ENABLED: false
   };
 
   // Merge with user-provided config (if any)

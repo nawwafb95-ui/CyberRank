@@ -12,7 +12,7 @@ const db = admin.firestore();
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const FROM_EMAIL = process.env.FROM_EMAIL;
 
-// Allow localhost origins
+// Allow localhost origins and production domains
 const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(",").map(o => o.trim())
   : [
@@ -20,7 +20,9 @@ const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS
       "http://localhost:3000",
       "http://localhost:8080",
       "http://127.0.0.1:5173",
-      "http://127.0.0.1:3000"
+      "http://127.0.0.1:3000",
+      "https://socyberx.com",
+      "https://www.socyberx.com"
     ];
 
 function isOriginAllowed(origin) {

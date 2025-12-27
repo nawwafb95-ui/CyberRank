@@ -1,0 +1,243 @@
+/* ===========================
+   Top Navigation (Navbar)
+   =========================== */
+
+   .topbar {
+    position: fixed;
+    inset-inline: 0;
+    top: 0;
+    z-index: 40;
+    height: 64px;
+    padding: 0 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    background: var(--card);
+    border-bottom: 1px solid var(--border);
+  }
+  
+  /* Small logo above */
+  .brand-mini {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 700;
+    font-size: 18px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text);
+  }
+  
+  .brand-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 999px;
+    background: radial-gradient(circle at 30% 20%, #f9fafb, var(--accent-strong));
+    box-shadow: 0 0 0 6px rgba(56, 189, 248, 0.35);
+  }
+  
+  /* Right side of navbar */
+  .nav {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  /* ===========================
+     Buttons
+     =========================== */
+  
+  .link-btn,
+  .btn {
+    position: relative;
+    border-radius: 999px;
+    border: 1px solid var(--border, rgba(148, 163, 184, 0.4));
+    padding: 6px 14px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    background: var(--surface);
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease,
+      color 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  
+  .link-btn:hover,
+  .btn:hover {
+    background: var(--surface);
+    border-color: var(--glow, rgba(129, 140, 248, 0.8));
+    box-shadow: 0 0 0 1px var(--glow, rgba(56, 189, 248, 0.35));
+    transform: translateY(-0.5px);
+  }
+  
+  .link-btn:active,
+  .btn:active {
+    transform: translateY(0);
+    box-shadow: none;
+  }
+  
+  
+  /* Main CTA button */
+  .cta {
+    border-radius: 999px;
+    padding: 12px 26px;
+    font-size: 15px;
+    font-weight: 600;
+    border: none;
+    background-image: linear-gradient(120deg, #2563eb, #0ea5e9);
+    color: #f9fafb;
+    box-shadow: 0 20px 45px rgba(37, 99, 235, 0.5);
+  }
+  
+  .cta:hover {
+    filter: brightness(1.05);
+    box-shadow: 0 24px 60px rgba(37, 99, 235, 0.65);
+  }
+  
+  .cta:active {
+    filter: brightness(0.98);
+    box-shadow: 0 16px 40px var(--shadow, rgba(15, 23, 42, 0.9));
+  }
+  
+  /* Quizzes button */
+  .quizzes-btn {
+    min-width: 140px;
+  }
+  
+  /* Ghost button (like success page) */
+  .ghost {
+    border-radius: 999px;
+    padding: 9px 18px;
+    font-size: 14px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text);
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease, transform 0.08s ease;
+  }
+  
+  .ghost:hover {
+    background: var(--surface);
+    transform: translateY(-1px);
+  }
+  
+  /* ===========================
+     Dropdowns
+     =========================== */
+  
+  .dropdown {
+    position: relative;
+  }
+  
+  .dropdown-panel {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 8px);
+    min-width: 220px;
+    padding: 12px 12px 14px;
+    background: var(--card);
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    box-shadow: 0 30px 80px var(--shadow, rgba(15, 23, 42, 0.9));
+    color: var(--text);
+    display: none;
+  }
+  
+  .dropdown.open .dropdown-panel {
+    display: block;
+  }
+  
+  /* User info card inside dropdown */
+  .user-info-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  
+  .avatar-wrap.info {
+    width: 52px;
+    height: 52px;
+    border-radius: 999px;
+    overflow: hidden;
+    background: radial-gradient(circle at 0 0, var(--card), var(--bg));
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .avatar-wrap.info img.avatar {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  .info-box {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    column-gap: 6px;
+    row-gap: 2px;
+    font-size: 12px;
+  }
+  
+  .info-title {
+    color: var(--muted);
+  }
+  
+  .info-value {
+    font-weight: 500;
+  }
+  
+  .info-links {
+    margin-top: 10px;
+    display: flex;
+    gap: 8px;
+  }
+  
+  
+  /* ===========================
+     Small Helpers
+     =========================== */
+  
+  .muted {
+    color: var(--muted);
+  }
+  
+  .row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  
+  /* ===========================
+     Responsive (Components)
+     =========================== */
+  
+  @media (max-width: 900px) {
+    .topbar {
+      padding-inline: 16px;
+      height: 58px;
+    }
+  }
+  
+  @media (max-width: 640px) {
+    .brand-mini {
+      font-size: 16px;
+    }
+  
+    .nav {
+      gap: 6px;
+    }
+  
+    .link-btn,
+    .btn {
+      padding-inline: 10px;
+    }
+  }
+  

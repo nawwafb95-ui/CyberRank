@@ -1,0 +1,735 @@
+/* ===========================
+   Home Page - Hero Section (3D Door Portal)
+   =========================== */
+
+body[data-page="home"] .hero {
+  position: relative;
+  min-height: 100vh;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+/* Background light effects removed - clean dark background only */
+body[data-page="home"] .hero--door-scene {
+  perspective: 1200px;
+}
+
+body[data-page="home"] .page-frame,
+body[data-page="home"] .cyber-shapes,
+body[data-page="home"] .cyber-shape {
+  display: none !important;
+}
+
+/* ===========================
+   SOC Command Center Background
+   =========================== */
+
+body[data-page="home"] .socx-home {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  background: var(--bg, #050b18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Layer 1: Cyber Grid */
+body[data-page="home"] .socx-bg-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(0, 140, 255, 0.12) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 140, 255, 0.12) 1px, transparent 1px);
+  background-size: 80px 80px;
+  opacity: 0.06;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Layer 2: World Map */
+body[data-page="home"] .socx-bg-map {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.08;
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Threat Blips on Map */
+body[data-page="home"] .socx-map-dot {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(0, 255, 255, 0.9);
+  box-shadow: 0 0 14px rgba(0, 255, 255, 0.9);
+  animation: socx-dot-pulse 3s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+
+@keyframes socx-dot-pulse {
+  from {
+    opacity: 0.4;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1.3);
+  }
+}
+
+/* Blip positions (rough world map locations) */
+body[data-page="home"] .socx-dot-us {
+  top: 38%;
+  left: 32%;
+}
+
+body[data-page="home"] .socx-dot-eu {
+  top: 34%;
+  left: 50%;
+}
+
+body[data-page="home"] .socx-dot-me {
+  top: 45%;
+  left: 53%;
+}
+
+body[data-page="home"] .socx-dot-asia {
+  top: 40%;
+  left: 65%;
+}
+
+/* Layer 3: Scan Line */
+body[data-page="home"] .socx-scanline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -20%;
+  height: 120px;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    rgba(0, 200, 255, 0.22),
+    transparent
+  );
+  filter: blur(6px);
+  opacity: 0;
+  animation: socx-scanline-move 10s linear infinite;
+  pointer-events: none;
+  z-index: 3;
+}
+
+@keyframes socx-scanline-move {
+  0% {
+    top: -40%;
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.4;
+  }
+  50% {
+    top: 60%;
+    opacity: 0.35;
+  }
+  90% {
+    opacity: 0;
+  }
+  100% {
+    top: 120%;
+    opacity: 0;
+  }
+}
+
+/* ===========================
+   Door Scene (3D Container) - Portal Hero
+   =========================== */
+
+body[data-page="home"] .door-scene {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  perspective: 1200px;
+  transform-style: preserve-3d;
+  position: relative;
+  z-index: 10;
+  overflow: hidden;
+}
+
+/* Background Particles */
+body[data-page="home"] .background-particles {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  z-index: 1;
+  pointer-events: none;
+}
+
+body[data-page="home"] .particle {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background: rgba(0, 255, 255, 0.3);
+  border-radius: 50%;
+  box-shadow: 
+    10vw 20vh 0 0 rgba(0, 255, 255, 0.2),
+    30vw 40vh 0 0 rgba(0, 150, 255, 0.15),
+    50vw 60vh 0 0 rgba(0, 255, 255, 0.2),
+    70vw 30vh 0 0 rgba(0, 150, 255, 0.15),
+    20vw 70vh 0 0 rgba(0, 255, 255, 0.2),
+    80vw 80vh 0 0 rgba(0, 150, 255, 0.15),
+    15vw 10vh 0 0 rgba(0, 255, 255, 0.2),
+    90vw 50vh 0 0 rgba(0, 150, 255, 0.15),
+    5vw 90vh 0 0 rgba(0, 255, 255, 0.2),
+    40vw 15vh 0 0 rgba(0, 150, 255, 0.15),
+    60vw 85vh 0 0 rgba(0, 255, 255, 0.2),
+    25vw 45vh 0 0 rgba(0, 150, 255, 0.15),
+    75vw 25vh 0 0 rgba(0, 255, 255, 0.2),
+    35vw 75vh 0 0 rgba(0, 150, 255, 0.15),
+    85vw 65vh 0 0 rgba(0, 255, 255, 0.2),
+    45vw 35vh 0 0 rgba(0, 150, 255, 0.15),
+    55vw 55vh 0 0 rgba(0, 255, 255, 0.2),
+    65vw 5vh 0 0 rgba(0, 150, 255, 0.15),
+    95vw 95vh 0 0 rgba(0, 255, 255, 0.2),
+    12vw 65vh 0 0 rgba(0, 150, 255, 0.15);
+  animation: particleFloat 20s infinite ease-in-out;
+  will-change: transform, opacity;
+  pointer-events: none;
+}
+
+body[data-page="home"] .particle:nth-child(2) {
+  animation-delay: -2s;
+  animation-duration: 25s;
+}
+
+body[data-page="home"] .particle:nth-child(3) {
+  animation-delay: -4s;
+  animation-duration: 30s;
+}
+
+@keyframes particleFloat {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0.3;
+  }
+  50% {
+    transform: translate3d(20px, -30px, 0) scale(1.2);
+    opacity: 0.6;
+  }
+}
+
+/* Portal Card Container */
+body[data-page="home"] .portal-wrapper {
+  position: relative;
+  z-index: 10;
+  transform-style: preserve-3d;
+  animation: float 6s ease-in-out infinite;
+  transform-origin: center center;
+  width: 400px;
+  height: 500px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  will-change: transform;
+  pointer-events: none;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) rotateY(-5deg) rotateX(3deg);
+  }
+  50% {
+    transform: translate3d(0, -20px, 0) rotateY(5deg) rotateX(-3deg);
+  }
+}
+
+body[data-page="home"] .portal-card {
+  position: relative;
+  width: 400px;
+  height: 500px;
+  transform-style: preserve-3d;
+  transition: transform 0.3s ease;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  outline: none;
+  transform-origin: center center;
+  will-change: transform;
+  pointer-events: auto;
+}
+
+body[data-page="home"] .portal-card::before {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 20px;
+  background: linear-gradient(45deg, #00ffff, #0096ff, #00ffff);
+  background-size: 200% 200%;
+  animation: borderGlow 3s ease-in-out infinite, borderShift 4s linear infinite;
+  z-index: -1;
+  filter: blur(8px);
+  opacity: 0.8;
+  pointer-events: none;
+  will-change: opacity, background-position;
+}
+
+@keyframes borderGlow {
+  0%, 100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes borderShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 200% 50%;
+  }
+}
+
+body[data-page="home"] .portal-card:hover:not(.door-animating) {
+  transform: scale3d(1.03, 1.03, 1);
+}
+
+body[data-page="home"] .portal-card:hover:not(.door-animating)::before {
+  opacity: 1;
+  animation-duration: 2s, 2s;
+}
+
+/* Disable interactions during animation */
+body[data-page="home"] .portal-card.door-animating {
+  pointer-events: none;
+  cursor: default;
+}
+
+/* Portal Inner Container */
+body[data-page="home"] .portal-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  border: 2px solid #00ffff;
+  border-radius: 20px;
+  box-shadow: 
+    0 0 30px rgba(0, 255, 255, 0.5),
+    inset 0 0 30px rgba(0, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+/* Light mode portal - keep dark cyber look */
+body[data-page="home"][data-theme="light"] .portal-inner {
+  background: rgba(7, 18, 35, 0.92);
+  box-shadow: 
+    0 0 30px rgba(0, 255, 255, 0.5),
+    inset 0 0 30px rgba(0, 255, 255, 0.1),
+    0 18px 50px var(--shadow, rgba(11, 31, 51, 0.16));
+}
+
+/* Inner Frame */
+body[data-page="home"] .portal-inner-frame {
+  position: absolute;
+  inset: 40px;
+  border: 1px solid rgba(0, 255, 255, 0.4);
+  border-radius: 12px;
+  box-shadow: 
+    0 0 20px rgba(0, 255, 255, 0.3),
+    inset 0 0 20px rgba(0, 255, 255, 0.1);
+  pointer-events: none;
+}
+
+/* Cyber Glyphs */
+body[data-page="home"] .portal-glyphs {
+  position: absolute;
+  inset: 40px;
+  border-radius: 12px;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+body[data-page="home"] .glyph {
+  position: absolute;
+  color: #00ffff;
+  font-size: 14px;
+  font-weight: bold;
+  text-shadow: 0 0 8px rgba(0, 255, 255, 0.8);
+  opacity: 0.6;
+  pointer-events: none;
+  will-change: transform;
+}
+
+/* Top glyphs */
+body[data-page="home"] .glyph-top {
+  top: -10px;
+  animation: slideRight 8s linear infinite;
+}
+
+body[data-page="home"] .glyph-top:nth-child(2) {
+  animation-delay: -2s;
+}
+
+body[data-page="home"] .glyph-top:nth-child(3) {
+  animation-delay: -4s;
+}
+
+body[data-page="home"] .glyph-top:nth-child(4) {
+  animation-delay: -6s;
+}
+
+/* Bottom glyphs */
+body[data-page="home"] .glyph-bottom {
+  bottom: -10px;
+  animation: slideLeft 8s linear infinite;
+}
+
+body[data-page="home"] .glyph-bottom:nth-child(5) {
+  animation-delay: -1s;
+}
+
+body[data-page="home"] .glyph-bottom:nth-child(6) {
+  animation-delay: -3s;
+}
+
+body[data-page="home"] .glyph-bottom:nth-child(7) {
+  animation-delay: -5s;
+}
+
+/* Left glyphs */
+body[data-page="home"] .glyph-left {
+  left: -10px;
+  animation: slideDown 8s linear infinite;
+}
+
+body[data-page="home"] .glyph-left:nth-child(8) {
+  animation-delay: -1.5s;
+}
+
+body[data-page="home"] .glyph-left:nth-child(9) {
+  animation-delay: -3.5s;
+}
+
+/* Right glyphs */
+body[data-page="home"] .glyph-right {
+  right: -10px;
+  animation: slideUp 8s linear infinite;
+}
+
+body[data-page="home"] .glyph-right:nth-child(10) {
+  animation-delay: -2.5s;
+}
+
+body[data-page="home"] .glyph-right:nth-child(11) {
+  animation-delay: -4.5s;
+}
+
+@keyframes slideRight {
+  0% {
+    transform: translate3d(-500px, 0, 0);
+  }
+  100% {
+    transform: translate3d(500px, 0, 0);
+  }
+}
+
+@keyframes slideLeft {
+  0% {
+    transform: translate3d(500px, 0, 0);
+  }
+  100% {
+    transform: translate3d(-500px, 0, 0);
+  }
+}
+
+@keyframes slideDown {
+  0% {
+    transform: translate3d(0, -500px, 0);
+  }
+  100% {
+    transform: translate3d(0, 500px, 0);
+  }
+}
+
+@keyframes slideUp {
+  0% {
+    transform: translate3d(0, 500px, 0);
+  }
+  100% {
+    transform: translate3d(0, -500px, 0);
+  }
+}
+
+/* Warp Lines */
+body[data-page="home"] .portal-warp-lines {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: 20px;
+  z-index: 2;
+  pointer-events: none;
+}
+
+body[data-page="home"] .portal-warp-line {
+  position: absolute;
+  width: 2px;
+  height: 200%;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(0, 255, 255, 0.3) 20%,
+    rgba(0, 150, 255, 0.6) 50%,
+    rgba(0, 255, 255, 0.3) 80%,
+    transparent 100%
+  );
+  top: 50%;
+  left: 50%;
+  transform-origin: center;
+  opacity: 0.4;
+  animation: warpMove 3s linear infinite;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+body[data-page="home"] .portal-warp-line:nth-child(1) {
+  transform: translate(-50%, -50%) rotate(0deg) translateY(-100%);
+  animation-delay: 0s;
+}
+
+body[data-page="home"] .portal-warp-line:nth-child(2) {
+  transform: translate(-50%, -50%) rotate(90deg) translateY(-100%);
+  animation-delay: -0.5s;
+}
+
+body[data-page="home"] .portal-warp-line:nth-child(3) {
+  transform: translate(-50%, -50%) rotate(180deg) translateY(-100%);
+  animation-delay: -1s;
+}
+
+body[data-page="home"] .portal-warp-line:nth-child(4) {
+  transform: translate(-50%, -50%) rotate(270deg) translateY(-100%);
+  animation-delay: -1.5s;
+}
+
+body[data-page="home"] .portal-warp-line:nth-child(5) {
+  transform: translate(-50%, -50%) rotate(30deg) translateY(-100%);
+  animation-delay: -0.25s;
+}
+
+body[data-page="home"] .portal-warp-line:nth-child(6) {
+  transform: translate(-50%, -50%) rotate(60deg) translateY(-100%);
+  animation-delay: -0.75s;
+}
+
+body[data-page="home"] .portal-warp-line:nth-child(7) {
+  transform: translate(-50%, -50%) rotate(120deg) translateY(-100%);
+  animation-delay: -1.25s;
+}
+
+body[data-page="home"] .portal-warp-line:nth-child(8) {
+  transform: translate(-50%, -50%) rotate(150deg) translateY(-100%);
+  animation-delay: -1.75s;
+}
+
+@keyframes warpMove {
+  0% {
+    transform: translate3d(-50%, -50%, 0) var(--rotation) translate3d(0, -100%, 0) scaleY(1);
+    opacity: 0.2;
+  }
+  50% {
+    opacity: 0.6;
+  }
+  100% {
+    transform: translate3d(-50%, -50%, 0) var(--rotation) translate3d(0, 0, 0) scaleY(1.5);
+    opacity: 0;
+  }
+}
+
+body[data-page="home"] .portal-card:hover:not(.door-animating) .portal-warp-line {
+  opacity: 0.8;
+  animation-duration: 1.5s;
+}
+
+/* Portal Text */
+body[data-page="home"] .portal-text {
+  position: relative;
+  z-index: 5;
+  font-size: 32px;
+  font-weight: 900;
+  letter-spacing: 8px;
+  text-transform: uppercase;
+  color: #00ffff;
+  text-shadow: 
+    0 0 10px rgba(0, 255, 255, 0.8),
+    0 0 20px rgba(0, 255, 255, 0.6),
+    0 0 30px rgba(0, 255, 255, 0.4);
+  animation: glitch 3s infinite;
+  transition: text-shadow 0.3s ease;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+/* Light mode portal text - keep readable on dark portal */
+body[data-page="home"][data-theme="light"] .portal-text {
+  color: #eaf6ff;
+  text-shadow: 
+    0 0 10px rgba(234, 246, 255, 0.8),
+    0 0 20px rgba(0, 255, 255, 0.6),
+    0 0 30px rgba(0, 255, 255, 0.4);
+}
+
+body[data-page="home"] .portal-card:hover:not(.door-animating) .portal-text {
+  text-shadow: 
+    0 0 15px rgba(0, 255, 255, 1),
+    0 0 30px rgba(0, 255, 255, 0.8),
+    0 0 45px rgba(0, 255, 255, 0.6),
+    0 0 60px rgba(0, 255, 255, 0.4);
+}
+
+@keyframes glitch {
+  0%, 90%, 100% {
+    transform: translate3d(0, 0, 0);
+    opacity: 1;
+  }
+  91% {
+    transform: translate3d(-2px, 2px, 0);
+    opacity: 0.8;
+  }
+  92% {
+    transform: translate3d(2px, -2px, 0);
+    opacity: 0.9;
+  }
+  93% {
+    transform: translate3d(-1px, 1px, 0);
+    opacity: 0.85;
+  }
+  94% {
+    transform: translate3d(1px, -1px, 0);
+    opacity: 0.9;
+  }
+  95% {
+    transform: translate3d(0, 0, 0);
+    opacity: 1;
+  }
+}
+
+/* ===========================
+   Zoom-in Animation on Click
+   =========================== */
+
+body[data-page="home"] .door-scene.scene-zooming {
+  animation: scene-zoom-in 1.1s ease-in-out forwards;
+}
+
+body[data-page="home"] .door-scene.scene-zooming .portal-wrapper {
+  animation: portal-zoom-in 1.1s ease-in-out forwards;
+}
+
+body[data-page="home"] .door-scene.scene-zooming .portal-card {
+  animation: none;
+}
+
+@keyframes portal-zoom-in {
+  0% {
+    transform: translate3d(0, 0, 0) rotateY(0deg) rotateX(0deg) scale3d(1, 1, 1);
+  }
+  100% {
+    transform: translate3d(0, 0, 0) rotateY(0deg) rotateX(0deg) scale3d(2.2, 2.2, 1);
+  }
+}
+
+body[data-page="home"].door-animating {
+  animation: fadeToBlack 1.1s ease-in-out forwards;
+}
+
+@keyframes scene-zoom-in {
+  0% {
+    transform: scale3d(1, 1, 1);
+  }
+  100% {
+    transform: scale3d(2.5, 2.5, 1);
+  }
+}
+
+@keyframes door-zoom-in {
+  0% {
+    transform: translateZ(0) scale(1);
+  }
+  100% {
+    transform: translateZ(0) scale(1.8);
+  }
+}
+
+@keyframes fadeToBlack {
+  0% {
+    background-color: transparent;
+  }
+  100% {
+    background-color: rgba(0, 0, 0, 0.9);
+  }
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  body[data-page="home"] .hero {
+    align-items: center;
+  }
+
+  body[data-page="home"] .portal-wrapper {
+    width: 300px;
+    height: 400px;
+  }
+
+  body[data-page="home"] .portal-card {
+    width: 300px;
+    height: 400px;
+  }
+
+  body[data-page="home"] .portal-text {
+    font-size: 24px;
+    letter-spacing: 4px;
+  }
+
+  body[data-page="home"] .portal-inner-frame {
+    inset: 30px;
+  }
+
+  body[data-page="home"] .portal-glyphs {
+    inset: 30px;
+  }
+}
+
+@media (max-width: 640px) {
+  body[data-page="home"] .portal-wrapper {
+    width: 280px;
+    height: 360px;
+  }
+
+  body[data-page="home"] .portal-card {
+    width: 280px;
+    height: 360px;
+  }
+
+  body[data-page="home"] .portal-text {
+    font-size: 20px;
+    letter-spacing: 3px;
+  }
+}
+

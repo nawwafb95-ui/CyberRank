@@ -1,0 +1,51 @@
+﻿<!doctype html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SOCyberX | Question</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <link rel="stylesheet" href="/css/base.css" />
+    <link rel="stylesheet" href="/css/components.css" />
+    <link rel="stylesheet" href="/css/pages.css" />
+    <link rel="stylesheet" href="/css/pages/question.css" />
+    <link rel="stylesheet" href="/css/sidebar.css" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/images/favicon.png" />
+  </head>
+
+  <body data-page="question">
+    <main class="question-layout">
+      <div class="question-timer" id="timer">00:00</div>
+
+      <section class="question-card card">
+        <div id="question-text" class="question-text">Loading questionâ€¦</div>
+
+        <div class="question-actions">
+          <button class="btn primary" id="btn-next">Next</button>
+          <button class="btn" id="btn-skip">Skip</button>
+        </div>
+
+        <div id="ai-feedback" class="ai-feedback"></div>
+      </section>
+    </main>
+
+    <!-- Scripts -->
+    <script src="/js/core.js"></script>
+    <script src="/js/main.js"></script>
+    <script type="module" src="/js/navAuth.js"></script>
+    <script src="/js/sidebar-inject.js"></script>
+    <script src="/js/sidebar.js"></script>
+    <script type="module" src="/js/question.js"></script>
+  </body>
+</html>
+

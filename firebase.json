@@ -29,44 +29,64 @@
     "ignore": [
       "firebase.json",
       "**/.*",
-      "**/node_modules/**",
-      "src/**"
+      "**/node_modules/**"
     ],
     "rewrites": [
-      { "source": "/", "destination": "/html/index.html" }
-    ],
-    "redirects": [
-      { "source": "/login.html", "destination": "/html/login.html", "type": 301 },
-      { "source": "/signup.html", "destination": "/html/signup.html", "type": 301 },
-      { "source": "/profile.html", "destination": "/html/profile.html", "type": 301 },
-      { "source": "/success.html", "destination": "/html/success.html", "type": 301 },
-      { "source": "/forgot-password.html", "destination": "/html/forgot-password.html", "type": 301 },
-      { "source": "/challenges.html", "destination": "/html/challenges.html", "type": 301 },
-      { "source": "/question.html", "destination": "/html/question.html", "type": 301 },
-      { "source": "/leaderboard.html", "destination": "/html/leaderboard.html", "type": 301 },
-      { "source": "/settings.html", "destination": "/html/settings.html", "type": 301 },
-      { "source": "/about.html", "destination": "/html/about.html", "type": 301 },
-      { "source": "/quizzes.html", "destination": "/html/quizzes.html", "type": 301 },
-      { "source": "/dashboard.html", "destination": "/html/dashboard.html", "type": 301 }
-    ],
-    "headers": [
       {
-        "source": "**/*.@(js|css)",
-        "headers": [
-          {
-            "key": "Cache-Control",
-            "value": "max-age=31536000"
-          }
-        ]
+        "source": "/",
+        "destination": "/index.html"
       },
       {
-        "source": "**/*.@(jpg|jpeg|gif|png|svg|webp)",
-        "headers": [
-          {
-            "key": "Cache-Control",
-            "value": "max-age=31536000"
-          }
-        ]
+        "source": "/signup",
+        "destination": "/signup.html"
+      },
+      {
+        "source": "/login",
+        "destination": "/login.html"
+      },
+      {
+        "source": "/dashboard",
+        "destination": "/dashboard.html"
+      },
+      {
+        "source": "/profile",
+        "destination": "/profile.html"
+      },
+      {
+        "source": "/leaderboard",
+        "destination": "/leaderboard.html"
+      },
+      {
+        "source": "/challenges",
+        "destination": "/challenges.html"
+      },
+      {
+        "source": "/quizzes",
+        "destination": "/quizzes.html"
+      },
+      {
+        "source": "/question",
+        "destination": "/question.html"
+      },
+      {
+        "source": "/settings",
+        "destination": "/settings.html"
+      },
+      {
+        "source": "/about",
+        "destination": "/about.html"
+      },
+      {
+        "source": "/success",
+        "destination": "/success.html"
+      },
+      {
+        "source": "/forgot-password",
+        "destination": "/forgot-password.html"
+      },
+      {
+        "source": "**",
+        "destination": "/404.html"
       }
     ]
   }
