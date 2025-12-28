@@ -34,8 +34,9 @@
       return 'https://us-central1-cyberrank-a4380.cloudfunctions.net';
     })(),
     
-    // OTP enabled by default (for security)
-    // Set to false to disable OTP verification (signup will work without Cloud Functions)
+    // OTP Feature Flag - OTP temporarily disabled – can be re-enabled by setting OTP_ENABLED = true
+    // When disabled: Skip OTP generation, skip email sending, auto-verify all requests
+    // Set to true to enable OTP verification (requires Cloud Functions)
     OTP_ENABLED: false
   };
 

@@ -60,14 +60,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   if (toHome) {
     toHome.addEventListener('click', () => {
-      const homePath = typeof getPath === 'function' ? getPath('home') : '/html/index.html';
+      const homePath = typeof getPath === 'function' ? getPath('home') : '/';
       location.href = homePath;
     });
   }
 
   if (toLogin) {
     toLogin.addEventListener('click', () => {
-      const loginPath = typeof getPath === 'function' ? getPath('login') : '/html/login.html';
+      const loginPath = typeof getPath === 'function' ? getPath('login') : '/login';
       location.href = loginPath;
     });
   }

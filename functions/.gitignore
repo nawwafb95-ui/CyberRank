@@ -1,2 +1,10 @@
 node_modules/
 *.local
+
+# Environment variables (CRITICAL: Never commit secrets)
+.env
+.env.*
+
+# Firebase Functions debug logs
+firebase-debug.log
+firebase-debug.*.log

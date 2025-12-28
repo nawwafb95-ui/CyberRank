@@ -1,6 +1,6 @@
 // ================== OTP Verification Handler ==================
 // Handles OTP verification for both signup and password reset flows
-// OTP is now ENABLED by default for security
+// OTP temporarily disabled – can be re-enabled by setting OTP_ENABLED = true
 
 import { auth, db } from './firebaseInit.js';
 import { createUserWithEmailAndPassword, sendPasswordResetEmail } from 'https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js';
@@ -10,6 +10,10 @@ import {
   serverTimestamp
 } from 'https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js';
 import { handleError } from './errorMessages.js';
+
+// OTP Feature Flag - OTP temporarily disabled – can be re-enabled by setting OTP_ENABLED = true
+const OTP_ENABLED = window.SOCYBERX_CONFIG?.OTP_ENABLED ??
+  window.__SOCYBERX_CONFIG__?.OTP_ENABLED ?? false;
 
 // Cloud Functions base URL from config.js
 const FUNCTIONS_BASE_URL = window.SOCYBERX_CONFIG?.FUNCTIONS_BASE_URL ?? 
@@ -80,12 +84,12 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function redirectToSignup() {
-    const signupPath = typeof window.getPath === 'function' ? window.getPath('signup') : '/html/signup.html';
+    const signupPath = typeof window.getPath === 'function' ? window.getPath('signup') : '/signup';
     window.location.href = signupPath;
   }
 
   function redirectToForgotPassword() {
-    const forgotPath = typeof window.getPath === 'function' ? window.getPath('forgotPassword') : '/html/forgot-password.html';
+    const forgotPath = typeof window.getPath === 'function' ? window.getPath('forgotPassword') : '/forgot-password';
     window.location.href = forgotPath;
   }
 
@@ -164,6 +168,33 @@ document.addEventListener('DOMContentLoaded', () => {
   if (resendLink) {
     resendLink.addEventListener('click', async (e) => {
       e.preventDefault();
+      
+      // OTP temporarily disabled – can be re-enabled by setting OTP_ENABLED = true
+      // When disabled: Auto-proceed with flow instead of resending
+      if (!OTP_ENABLED) {
+        setStatus('Proceeding... (OTP disabled)', '');
+        verifyBtn.disabled = true;
+
+        try {
+          if (purpose === 'signup') {
+            await handleSignupFlow(pendingData);
+          } else if (purpose === 'reset_password') {
+            await handlePasswordResetFlow(email);
+          }
+        } catch (err) {
+          console.error('[OTP] Flow error:', err);
+          const friendlyMsg = handleError('otp-form', err, {
+            errorType: 'form',
+            logToConsole: true,
+            fallbackMessage: 'An error occurred. Please try again. (حدث خطأ، يرجى المحاولة مرة أخرى)'
+          });
+          setStatus(friendlyMsg, 'error');
+          verifyBtn.disabled = false;
+        }
+        return;
+      }
+
+      // OTP ENABLED - Original resend logic
       setStatus('Resending verification code...');
 
       try {
@@ -207,6 +238,34 @@ document.addEventListener('DOMContentLoaded', () => {
   // ✅ Verify OTP
   if (verifyBtn) {
     verifyBtn.addEventListener('click', async () => {
+      // OTP temporarily disabled – can be re-enabled by setting OTP_ENABLED = true
+      // When disabled: Auto-proceed with signup/password reset flow without OTP verification
+      if (!OTP_ENABLED) {
+        console.log('[OTP] OTP disabled - auto-proceeding with flow');
+        setStatus('Proceeding... (OTP disabled)', '');
+        verifyBtn.disabled = true;
+
+        try {
+          // Auto-proceed with flow without OTP verification
+          if (purpose === 'signup') {
+            await handleSignupFlow(pendingData);
+          } else if (purpose === 'reset_password') {
+            await handlePasswordResetFlow(email);
+          }
+        } catch (err) {
+          console.error('[OTP] Flow error:', err);
+          const friendlyMsg = handleError('otp-form', err, {
+            errorType: 'form',
+            logToConsole: true,
+            fallbackMessage: 'An error occurred. Please try again. (حدث خطأ، يرجى المحاولة مرة أخرى)'
+          });
+          setStatus(friendlyMsg, 'error');
+          verifyBtn.disabled = false;
+        }
+        return;
+      }
+
+      // OTP ENABLED - Original OTP verification logic
       const otp = getOTP();
       if (otp.length !== 6) {
         setStatus('Please enter the complete 6-digit code. (يرجى إدخال رمز التحقق المكون من 6 أرقام)', 'error');
@@ -309,7 +368,7 @@ document.addEventListener('DOMContentLoaded', () => {
       localStorage.removeItem('pendingSignup');
 
       setStatus('Account created successfully! Redirecting... (تم إنشاء الحساب بنجاح! جاري إعادة التوجيه...)', 'success');
-      const homePath = typeof window.getPath === 'function' ? window.getPath('home') : '/html/index.html';
+      const homePath = typeof window.getPath === 'function' ? window.getPath('home') : '/';
       setTimeout(() => {
         window.location.href = homePath;
       }, 1500);
@@ -342,7 +401,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Show option to go to login
       setTimeout(() => {
-        const loginPath = typeof window.getPath === 'function' ? window.getPath('login') : '/html/login.html';
+        const loginPath = typeof window.getPath === 'function' ? window.getPath('login') : '/login';
         window.location.href = loginPath;
       }, 3000);
     } catch (err) {

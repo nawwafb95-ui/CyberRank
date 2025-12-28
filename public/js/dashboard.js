@@ -19,7 +19,7 @@ const addBtn     = document.getElementById("btn-add-score");
   
   if (!isAuthenticated) {
     // Not authenticated - redirect to login
-    const loginPath = typeof window.getPath === 'function' ? window.getPath('login') : '/html/login.html';
+    const loginPath = typeof window.getPath === 'function' ? window.getPath('login') : '/login';
     const currentPath = window.location.pathname + window.location.search;
     
     // Add next parameter for redirect after login
@@ -43,7 +43,7 @@ const addBtn     = document.getElementById("btn-add-score");
   window.addEventListener('auth:state-changed', (e) => {
     if (!e.detail.user) {
       // User logged out - redirect to login
-      const loginPath = typeof window.getPath === 'function' ? window.getPath('login') : '/html/login.html';
+      const loginPath = typeof window.getPath === 'function' ? window.getPath('login') : '/login';
       window.location.replace(loginPath);
     }
   });

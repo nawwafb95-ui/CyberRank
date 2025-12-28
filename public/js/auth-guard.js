@@ -73,7 +73,7 @@
       // Build login URL with next parameter (all origin-relative)
       const params = new URLSearchParams();
       params.set('next', sanitizedPath);
-      const loginPath = typeof window.getPath === 'function' ? window.getPath('login') : '/html/login.html';
+      const loginPath = typeof window.getPath === 'function' ? window.getPath('login') : '/login';
       
       // Use origin-relative path (no protocol/host/port) to stay on same origin
       window.location.href = `${loginPath}?${params.toString()}`;

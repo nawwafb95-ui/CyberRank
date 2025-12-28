@@ -77,26 +77,17 @@ document.addEventListener('DOMContentLoaded', () => {
           nextSafe = normalizeNextPath(nextRaw || '');
         } else {
         // Fallback: basic sanitization
-        // All paths must be under /html/ base
         if (!nextDecoded || nextDecoded.startsWith('http://') || nextDecoded.startsWith('https://') || 
-            nextDecoded.startsWith('javascript:') || nextDecoded === '/html/login.html' || 
-            nextDecoded === '/html/signup.html' || nextDecoded === '/login.html' || 
-            nextDecoded === '/signup.html') {
+            nextDecoded.startsWith('javascript:') || nextDecoded === '/login' || 
+            nextDecoded === '/signup' || nextDecoded === '/login.html' || 
+            nextDecoded === '/signup.html' || nextDecoded === '/html/login.html' || 
+            nextDecoded === '/html/signup.html') {
           // Prevent redirect loops to login/signup pages
-          nextSafe = (getPath && typeof getPath === 'function') ? getPath('home') : '/html/index.html';
+          nextSafe = (getPath && typeof getPath === 'function') ? getPath('home') : '/';
         } else {
           const sanitized = (sanitizePath && typeof sanitizePath === 'function') ? sanitizePath(nextDecoded) : nextDecoded;
-          // Ensure path has /html/ prefix - sanitizePath should handle this, but ensure it
-          if (sanitized.startsWith('/') && !sanitized.startsWith('/html/')) {
-            // Absolute path without /html/: add it
-            nextSafe = '/html' + sanitized;
-          } else if (!sanitized.startsWith('/')) {
-            // Relative path: add /html/ prefix
-            nextSafe = '/html/' + sanitized.replace(/^\.?\//, '');
-          } else {
-            // Already has /html/ or sanitizePath handled it
-            nextSafe = sanitized;
-          }
+          // Use clean route (sanitizePath handles conversion)
+          nextSafe = sanitized;
         }
         }
         

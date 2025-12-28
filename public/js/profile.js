@@ -168,10 +168,10 @@ function showMessage(message, isError = false) {
 function redirectToLogin() {
   // Always redirect to profile page after login
   // Use origin-relative paths (no protocol/host/port) to preserve localStorage/auth state
-  const profilePath = typeof getPath === 'function' ? getPath('profile') : '/html/profile.html';
+  const profilePath = typeof getPath === 'function' ? getPath('profile') : '/profile';
   const params = new URLSearchParams();
   params.set('next', profilePath);
-  const loginPath = typeof getPath === 'function' ? getPath('login') : '/html/login.html';
+  const loginPath = typeof getPath === 'function' ? getPath('login') : '/login';
   // loginPath is origin-relative - ensures we stay on same origin
   window.location.href = `${loginPath}?${params.toString()}`;
 }
@@ -431,7 +431,7 @@ async function deleteAccount() {
       throw error;
     }
 
-    const loginPath = typeof getPath === 'function' ? getPath('login') : '/html/login.html';
+    const loginPath = typeof getPath === 'function' ? getPath('login') : '/login';
     window.location.href = loginPath;
   } catch (error) {
     console.error('Error deleting account:', error);
@@ -466,7 +466,7 @@ async function loadPointsHistory() {
           <div class="points-history-empty__icon">📊</div>
           <h3 class="points-history-empty__title">No points yet</h3>
           <p class="points-history-empty__subtitle">Start your first challenge to see your history here.</p>
-          <a href="${typeof getPath === 'function' ? getPath('quizzes') : '/html/quizzes.html'}" class="btn btn--primary">Start Challenge</a>
+          <a href="${typeof getPath === 'function' ? getPath('quizzes') : '/quizzes'}" class="btn btn--primary">Start Challenge</a>
         </div>
       `;
       return;

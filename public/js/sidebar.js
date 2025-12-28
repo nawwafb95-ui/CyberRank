@@ -19,12 +19,14 @@
   }
 
   // Dynamically import Firestore functions if not available
+  let onSnapshot = null;
   (async function() {
     try {
       // Import Firestore functions from CDN
       const firestoreModule = await import('https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js');
       doc = firestoreModule.doc;
       getDoc = firestoreModule.getDoc;
+      onSnapshot = firestoreModule.onSnapshot;
 
       // If db not available from window, try importing from firebaseInit
       if (!db) {
@@ -151,6 +153,12 @@
         logoutBtn.disabled = true;
 
         try {
+          // Unsubscribe from stats listener on logout
+          if (statsListenerUnsubscribe) {
+            statsListenerUnsubscribe();
+            statsListenerUnsubscribe = null;
+          }
+          
           // REFACTORED: Use Firebase signOut only - removed localStorage clearing
           // Firebase Auth manages session state, no need to clear localStorage
           if (window.auth) {
@@ -174,6 +182,9 @@
         }
       });
     }
+
+    // Track if stats listener is already set up
+    let statsListenerUnsubscribe = null;
 
     // Update sidebar content with user profile data
     function updateSidebarContent() {
@@ -222,96 +233,84 @@
         avatarEl.src = avatarSrc;
       }
 
-      // Update points from Firestore userStats
+      // Update points, level, and progress from Firestore userStats (realtime)
       const pointsEl = document.getElementById('socxSidebarPoints');
-      if (pointsEl) {
-        const valueEl = pointsEl.querySelector('.socx-stat-value');
-        if (valueEl) {
-          // Get current user
-          const user = window.__authUser || (auth && auth.currentUser);
-          
-          if (user && db && doc && getDoc) {
-            // Read from Firestore userStats collection
-            (async function() {
-              try {
-                const userStatsRef = doc(db, 'userStats', user.uid);
-                const userStatsSnap = await getDoc(userStatsRef);
-                
-                let points = 0;
-                if (userStatsSnap.exists()) {
-                  const data = userStatsSnap.data();
-                  points = data.totalScore ?? 0;
-                }
-                
-                valueEl.textContent = points || '0';
-              } catch (e) {
-                // Fail silently, fallback to 0
-                console.warn('Failed to load points from Firestore:', e.message);
-                valueEl.textContent = '0';
-              }
-            })();
-          } else {
-            // Not logged in or Firestore not available - show 0
-            valueEl.textContent = '0';
-          }
-        }
-      }
-
-      // Update progress bar from Firestore userStats
       const progressFill = document.querySelector('.socx-progress-fill');
       const levelLabel = document.querySelector('.socx-level-label');
       
-      if (progressFill || levelLabel) {
-        // Get current user
-        const user = window.__authUser || (auth && auth.currentUser);
-        
-        if (user && db && doc && getDoc) {
-          // Read from Firestore userStats collection
-          (async function() {
+      const valueEl = pointsEl?.querySelector('.socx-stat-value');
+      
+      // Get current user
+      const user = window.__authUser || (auth && auth.currentUser);
+      
+      if (user && db && doc && onSnapshot) {
+        try {
+          // Unsubscribe from previous listener if it exists
+          if (statsListenerUnsubscribe) {
+            statsListenerUnsubscribe();
+            statsListenerUnsubscribe = null;
+          }
+          
+          const userStatsRef = doc(db, 'userStats', user.uid);
+          
+          // Set up realtime listener for userStats
+          statsListenerUnsubscribe = onSnapshot(userStatsRef, (snap) => {
             try {
-              const userStatsRef = doc(db, 'userStats', user.uid);
-              const userStatsSnap = await getDoc(userStatsRef);
+              let points = 0;
               
-              let currentLevel = 1;
-              let levelProgress = 0;
-              
-              if (userStatsSnap.exists()) {
-                const data = userStatsSnap.data();
-                currentLevel = data.currentLevel ?? 1;
-                levelProgress = data.levelProgress ?? 0;
-                // Clamp progress to 0-100
-                levelProgress = Math.max(0, Math.min(100, levelProgress));
+              if (snap.exists()) {
+                const data = snap.data();
+                points = data.points ?? 0;
               }
               
-              // Update level label if element exists
+              // Calculate level: floor(points / 100) + 1
+              const level = Math.floor(points / 100) + 1;
+              
+              // Calculate progress percentage: (points % 100) / 100
+              const progressPercent = (points % 100) / 100;
+              const progressPercentDisplay = Math.max(0, Math.min(100, progressPercent * 100));
+              
+              // Update points display
+              if (valueEl) {
+                valueEl.textContent = points.toString();
+              }
+              
+              // Update level display
               if (levelLabel) {
-                levelLabel.textContent = `Level ${currentLevel}`;
+                levelLabel.textContent = `Level ${level}`;
               }
               
               // Update progress bar width
               if (progressFill) {
-                progressFill.style.width = `${levelProgress}%`;
+                progressFill.style.width = `${progressPercentDisplay}%`;
               }
             } catch (e) {
-              // Fail silently, fallback to defaults
-              console.warn('Failed to load progress from Firestore:', e.message);
-              if (levelLabel) {
-                levelLabel.textContent = 'Level 1';
-              }
-              if (progressFill) {
-                progressFill.style.width = '0%';
-              }
+              console.warn('[sidebar] Error processing userStats snapshot:', e);
+              // Fallback to defaults on error
+              if (valueEl) valueEl.textContent = '0';
+              if (levelLabel) levelLabel.textContent = 'Level 1';
+              if (progressFill) progressFill.style.width = '0%';
             }
-          })();
-        } else {
-          // Not logged in or Firestore not available - reset to defaults
-          if (levelLabel) {
-            levelLabel.textContent = 'Level 1';
-          }
-          if (progressFill) {
-            progressFill.style.width = '0%';
-          }
+          }, (error) => {
+            // Snapshot error handler
+            console.warn('[sidebar] Failed to listen to userStats:', error);
+            // Fallback to defaults
+            if (valueEl) valueEl.textContent = '0';
+            if (levelLabel) levelLabel.textContent = 'Level 1';
+            if (progressFill) progressFill.style.width = '0%';
+          });
+        } catch (e) {
+          console.warn('[sidebar] Failed to set up userStats listener:', e);
+          // Fallback to defaults
+          if (valueEl) valueEl.textContent = '0';
+          if (levelLabel) levelLabel.textContent = 'Level 1';
+          if (progressFill) progressFill.style.width = '0%';
         }
+      } else {
+        // Not logged in or Firestore not available - show defaults
+        if (valueEl) valueEl.textContent = '0';
+        if (levelLabel) levelLabel.textContent = 'Level 1';
+        if (progressFill) progressFill.style.width = '0%';
       }
     }
 

@@ -298,7 +298,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         showAlert('Account created successfully! Redirecting... (تم إنشاء الحساب بنجاح، جاري التحويل)', 'success');
 
-        const homePath = (typeof window.getPath === 'function' ? window.getPath('home') : '/html/index.html');
+        const homePath = (typeof window.getPath === 'function' ? window.getPath('home') : '/');
         setTimeout(() => { window.location.href = homePath; }, 700);
 
       } catch (err) {
@@ -386,7 +386,7 @@ document.addEventListener('DOMContentLoaded', () => {
         signupStatus.className = 'success';
       }
 
-      const otpPath = typeof window.getPath === 'function' ? window.getPath('otp') : '/html/success.html';
+      const otpPath = typeof window.getPath === 'function' ? window.getPath('otp') : '/success';
       setTimeout(() => { window.location.href = otpPath; }, 900);
 
     } catch (err) {

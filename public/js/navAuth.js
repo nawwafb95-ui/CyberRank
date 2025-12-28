@@ -29,7 +29,7 @@ function updateAuthButton(user) {
           await signOut(auth);
         }
         
-        const homePath = typeof window.getPath === 'function' ? window.getPath('home') : '/html/index.html';
+        const homePath = typeof window.getPath === 'function' ? window.getPath('home') : '/';
         window.location.href = homePath;
       } catch (err) {
         console.error('[Logout] Error:', err);
@@ -43,7 +43,7 @@ function updateAuthButton(user) {
     loginBtn.onclick = (e) => {
       e.preventDefault();
       e.stopPropagation();
-      const loginPath = typeof window.getPath === 'function' ? window.getPath('login') : '/html/login.html';
+      const loginPath = typeof window.getPath === 'function' ? window.getPath('login') : '/login';
       window.location.href = loginPath;
     };
   }

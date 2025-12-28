@@ -60,68 +60,50 @@
   // If you need user profile data, use Firestore (users collection) instead.
 
   // ===== Centralized Path Helpers =====
-  // BASE_PATH: All internal navigation uses /html/ as the base path
-  // The app is served under /html/ subfolder, so all paths must include this prefix
-  const BASE_PATH = '/html';
+  // All paths use clean routes (no .html extension, no /html/ prefix)
+  // Firebase Hosting rewrites handle routing to /html/ folder
   
-  // Path constants for all pages - ALL paths must be prefixed with /html/
+  // Path constants for all pages - clean routes
   const PATHS = {
-    home: '/html/index.html',
-    login: '/html/login.html',
-    signup: '/html/signup.html',
-    profile: '/html/profile.html',
-    otp: '/html/success.html',
-    forgotPassword: '/html/forgot-password.html',
-    challenges: '/html/challenges.html',
-    question: '/html/question.html',
-    leaderboard: '/html/leaderboard.html',
-    settings: '/html/settings.html',
-    about: '/html/about.html',
-    quizzes: '/html/quizzes.html',
-    dashboard: '/html/dashboard.html'
+    home: '/',
+    login: '/login',
+    signup: '/signup',
+    profile: '/profile',
+    otp: '/success',
+    forgotPassword: '/forgot-password',
+    challenges: '/challenges',
+    question: '/question',
+    leaderboard: '/leaderboard',
+    settings: '/settings',
+    about: '/about',
+    quizzes: '/quizzes',
+    dashboard: '/dashboard'
   };
 
   /**
    * Get absolute path for a page
    * @param {string} page - Page name (e.g., 'home', 'login', 'profile')
-   * @returns {string} Absolute path starting with /html/
+   * @returns {string} Clean route path (e.g., '/login', '/profile')
    */
   function getPath(page) {
     return PATHS[page] || PATHS.home;
   }
 
   /**
-   * Sanitize path to fix /html/html/ duplication while preserving /html/ base
+   * Sanitize path to use clean routes
    * @param {string} path - Path to sanitize
-   * @returns {string} Sanitized path with /html/ prefix
+   * @returns {string} Sanitized clean route
    */
   function sanitizePath(path) {
     if (!path) return PATHS.home;
     
-    // Fix /html/html/ duplication (keep only one /html/)
-    path = path.replace(/\/html\/html\//g, '/html/');
-    path = path.replace(/\/html\/html\//g, '/html/'); // Run twice to catch nested duplications
+    // Remove .html extension and /html/ prefix for clean routes
+    path = path.replace(/\.html$/, '');
+    path = path.replace(/^\/html\//, '/');
     
-    // Ensure path starts with /html/ if it's an absolute path
-    if (path.startsWith('/') && !path.startsWith('/html/')) {
-      // If it's an absolute path without /html/, add it
-      if (path.endsWith('.html') || path.includes('/')) {
-        path = '/html' + path;
-      }
-    }
-    
-    // If path doesn't start with / and ends with .html, ensure it's absolute with /html/
-    if (path.endsWith('.html') && !path.startsWith('/')) {
-      if (path.startsWith('./') || path.startsWith('../')) {
-        // Keep relative paths as-is for same-directory navigation
-        return path;
-      }
-      path = '/html/' + path.replace(/^\.?\//, '');
-    }
-    
-    // Final check: ensure all absolute paths have /html/ prefix
-    if (path.startsWith('/') && !path.startsWith('/html/') && path.endsWith('.html')) {
-      path = '/html' + path;
+    // Ensure path starts with /
+    if (!path.startsWith('/') && !path.startsWith('./') && !path.startsWith('../')) {
+      path = '/' + path;
     }
     
     return path;
@@ -130,7 +112,7 @@
   /**
    * Sanitize and validate next parameter for redirects
    * @param {string} nextPath - Path from next parameter
-   * @returns {string} Safe, normalized absolute path with /html/ prefix
+   * @returns {string} Safe, normalized clean route
    */
   function sanitizeNextPath(nextPath) {
     if (!nextPath) return PATHS.home;
@@ -152,27 +134,27 @@
       return PATHS.home;
     }
     
-    // Fix /html/html/ duplication (keep only one /html/)
-    decoded = decoded.replace(/\/html\/html\//g, '/html/');
-    decoded = decoded.replace(/\/html\/html\//g, '/html/'); // Run twice to catch nested duplications
+    // Fix /html/html/ duplication (convert to clean route)
+    decoded = decoded.replace(/\/html\/html\//g, '/');
+    decoded = decoded.replace(/\/html\/html\//g, '/'); // Run twice to catch nested duplications
     
-    // Sanitize path (this will ensure /html/ prefix)
+    // Sanitize path (converts to clean route)
     const sanitized = sanitizePath(decoded);
     
-    // Ensure it starts with /html/ (all paths must be under /html/ base)
+    // Remove .html extension and /html/ prefix for clean routes
     let finalPath = sanitized;
-    if (!finalPath.startsWith('/html/')) {
-      if (finalPath.startsWith('./') || finalPath.startsWith('../')) {
-        // Relative paths: convert to absolute with /html/ prefix
-        // Remove ./ or ../ and prepend /html/
-        finalPath = '/html/' + finalPath.replace(/^\.\.?\//, '');
-      } else if (finalPath.startsWith('/')) {
-        // Absolute path without /html/: add it
-        finalPath = '/html' + finalPath;
-      } else {
-        // No leading slash: add /html/ prefix
-        finalPath = '/html/' + finalPath.replace(/^\.?\//, '');
-      }
+    if (finalPath.startsWith('./') || finalPath.startsWith('../')) {
+      // Relative paths: convert to absolute clean route
+      finalPath = finalPath.replace(/^\.\.?\//, '');
+    }
+    
+    // Remove .html extension and /html/ prefix for clean routes
+    finalPath = finalPath.replace(/\.html$/, '');
+    finalPath = finalPath.replace(/^\/html\//, '/');
+    
+    // Ensure path starts with /
+    if (!finalPath.startsWith('/')) {
+      finalPath = '/' + finalPath;
     }
     
     // Prevent redirect loops: don't redirect to login or signup pages
@@ -308,21 +290,20 @@
     const currentPath = window.location.pathname;
     const search = window.location.search;
     
-    // Fix /html/html/ duplication while preserving /html/ base
-    // If path doesn't start with /html/, add it (shouldn't happen but defensive)
-    if (currentPath.startsWith('/') && !currentPath.startsWith('/html/') && currentPath.endsWith('.html')) {
-      const fixedPath = '/html' + currentPath;
-      const fixedUrl = fixedPath + search;
-      console.warn('[Path Fix] Adding /html/ prefix:', currentPath, '->', fixedPath);
-      window.location.replace(fixedUrl);
-      return;
-    }
-    
-    // Fix /html/html/ duplication
+    // Fix /html/html/ duplication (convert to clean route)
     if (currentPath.includes('/html/html/')) {
       const fixedPath = sanitizePath(currentPath);
       const fixedUrl = fixedPath + search;
       console.warn('[Path Fix] Correcting duplication:', currentPath, '->', fixedPath);
+      window.location.replace(fixedUrl);
+      return;
+    }
+    
+    // Fix paths that have /html/ prefix (convert to clean route)
+    if (currentPath.startsWith('/html/') && currentPath.endsWith('.html')) {
+      const fixedPath = sanitizePath(currentPath);
+      const fixedUrl = fixedPath + search;
+      console.warn('[Path Fix] Converting /html/ path to clean route:', currentPath, '->', fixedPath);
       window.location.replace(fixedUrl);
       return;
     }
@@ -360,7 +341,6 @@
   window.sanitizeNextPath = sanitizeNextPath;
   window.normalizeNextPath = normalizeNextPath;
   window.PATHS = PATHS;
-  window.BASE_PATH = BASE_PATH;
   // REMOVED: getUsers, saveUsers, findUserByUsername exports
   // These functions have been removed as they were used for localStorage-based auth
   window.getCurrentUser = getCurrentUser;

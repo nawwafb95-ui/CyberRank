@@ -1,15 +1,19 @@
 {
   "emulators": {
     "functions": {
-      "port": 5001
+      "port": 5002
     },
     "firestore": {
-      "port": 8080
+      "port": 8082
     },
     "ui": {
       "enabled": true,
-      "port": 4000
-    }
+      "port": 4002
+    },
+    "hosting": {
+      "port": 5003
+    },
+    "singleProjectMode": true
   },
   "functions": [
     {
@@ -20,16 +24,32 @@
         ".git",
         "firebase-debug.log",
         "firebase-debug.*.log",
-        "*.local"
+        "*.local",
+        ".env",
+        ".env.*"
       ]
     }
   ],
+  "firestore": {
+    "rules": "firestore.rules"
+  },
   "hosting": {
     "public": "public",
     "ignore": [
       "firebase.json",
       "**/.*",
       "**/node_modules/**"
+    ],
+    "headers": [
+      {
+        "source": "**/*.js",
+        "headers": [
+          {
+            "key": "Content-Type",
+            "value": "application/javascript; charset=utf-8"
+          }
+        ]
+      }
     ],
     "rewrites": [
       {
@@ -38,55 +58,55 @@
       },
       {
         "source": "/signup",
-        "destination": "/signup.html"
+        "destination": "/html/signup.html"
       },
       {
         "source": "/login",
-        "destination": "/login.html"
+        "destination": "/html/login.html"
       },
       {
         "source": "/dashboard",
-        "destination": "/dashboard.html"
+        "destination": "/html/dashboard.html"
       },
       {
         "source": "/profile",
-        "destination": "/profile.html"
+        "destination": "/html/profile.html"
       },
       {
         "source": "/leaderboard",
-        "destination": "/leaderboard.html"
+        "destination": "/html/leaderboard.html"
       },
       {
         "source": "/challenges",
-        "destination": "/challenges.html"
+        "destination": "/html/challenges.html"
       },
       {
         "source": "/quizzes",
-        "destination": "/quizzes.html"
+        "destination": "/html/quizzes.html"
       },
       {
         "source": "/question",
-        "destination": "/question.html"
+        "destination": "/html/question.html"
       },
       {
         "source": "/settings",
-        "destination": "/settings.html"
+        "destination": "/html/settings.html"
       },
       {
         "source": "/about",
-        "destination": "/about.html"
+        "destination": "/html/about.html"
       },
       {
         "source": "/success",
-        "destination": "/success.html"
+        "destination": "/html/success.html"
       },
       {
         "source": "/forgot-password",
-        "destination": "/forgot-password.html"
+        "destination": "/html/forgot-password.html"
       },
       {
         "source": "**",
-        "destination": "/404.html"
+        "destination": "/html/404.html"
       }
     ]
   }

@@ -133,7 +133,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       // After logout
-      const loginPath = typeof getPath === 'function' ? getPath('login') : '/html/login.html';
+      const loginPath = typeof getPath === 'function' ? getPath('login') : '/login';
       window.location.href = loginPath;
 
       // Update button states
@@ -150,7 +150,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (sideLogin) {
     sideLogin.addEventListener("click", () => {
-      const loginPath = typeof getPath === 'function' ? getPath('login') : '/html/login.html';
+      const loginPath = typeof getPath === 'function' ? getPath('login') : '/login';
       window.location.href = loginPath;
     });
   }
@@ -158,7 +158,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (sideSignup) {
     sideSignup.addEventListener("click", () => {
       if (typeof go === "function") {
-        const signupPath = typeof getPath === 'function' ? getPath('signup') : '/html/signup.html';
+        const signupPath = typeof getPath === 'function' ? getPath('signup') : '/signup';
         window.location.href = signupPath;
       }
     });
@@ -190,7 +190,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      const homePath = typeof getPath === 'function' ? getPath('home') : '/html/index.html';
+      const homePath = typeof getPath === 'function' ? getPath('home') : '/';
       window.location.href = homePath;
 
       if (typeof window.updateNavigationState === "function") {
@@ -267,7 +267,7 @@ document.addEventListener("DOMContentLoaded", () => {
       // SEQUENCE 6: Redirect after animation completes
       // ========================================
       setTimeout(() => {
-        const challengesPath = typeof getPath === 'function' ? getPath('challenges') : '/html/challenges.html';
+        const challengesPath = typeof getPath === 'function' ? getPath('challenges') : '/challenges';
         window.location.href = challengesPath;
       }, 1100); // Match animation duration (1.1s)
     });

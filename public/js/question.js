@@ -1,460 +1,766 @@
 // public/js/question.js
-// SERVER-SIDE ENFORCED: Questions fetched from Firestore with level gating
-// Score submission via Cloud Functions (submitQuizResult)
+// Question Page - Reads from Firestore collection: questions
+// Robust query + safe DOM init + local validation (demo mode)
 
-import { auth, db, waitForAuthReady, app } from './firebaseInit.js';
+import { auth, db, waitForAuthReady, getCurrentAuthUser } from './firebaseInit.js';
+
 import {
   collection,
-  addDoc,
   doc,
-  updateDoc,
-  serverTimestamp,
+  getDoc,
+  getDocs,
   query,
   where,
   orderBy,
-  getDocs,
-  getDoc
+  setDoc,
+  updateDoc,
+  serverTimestamp,
+  increment
 } from 'https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js';
-import { getFunctions, httpsCallable } from 'https://www.gstatic.com/firebasejs/11.0.2/firebase-functions.js';
 
-document.addEventListener('DOMContentLoaded', async () => {
-  // ================== AUTH CHECK ==================
-  const isAuthenticated = await waitForAuthReady();
-  if (!isAuthenticated || !auth.currentUser) {
-    // Redirect to login with message
-    const loginPath = typeof window.getPath === 'function' ? window.getPath('login') : '/html/login.html';
-    const currentPath = window.location.pathname + window.location.search;
-    window.location.href = `${loginPath}?next=${encodeURIComponent(currentPath)}&message=${encodeURIComponent('Login required to start challenges.')}`;
-    return;
-  }
+// ==================== STATE ====================
 
-  const qs = new URLSearchParams(location.search);
-  
-  // Support both old quiz parameter and new level parameter
-  const level = qs.get('level'); // 'easy', 'medium', or 'hard'
-  const quiz = qs.get('quiz'); // Legacy support
-  const qNum = Number(qs.get('q') || '1');
+const STATE = {
+  level: null,
+  questionSet: null,
+  currentQuestionIndex: 0,
+  currentQuestion: null,
+  questionIds: [],
+  timerInterval: null,
+  timerStartTime: null,
+  timerTarget: 120,
+  isSubmitted: false,
+  selectedAnswer: null
+};
 
-  // Determine current level
-  let currentLevel = level;
-  if (!currentLevel && quiz) {
-    // Map legacy quiz to level
-    if (quiz === '1') currentLevel = 'easy';
-    else if (quiz === '2') currentLevel = 'medium';
-    else if (quiz === '3') currentLevel = 'hard';
-  }
-  if (!currentLevel) currentLevel = 'easy'; // Default
+// Will be initialized after DOMContentLoaded
+const elements = {};
 
-  // ================== FETCH QUESTIONS FROM FIRESTORE ==================
-  // Firestore Security Rules will enforce level gating server-side
-  let questions = [];
+// ==================== STORAGE ====================
+
+function getStorageKey() {
+  const user = (getCurrentAuthUser ? getCurrentAuthUser() : null) || auth.currentUser;
+  if (!user) return null;
+  const level = STATE.level || 'easy';
+  return `question_progress_${user.uid}_${level}`;
+}
+
+function saveProgress() {
+  const key = getStorageKey();
+  if (!key) return;
   try {
-    const questionsRef = collection(db, 'questions');
-    const q = query(
-      questionsRef,
-      where('level', '==', currentLevel),
-      orderBy('order', 'asc')
+    localStorage.setItem(
+      key,
+      JSON.stringify({
+        questionIndex: STATE.currentQuestionIndex,
+        questionIds: STATE.questionIds,
+        level: STATE.level
+      })
     );
-    const querySnapshot = await getDocs(q);
-    
-    if (querySnapshot.empty) {
-      // Fallback to hardcoded questions if Firestore is empty (for migration period)
-      console.warn('[question.js] No questions found in Firestore, using fallback');
-      questions = getFallbackQuestions(currentLevel);
-    } else {
-      questions = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        text: doc.data().text,
-        correct: doc.data().correct
-      }));
-    }
-  } catch (error) {
-    console.error('[question.js] Error fetching questions:', error);
-    // If error is permission denied, user doesn't have access to this level
-    if (error.code === 'permission-denied') {
-      alert(`You don't have access to the ${currentLevel} level yet. Complete the previous level first (score >= 60%).`);
-      window.location.href = typeof window.getPath === 'function' ? window.getPath('challenges') : '/html/challenges.html';
-      return;
-    }
-    // Fallback to hardcoded questions
-    questions = getFallbackQuestions(currentLevel);
+  } catch (e) {
+    console.warn('[Question] Failed to save progress:', e);
+  }
+}
+
+function loadProgress() {
+  const key = getStorageKey();
+  if (!key) return null;
+  try {
+    const stored = localStorage.getItem(key);
+    if (stored) return JSON.parse(stored);
+  } catch (e) {
+    console.warn('[Question] Failed to load progress:', e);
+  }
+  return null;
+}
+
+function clearProgress() {
+  const key = getStorageKey();
+  if (!key) return;
+  try { localStorage.removeItem(key); } catch (_) {}
+}
+
+// ==================== TIMER ====================
+
+function startTimer() {
+  if (STATE.timerInterval) clearInterval(STATE.timerInterval);
+  STATE.timerStartTime = Date.now();
+  STATE.timerInterval = setInterval(updateTimer, 250);
+  updateTimer();
+}
+
+function stopTimer() {
+  if (STATE.timerInterval) {
+    clearInterval(STATE.timerInterval);
+    STATE.timerInterval = null;
+  }
+}
+
+function updateTimer() {
+  if (!STATE.timerStartTime || !elements.timer) return;
+
+  const elapsed = Math.floor((Date.now() - STATE.timerStartTime) / 1000);
+  const remaining = Math.max(0, STATE.timerTarget - elapsed);
+
+  const minutes = Math.floor(remaining / 60);
+  const seconds = remaining % 60;
+  elements.timer.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+
+  const timerEl = elements.timer.parentElement;
+  if (timerEl) {
+    if (remaining <= 30 && remaining > 0) timerEl.classList.add('timer-warning');
+    else timerEl.classList.remove('timer-warning');
+
+    if (remaining === 0) timerEl.classList.add('timer-expired');
+    else timerEl.classList.remove('timer-expired');
+  }
+}
+
+function getElapsedSeconds() {
+  if (!STATE.timerStartTime) return 0;
+  return Math.floor((Date.now() - STATE.timerStartTime) / 1000);
+}
+
+// ==================== UI HELPERS ====================
+
+function showLoading() {
+  if (elements.loading) elements.loading.style.display = 'block';
+  if (elements.content) elements.content.style.display = 'none';
+  if (elements.error) elements.error.style.display = 'none';
+}
+
+function hideLoading() {
+  if (elements.loading) elements.loading.style.display = 'none';
+  if (elements.content) elements.content.style.display = 'block';
+  if (elements.error) elements.error.style.display = 'none';
+}
+
+function showError(message) {
+  console.error('[Question] UI Error:', message);
+  if (elements.errorMessage) elements.errorMessage.textContent = message;
+  if (elements.error) elements.error.style.display = 'block';
+  if (elements.loading) elements.loading.style.display = 'none';
+  if (elements.content) elements.content.style.display = 'none';
+}
+
+// ==================== FIRESTORE LOADING ====================
+
+async function runQuestionsQuery(normalizedLevel, useFlags, useOrderBy) {
+  const questionsRef = collection(db, 'questions');
+  const parts = [where('level', '==', normalizedLevel)];
+
+  // Optional flags (in case some docs don't have them)
+  if (useFlags) {
+    parts.push(where('isActive', '==', true));
+    parts.push(where('isHidden', '==', false));
   }
 
-  // Fallback questions (for migration period or if Firestore is empty)
-  function getFallbackQuestions(level) {
-    const QUESTIONS_BY_LEVEL = {
-      easy: [
-        { id: 'easy_1', text: 'What does CIA triad stand for?', correct: 'Confidentiality, Integrity, Availability' },
-        { id: 'easy_2', text: 'Which protocol secures web traffic?', correct: 'HTTPS' },
-        { id: 'easy_3', text: 'What is phishing?', correct: 'Social engineering attempt' },
-        { id: 'easy_4', text: 'What is a firewall used for?', correct: 'Network security' },
-        { id: 'easy_5', text: 'What does SSL/TLS provide?', correct: 'Encryption' }
-      ],
-      medium: [
-        { id: 'medium_1', text: 'Port for HTTP?', correct: '80' },
-        { id: 'medium_2', text: 'SQL injection affects which layer?', correct: 'Application' },
-        { id: 'medium_3', text: 'One strong password trait?', correct: 'Length' },
-        { id: 'medium_4', text: 'What is a DDoS attack?', correct: 'Distributed Denial of Service' },
-        { id: 'medium_5', text: 'What is the purpose of a VPN?', correct: 'Secure remote access' },
-        { id: 'medium_6', text: 'What does IDS stand for?', correct: 'Intrusion Detection System' }
-      ],
-      hard: [
-        { id: 'hard_1', text: 'What is MFA?', correct: 'Multi-factor authentication' },
-        { id: 'hard_2', text: 'Firewall purpose?', correct: 'Traffic filtering' },
-        { id: 'hard_3', text: 'TLS provides?', correct: 'Encryption' },
-        { id: 'hard_4', text: 'What is a zero-day vulnerability?', correct: 'Unknown security flaw' },
-        { id: 'hard_5', text: 'What is the principle of least privilege?', correct: 'Minimum necessary access' },
-        { id: 'hard_6', text: 'What is APT in cybersecurity?', correct: 'Advanced Persistent Threat' },
-        { id: 'hard_7', text: 'What is social engineering?', correct: 'Manipulation technique' },
-        { id: 'hard_8', text: 'What does SIEM stand for?', correct: 'Security Information and Event Management' }
-      ]
-    };
-    return QUESTIONS_BY_LEVEL[level] || QUESTIONS_BY_LEVEL.easy;
+  if (useOrderBy) {
+    parts.push(orderBy('order'));
   }
 
-  const question = questions[qNum - 1];
+  const q = query(questionsRef, ...parts);
+  return await getDocs(q);
+}
 
-  const elQ = document.getElementById('question-text');
-  const elF = document.getElementById('ai-feedback');
-  const elT = document.getElementById('timer');
-  const btnNext = document.getElementById('btn-next');
-  const btnSkip = document.getElementById('btn-skip');
+async function loadQuestionSet(level) {
+  try {
+    console.log('[Question] Loading question set for level:', level);
 
-  // ================== Attempt Tracker Module ==================
-  const ATTEMPT_TRACKER = {
-    attemptId: null,
-    answersBuffer: [],
-    quizStartTime: null,
-    totalDurationSec: 0,
-    pointsPerQuestion: 10, // Points awarded per correct answer
-    level: currentLevel,
-    totalQuestions: questions.length,
-    
-    // Initialize attempt tracking
-    init() {
-      // Restore from sessionStorage if available
-      const stored = sessionStorage.getItem('cr_attempt_tracker');
-      if (stored) {
-        try {
-          const data = JSON.parse(stored);
-          this.attemptId = data.attemptId;
-          this.answersBuffer = data.answersBuffer || [];
-          this.quizStartTime = data.quizStartTime ? new Date(data.quizStartTime) : null;
-          this.totalDurationSec = data.totalDurationSec || 0;
-          this.level = data.level || currentLevel;
-          this.totalQuestions = data.totalQuestions || questions.length;
-        } catch (e) {
-          console.warn('[Attempt Tracker] Failed to restore from sessionStorage:', e);
-        }
-      }
-    },
-    
-    // Save to sessionStorage
-    persist() {
-      try {
-        sessionStorage.setItem('cr_attempt_tracker', JSON.stringify({
-          attemptId: this.attemptId,
-          answersBuffer: this.answersBuffer,
-          quizStartTime: this.quizStartTime ? this.quizStartTime.getTime() : null,
-          totalDurationSec: this.totalDurationSec,
-          level: this.level,
-          totalQuestions: this.totalQuestions
-        }));
-      } catch (e) {
-        console.warn('[Attempt Tracker] Failed to persist to sessionStorage:', e);
-      }
-    },
-    
-    // Clear tracking data
-    clear() {
-      this.attemptId = null;
-      this.answersBuffer = [];
-      this.quizStartTime = null;
-      this.totalDurationSec = 0;
-      try {
-        sessionStorage.removeItem('cr_attempt_tracker');
-      } catch (e) {
-        // Ignore
-      }
+    const normalizedLevel = String(level || '').toLowerCase().trim();
+    if (!['easy', 'medium', 'hard'].includes(normalizedLevel)) {
+      throw new Error(`Invalid level: ${level}. Must be one of: easy, medium, hard`);
     }
-  };
-  
-  // Initialize attempt tracker
-  ATTEMPT_TRACKER.init();
 
-  // ================== Finalize Attempt and Submit Score via Cloud Function ==================
-  async function finalizeAttempt() {
-    if (!ATTEMPT_TRACKER.attemptId) {
-      console.log('[Attempt Tracker] No attempt ID, skipping finalization');
-      return;
-    }
-    
+    let snap = null;
+
+    // 1) Best query: with flags + orderBy
     try {
-      // Wait for auth to be ready
-      const isAuthenticated = await waitForAuthReady();
-      if (!isAuthenticated || !auth.currentUser) {
-        console.log('[Attempt Tracker] User not authenticated, skipping attempt finalization');
-        return;
-      }
-      
-      // Calculate final score and correct count
-      const finalScore = ATTEMPT_TRACKER.answersBuffer.reduce((sum, ans) => sum + ans.points, 0);
-      const correctCount = ATTEMPT_TRACKER.answersBuffer.filter(ans => ans.isCorrect).length;
-      const maxScore = ATTEMPT_TRACKER.pointsPerQuestion * ATTEMPT_TRACKER.totalQuestions;
-      const scorePercent = maxScore > 0 ? Math.round((finalScore / maxScore) * 100) : 0;
-      
-      // Update attempt document
-      const attemptRef = doc(db, 'attempts', ATTEMPT_TRACKER.attemptId);
-      await updateDoc(attemptRef, {
-        finishedAt: serverTimestamp(),
-        durationSec: ATTEMPT_TRACKER.totalDurationSec,
-        score: finalScore,
-        maxScore: maxScore,
-        correctCount: correctCount,
-        totalQuestions: ATTEMPT_TRACKER.totalQuestions,
-        answers: ATTEMPT_TRACKER.answersBuffer
-      });
-      
-      console.log('[Attempt Tracker] Attempt finalized:', ATTEMPT_TRACKER.attemptId);
-      
-      // Submit score via Cloud Function (SERVER-SIDE ENFORCED)
-      const functions = getFunctions(app);
-      const submitQuizResult = httpsCallable(functions, 'submitQuizResult');
-      
-      try {
-        const result = await submitQuizResult({
-          level: ATTEMPT_TRACKER.level,
-          score: scorePercent,
-          attemptId: ATTEMPT_TRACKER.attemptId
-        });
-        
-        console.log('[Attempt Tracker] Score submitted via Cloud Function:', result.data);
-        
-        // Show success message if level was unlocked
-        if (result.data.levelUnlocked) {
-          const nextLevel = ATTEMPT_TRACKER.level === 'easy' ? 'Medium' : ATTEMPT_TRACKER.level === 'medium' ? 'Hard' : null;
-          if (nextLevel) {
-            console.log(`[Attempt Tracker] ${nextLevel} level unlocked!`);
-          }
-        }
-      } catch (submitError) {
-        console.error('[Attempt Tracker] Failed to submit score via Cloud Function:', submitError);
-        // Non-blocking - show error but don't block UI
-        const statusEl = document.getElementById('quiz-status');
-        if (statusEl) {
-          statusEl.textContent = 'Quiz completed, but saving results failed. Please try again.';
-          statusEl.className = 'error';
-        }
-      }
-      
-      // Clear attempt tracker
-      ATTEMPT_TRACKER.clear();
-      
-    } catch (error) {
-      console.error('[Attempt Tracker] Failed to finalize attempt:', error);
-      // Non-blocking - quiz completion UI still shows
-      const statusEl = document.getElementById('quiz-status');
-      if (statusEl) {
-        statusEl.textContent = 'Quiz completed, but saving results failed. Please try again.';
-        statusEl.className = 'error';
-      }
-    }
-  }
+      snap = await runQuestionsQuery(normalizedLevel, true, true);
+    } catch (e1) {
+      console.warn('[Question] Query(flags+orderBy) failed:', e1?.message || e1);
 
-  // No more questions - level completed
-  if (!question) {
-    // Finalize attempt if it exists (quiz completed)
-    finalizeAttempt(); // Fire and forget - non-blocking
-    
-    if (elQ) {
-      elQ.textContent = currentLevel 
-        ? `Level completed! You finished all ${currentLevel} level questions.`
-        : 'No more questions in this quiz.';
+      // 2) Fallback: with flags only (no orderBy)
+      try {
+        snap = await runQuestionsQuery(normalizedLevel, true, false);
+      } catch (e2) {
+        console.warn('[Question] Query(flags only) failed:', e2?.message || e2);
+
+        // 3) Fallback: level only + orderBy
+        try {
+          snap = await runQuestionsQuery(normalizedLevel, false, true);
+        } catch (e3) {
+          console.warn('[Question] Query(level+orderBy) failed:', e3?.message || e3);
+
+          // 4) Last resort: level only
+          snap = await runQuestionsQuery(normalizedLevel, false, false);
+        }
+      }
     }
-    if (btnNext) {
-      btnNext.textContent = 'Back to Challenges';
-      btnNext.disabled = false;
-      btnNext.onclick = () => {
-        const challengesPath = typeof window.getPath === 'function' ? window.getPath('challenges') : '/html/challenges.html';
-        window.location.href = challengesPath;
-      };
+
+    console.log('[Question] Query returned', snap.size, 'questions');
+
+    if (!snap || snap.empty) {
+      throw new Error(
+        `No questions found for level: ${normalizedLevel}. ` +
+        `Check Firestore docs: do they have level="${normalizedLevel}"?`
+      );
     }
-    if (btnSkip) btnSkip.style.display = 'none';
-    
+
+    const questionsWithOrder = [];
+    snap.forEach((d) => {
+      const data = d.data();
+      const orderValue =
+        data.order !== undefined && data.order !== null ? Number(data.order) : Infinity;
+      questionsWithOrder.push({ id: d.id, order: orderValue });
+    });
+
+    // Stable sort
+    questionsWithOrder.sort((a, b) => {
+      if (a.order !== b.order) return a.order - b.order;
+      return a.id.localeCompare(b.id);
+    });
+
+    const questionIds = questionsWithOrder.map((x) => x.id);
+
+    const data = { level: normalizedLevel, questionIds, totalQuestions: questionIds.length };
+
+    STATE.questionSet = data;
+    STATE.questionIds = questionIds;
+    STATE.level = normalizedLevel;
+
+    console.log('[Question] Loaded question set OK:', {
+      level: data.level,
+      totalQuestions: data.totalQuestions,
+      firstQuestionId: questionIds[0] || 'none'
+    });
+
+    return data;
+  } catch (error) {
+    console.error('[Question] Failed to load question set:', error);
+
+    let msg = error?.message || 'Failed to load questions. Please try again.';
+    if (error?.code === 'permission-denied') msg = 'Permission denied. Firestore rules must allow reading questions.';
+    if (error?.code === 'unavailable') msg = 'Firestore temporarily unavailable. Try again later.';
+
+    throw new Error(msg);
+  }
+}
+
+async function loadQuestion(questionId) {
+  const ref = doc(db, 'questions', questionId);
+  const snap = await getDoc(ref);
+  if (!snap.exists()) throw new Error(`Question ${questionId} not found`);
+
+  const data = snap.data();
+
+  const options = data.options || data.choices || [];
+  const title = data.title || data.text || '';
+  const text = data.title ? (data.text || '') : '';
+
+  const correctAnswer =
+    data.correctAnswer !== undefined ? data.correctAnswer :
+    (data.correct !== undefined ? data.correct : null);
+
+  const type = data.type || (options.length > 0 ? 'mcq' : 'short');
+
+  return {
+    id: questionId,
+    title,
+    text,
+    type,
+    options,
+    imageUrl: data.imageUrl || null,
+    scenario: data.scenario || null,
+    difficulty: (data.difficulty || data.level || STATE.level || 'medium'),
+    correctAnswer
+  };
+}
+
+// ==================== RENDERING ====================
+
+function renderAnswerArea(question) {
+  const type = question.type;
+
+  if (elements.radioOptions) elements.radioOptions.style.display = 'none';
+  if (elements.shortAnswerContainer) elements.shortAnswerContainer.style.display = 'none';
+
+  const enableSubmit = () => { if (elements.btnSubmit) elements.btnSubmit.disabled = false; };
+
+  if (type === 'mcq' || type === 'tf') {
+    if (!elements.radioOptions) return;
+    elements.radioOptions.innerHTML = '';
+
+    const options =
+      type === 'tf'
+        ? [{ label: 'True', value: 'true' }, { label: 'False', value: 'false' }]
+        : (question.options || []);
+
+    options.forEach((option, index) => {
+      const optionEl = document.createElement('div');
+      optionEl.className = 'radio-option';
+
+      const radio = document.createElement('input');
+      radio.type = 'radio';
+      radio.name = 'answer';
+      radio.id = `option-${index}`;
+      radio.value = typeof option === 'string' ? option : option.value;
+
+      radio.addEventListener('change', () => {
+        STATE.selectedAnswer = radio.value;
+        enableSubmit();
+      });
+
+      const label = document.createElement('label');
+      label.htmlFor = `option-${index}`;
+      label.textContent = typeof option === 'string' ? option : (option.label || option.value);
+
+      optionEl.appendChild(radio);
+      optionEl.appendChild(label);
+      elements.radioOptions.appendChild(optionEl);
+    });
+
+    elements.radioOptions.style.display = 'block';
     return;
   }
 
-  if (elQ) elQ.textContent = question.text;
+  // short answer
+  if (!elements.shortAnswerContainer || !elements.shortAnswerInput) return;
 
-  // ================== Initialize Attempt on First Question ==================
-  if (qNum === 1) {
-    // Quiz starts - create attempt document
-    (async () => {
-      try {
-        // Wait for auth to be ready
-        const isAuthenticated = await waitForAuthReady();
-        if (!isAuthenticated || !auth.currentUser) {
-          console.log('[Attempt Tracker] User not authenticated, skipping attempt creation');
-          return;
-        }
-        
-        // Create attempt document
-        const attemptData = {
-          userId: auth.currentUser.uid,
-          level: currentLevel || 'unknown',
-          startedAt: serverTimestamp(),
-          finishedAt: null,
-          durationSec: 0,
-          score: 0,
-          maxScore: ATTEMPT_TRACKER.pointsPerQuestion * questions.length,
-          correctCount: 0,
-          totalQuestions: questions.length,
-          answers: []
-        };
-        
-        const attemptRef = await addDoc(collection(db, 'attempts'), attemptData);
-        ATTEMPT_TRACKER.attemptId = attemptRef.id;
-        ATTEMPT_TRACKER.quizStartTime = new Date();
-        ATTEMPT_TRACKER.level = currentLevel || 'unknown';
-        ATTEMPT_TRACKER.totalQuestions = questions.length;
-        ATTEMPT_TRACKER.persist();
-        
-        console.log('[Attempt Tracker] Attempt created:', attemptRef.id);
-      } catch (error) {
-        console.error('[Attempt Tracker] Failed to create attempt:', error);
-        // Non-blocking - quiz continues normally
-      }
-    })();
+  const newInput = elements.shortAnswerInput.cloneNode(true);
+  elements.shortAnswerInput.parentNode.replaceChild(newInput, elements.shortAnswerInput);
+  elements.shortAnswerInput = newInput;
+
+  newInput.value = '';
+  newInput.addEventListener('input', () => {
+    STATE.selectedAnswer = newInput.value.trim();
+    if (elements.btnSubmit) elements.btnSubmit.disabled = !STATE.selectedAnswer;
+  });
+
+  elements.shortAnswerContainer.style.display = 'block';
+  newInput.focus();
+}
+
+function renderQuestion(question) {
+  STATE.currentQuestion = question;
+  STATE.isSubmitted = false;
+  STATE.selectedAnswer = null;
+
+  const difficultyTargets = { easy: 120, medium: 240, hard: 360 };
+  const normalizedDifficulty = String(question.difficulty || 'medium').toLowerCase().trim();
+  STATE.timerTarget = difficultyTargets[normalizedDifficulty] || 240;
+
+  if (elements.questionTitle) elements.questionTitle.textContent = question.title || 'Question';
+
+  if (elements.questionText) {
+    elements.questionText.textContent = question.text || '';
+    elements.questionText.style.display = question.text ? 'block' : 'none';
   }
 
-  // Simple timer (mm:ss)
-  let start = Date.now();
-  let tId;
-
-  function tick() {
-    const s = Math.floor((Date.now() - start) / 1000);
-    const mm = String(Math.floor(s / 60)).padStart(2, '0');
-    const ss = String(s % 60).padStart(2, '0');
-    if (elT) elT.textContent = mm + ':' + ss;
-  }
-
-  tId = setInterval(tick, 1000);
-  tick();
-
-  function saveAnswer(status) {
-    clearInterval(tId);
-    const elapsedMs = Date.now() - start;
-    const elapsedSec = Math.floor(elapsedMs / 1000);
-    
-    // Update total duration
-    ATTEMPT_TRACKER.totalDurationSec += elapsedSec;
-    
-    // Determine if answer is correct (answered = correct, skipped = incorrect)
-    const isCorrect = status === 'answered';
-    const points = isCorrect ? ATTEMPT_TRACKER.pointsPerQuestion : 0;
-    
-    // Use question ID from Firestore or fallback
-    const qId = question.id || `${currentLevel || 'unknown'}_q${qNum}`;
-    
-    // Add to answers buffer
-    ATTEMPT_TRACKER.answersBuffer.push({
-      qId: qId,
-      answer: status === 'answered' ? question.correct : null, // Store correct answer or null if skipped
-      isCorrect: isCorrect,
-      points: points,
-      timeSpentSec: elapsedSec
-    });
-    
-    ATTEMPT_TRACKER.persist();
-    
-    return { elapsedMs };
-  }
-
-  async function fakeAI(isCorrect) {
-    // Placeholder integration — replace with real endpoint call
-    await new Promise(r => setTimeout(r, 350));
-    if (isCorrect) {
-      return {
-        type: 'summary',
-        text: 'Good job! You identified the core concept correctly.'
-      };
-    }
-    return {
-      type: 'hint',
-      text: 'Think about the security property this protects.'
-    };
-  }
-
-  function goNext() {
-    const next = qNum + 1;
-    const totalQuestions = questions.length;
-    
-    // Check if this was the last question
-    if (next > totalQuestions) {
-      // Level completed - finalize attempt and show completion message
-      finalizeAttempt(); // Fire and forget - non-blocking
-      
-      if (elQ) {
-        elQ.textContent = `🎉 Congratulations! You completed the ${currentLevel} level!`;
-      }
-      if (btnNext) {
-        btnNext.textContent = 'Back to Challenges';
-        btnNext.onclick = () => {
-          const challengesPath = typeof window.getPath === 'function' ? window.getPath('challenges') : '/html/challenges.html';
-          window.location.href = challengesPath;
-        };
-      }
-      if (btnSkip) btnSkip.style.display = 'none';
-      return;
-    }
-
-    // Continue to next question - use absolute path
-    let nextUrl = '/html/question.html?';
-    
-    if (level) {
-      nextUrl += `level=${encodeURIComponent(level)}&q=${next}`;
-    } else if (quiz) {
-      nextUrl += `quiz=${encodeURIComponent(quiz)}&q=${next}`;
+  if (elements.scenarioText) {
+    if (question.scenario) {
+      elements.scenarioText.textContent = question.scenario;
+      elements.scenarioText.style.display = 'block';
     } else {
-      nextUrl += `level=${encodeURIComponent(currentLevel)}&q=${next}`;
+      elements.scenarioText.style.display = 'none';
     }
+  }
+
+  if (question.imageUrl && elements.imageContainer && elements.questionImage) {
+    elements.questionImage.src = question.imageUrl;
+    elements.questionImage.alt = question.title || 'Question image';
+    elements.imageContainer.style.display = 'block';
+  } else if (elements.imageContainer) {
+    elements.imageContainer.style.display = 'none';
+  }
+
+  renderAnswerArea(question);
+
+  if (elements.btnSubmit) {
+    elements.btnSubmit.disabled = true;
+    elements.btnSubmit.style.display = 'block';
+    const txt = elements.btnSubmit.querySelector('.btn-text');
+    if (txt) txt.textContent = 'Submit';
+  }
+  if (elements.btnNext) elements.btnNext.style.display = 'none';
+  if (elements.feedbackPanel) elements.feedbackPanel.style.display = 'none';
+
+  startTimer();
+}
+
+// ==================== SUBMIT ====================
+
+function showFeedback(data) {
+  if (!elements.feedbackPanel) return;
+
+  const isCorrect = !!data.isCorrect;
+  const baseScore = data.baseScore || 0;
+  const timeBonus = data.timeBonus || 0;
+  const finalScore = data.finalScore || 0;
+  const explanation = data.explanation || null;
+
+  if (elements.feedbackStatus) {
+    elements.feedbackStatus.textContent = isCorrect ? '✓ Correct!' : '✗ Incorrect';
+    elements.feedbackStatus.className = `feedback-status ${isCorrect ? 'correct' : 'incorrect'}`;
+  }
+
+  if (elements.scoreBreakdown) {
+    let html = `
+      <div class="score-item">
+        <span class="score-label">Base Score:</span>
+        <span class="score-value">${baseScore} pts</span>
+      </div>
+    `;
+
+    if (timeBonus > 0) {
+      html += `
+        <div class="score-item">
+          <span class="score-label">Time Bonus:</span>
+          <span class="score-value">+${timeBonus} pts</span>
+        </div>
+      `;
+    }
+
+    html += `
+      <div class="score-item total">
+        <span class="score-label">Total:</span>
+        <span class="score-value">${finalScore} pts</span>
+      </div>
+    `;
+
+    elements.scoreBreakdown.innerHTML = html;
+  }
+
+  if (elements.explanation) {
+    elements.explanation.textContent = explanation || '';
+    elements.explanation.style.display = explanation ? 'block' : 'none';
+  }
+
+  elements.feedbackPanel.style.display = 'block';
+}
+
+async function updateUserStats(finalScore) {
+  const user = getCurrentAuthUser ? getCurrentAuthUser() : (auth.currentUser || window.__authUser);
+  if (!user || !user.uid) {
+    console.warn('[Question] Cannot update stats: no user');
+    return false;
+  }
+
+  try {
+    const userStatsRef = doc(db, 'userStats', user.uid);
+    const userStatsSnap = await getDoc(userStatsRef);
+
+    if (userStatsSnap.exists()) {
+      // Document exists, use atomic increment
+      await updateDoc(userStatsRef, {
+        points: increment(finalScore),
+        xp: increment(finalScore),
+        updatedAt: serverTimestamp()
+      });
+    } else {
+      // Document doesn't exist, create it with initial values
+      await setDoc(userStatsRef, {
+        points: finalScore,
+        xp: finalScore,
+        level: 1,
+        updatedAt: serverTimestamp()
+      });
+    }
+
+    console.log(`[Question] Updated user stats: +${finalScore} points`);
+    return true;
+  } catch (error) {
+    console.warn('[Question] Failed to update user stats:', error);
+    return false;
+  }
+}
+
+async function handleSubmit() {
+  if (STATE.isSubmitted || !STATE.selectedAnswer) return;
+
+  STATE.isSubmitted = true;
+  stopTimer();
+
+  const elapsed = getElapsedSeconds();
+
+  if (elements.btnSubmit) {
+    elements.btnSubmit.disabled = true;
+    const txt = elements.btnSubmit.querySelector('.btn-text');
+    if (txt) txt.textContent = 'Checking...';
+  }
+
+  try {
+    let isCorrect = false;
+
+    if (STATE.currentQuestion && STATE.currentQuestion.correctAnswer !== null && STATE.currentQuestion.correctAnswer !== undefined) {
+      const userAnswer = String(STATE.selectedAnswer).trim().toLowerCase();
+      const correctAnswer = String(STATE.currentQuestion.correctAnswer).trim().toLowerCase();
+      isCorrect = userAnswer === correctAnswer;
+    } else {
+      isCorrect = true; // demo
+    }
+
+    const baseScore = isCorrect ? 10 : 0;
+    const timeBonus = isCorrect && elapsed < 60 ? Math.max(0, 60 - elapsed) : 0;
+    const finalScore = baseScore + timeBonus;
+
+    showFeedback({
+      isCorrect,
+      baseScore,
+      timeBonus: Math.floor(timeBonus),
+      finalScore,
+      explanation: isCorrect ? 'Correct!' : 'Incorrect. Keep practicing!'
+    });
+
+    // Update user stats with points (non-blocking)
+    updateUserStats(finalScore).catch(err => {
+      console.warn('[Question] Stats update failed (non-critical):', err);
+    });
+
+    if (elements.btnNext) elements.btnNext.style.display = 'block';
+    if (elements.btnSubmit) elements.btnSubmit.style.display = 'none';
+
+    saveProgress();
+  } catch (e) {
+    showError(e?.message || 'Failed to process answer.');
+    STATE.isSubmitted = false;
+
+    if (elements.btnSubmit) {
+      elements.btnSubmit.disabled = false;
+      const txt = elements.btnSubmit.querySelector('.btn-text');
+      if (txt) txt.textContent = 'Submit';
+    }
+  }
+}
+
+// ==================== NAV ====================
+
+async function markLevelCompleted(level, totalQuestions) {
+  const user = getCurrentAuthUser ? getCurrentAuthUser() : (auth.currentUser || window.__authUser);
+  if (!user || !user.uid) {
+    console.warn('[Question] Cannot mark completion: no user');
+    return false;
+  }
+
+  try {
+    const progressRef = doc(db, 'userProgress', user.uid);
+    const progressSnap = await getDoc(progressRef);
     
-    location.href = nextUrl;
+    const now = serverTimestamp();
+    const levelData = {
+      completed: true,
+      completedAt: now,
+      totalQuestions: totalQuestions
+    };
+
+    if (progressSnap.exists()) {
+      const existing = progressSnap.data();
+      await setDoc(progressRef, {
+        uid: user.uid,
+        levels: {
+          ...(existing.levels || {}),
+          [level]: levelData
+        }
+      }, { merge: true });
+    } else {
+      await setDoc(progressRef, {
+        uid: user.uid,
+        levels: {
+          [level]: levelData
+        }
+      });
+    }
+
+    console.log(`[Question] Marked level ${level} as completed`);
+    return true;
+  } catch (error) {
+    console.error('[Question] Failed to mark level completion:', error);
+    return false;
+  }
+}
+
+async function showCompletion() {
+  if (elements.content) {
+    elements.content.innerHTML = `
+      <div class="completion-message">
+        <h2>🎉 Level Complete!</h2>
+        <p>You've completed all questions in the ${STATE.level} level.</p>
+        <button class="btn btn-primary" id="completion-btn">
+          Continue
+        </button>
+      </div>
+    `;
+    
+    // Handle redirect based on level
+    const completionBtn = document.getElementById('completion-btn');
+    if (completionBtn) {
+      completionBtn.addEventListener('click', async () => {
+        // Mark level as completed in Firestore
+        const saved = await markLevelCompleted(STATE.level, STATE.questionIds.length);
+        if (!saved) {
+          console.warn('[Question] Failed to save completion, but continuing anyway');
+        }
+
+        // Redirect based on level
+        if (STATE.level === 'easy') {
+          window.location.href = '/question?level=medium&q=1';
+        } else if (STATE.level === 'medium') {
+          window.location.href = '/question?level=hard&q=1';
+        } else if (STATE.level === 'hard') {
+          window.location.href = '/challenges?message=' + encodeURIComponent('🎉 Congratulations! You\'ve completed all levels!');
+        } else {
+          window.location.href = '/challenges';
+        }
+      });
+    }
+  }
+  clearProgress();
+}
+
+async function loadCurrentQuestion() {
+  if (STATE.currentQuestionIndex >= STATE.questionIds.length) {
+    await showCompletion();
+    return;
   }
 
-  if (btnNext) {
-    btnNext.addEventListener('click', async () => {
-      saveAnswer('answered');
-      const ai = await fakeAI(true);
-      if (elF && ai && ai.text) elF.textContent = ai.text;
-      
-      // Check if this is the last question
-      const isLastQuestion = qNum >= questions.length;
-      if (isLastQuestion) {
-        // Finalize attempt before redirecting
-        await finalizeAttempt();
-        setTimeout(goNext, 1000); // Give time to show completion message
-      } else {
-        setTimeout(goNext, 600);
-      }
-    });
+  try {
+    showLoading();
+
+    const qid = STATE.questionIds[STATE.currentQuestionIndex];
+    const question = await loadQuestion(qid);
+    renderQuestion(question);
+
+    if (elements.currentQuestion) elements.currentQuestion.textContent = STATE.currentQuestionIndex + 1;
+
+    const newUrl = new URL(window.location);
+    newUrl.searchParams.set('q', STATE.currentQuestionIndex + 1);
+    window.history.replaceState({}, '', newUrl);
+
+    hideLoading();
+  } catch (e) {
+    showError(e?.message || 'Failed to load question.');
+  }
+}
+
+async function handleNext() {
+  STATE.currentQuestionIndex++;
+  if (STATE.currentQuestionIndex >= STATE.questionIds.length) {
+    await showCompletion();
+    return;
+  }
+  loadCurrentQuestion();
+}
+
+// ==================== INIT ====================
+
+function initElements() {
+  elements.loading = document.getElementById('loading-state');
+  elements.content = document.getElementById('question-content');
+  elements.error = document.getElementById('error-state');
+  elements.errorMessage = document.getElementById('error-message');
+  elements.levelBadge = document.getElementById('level-badge');
+  elements.currentQuestion = document.getElementById('current-question');
+  elements.totalQuestions = document.getElementById('total-questions');
+  elements.timer = document.getElementById('timer-text');
+
+  elements.imageContainer = document.getElementById('question-image-container');
+  elements.questionImage = document.getElementById('question-image');
+  elements.questionTitle = document.getElementById('question-title');
+  elements.questionText = document.getElementById('question-text');
+  elements.scenarioText = document.getElementById('scenario-text');
+
+  elements.radioOptions = document.getElementById('radio-options');
+  elements.shortAnswerContainer = document.getElementById('short-answer-container');
+  elements.shortAnswerInput = document.getElementById('short-answer-input');
+
+  elements.btnSubmit = document.getElementById('btn-submit');
+  elements.btnNext = document.getElementById('btn-next');
+
+  elements.feedbackPanel = document.getElementById('feedback-panel');
+  elements.feedbackStatus = document.getElementById('feedback-status');
+  elements.scoreBreakdown = document.getElementById('score-breakdown');
+  elements.explanation = document.getElementById('explanation');
+
+  if (elements.btnSubmit) elements.btnSubmit.addEventListener('click', handleSubmit);
+  if (elements.btnNext) elements.btnNext.addEventListener('click', handleNext);
+}
+
+async function initialize() {
+  initElements();
+
+  // ✅ Wait for auth to resolve (then retry a bit to avoid false redirects)
+  await waitForAuthReady();
+
+  let user =
+    auth.currentUser ||
+    (getCurrentAuthUser ? getCurrentAuthUser() : null) ||
+    window.__authUser ||
+    null;
+
+  for (let i = 0; i < 15 && !user; i++) {
+    await new Promise((r) => setTimeout(r, 200)); // up to ~3 seconds
+    user =
+      auth.currentUser ||
+      (getCurrentAuthUser ? getCurrentAuthUser() : null) ||
+      window.__authUser ||
+      null;
   }
 
-  if (btnSkip) {
-    btnSkip.addEventListener('click', async () => {
-      saveAnswer('skipped');
-      const ai = await fakeAI(false);
-      if (elF && ai && ai.text) elF.textContent = ai.text;
-      
-      // Check if this is the last question
-      const isLastQuestion = qNum >= questions.length;
-      if (isLastQuestion) {
-        // Finalize attempt before redirecting
-        await finalizeAttempt();
-        setTimeout(goNext, 1000);
-      } else {
-        setTimeout(goNext, 600);
-      }
-    });
+  console.log('[Question] Final auth user:', user?.uid || null);
+
+  if (!user) {
+    const loginPath = (typeof window.getPath === 'function') ? window.getPath('login') : '/login';
+    const next = encodeURIComponent(window.location.pathname + window.location.search);
+    window.location.href =
+      `${loginPath}?next=${next}&message=${encodeURIComponent('Login required to access questions.')}`;
+    return;
   }
-});
+
+  const urlParams = new URLSearchParams(window.location.search);
+  const level = (urlParams.get('level') || 'easy').toLowerCase();
+  const questionParam = urlParams.get('q');
+
+  if (!['easy', 'medium', 'hard'].includes(level)) {
+    showError(`Invalid level: ${level}. Please select easy/medium/hard.`);
+    return;
+  }
+
+  STATE.level = level;
+
+  if (elements.levelBadge) {
+    elements.levelBadge.textContent = STATE.level.charAt(0).toUpperCase() + STATE.level.slice(1);
+    elements.levelBadge.className = `level-badge level-${STATE.level}`;
+  }
+
+  try {
+    showLoading();
+
+    const set = await loadQuestionSet(STATE.level);
+    STATE.questionIds = set.questionIds;
+
+    if (elements.totalQuestions) elements.totalQuestions.textContent = set.totalQuestions;
+
+    if (questionParam) {
+      const n = parseInt(questionParam, 10);
+      STATE.currentQuestionIndex = (!isNaN(n) && n >= 1 && n <= set.totalQuestions) ? (n - 1) : 0;
+    } else {
+      const saved = loadProgress();
+      if (
+        saved &&
+        saved.questionIds &&
+        JSON.stringify(saved.questionIds) === JSON.stringify(STATE.questionIds) &&
+        saved.level === STATE.level
+      ) {
+        STATE.currentQuestionIndex = saved.questionIndex || 0;
+      } else {
+        STATE.currentQuestionIndex = 0;
+      }
+    }
+
+    await loadCurrentQuestion();
+  } catch (e) {
+    showError(e?.message || 'Failed to initialize questions.');
+  }
+}
+
+document.addEventListener('DOMContentLoaded', initialize);

@@ -1,115 +1,86 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    
-    // ==================== OTP REQUESTS (SECURE) ====================
-    // Clients CANNOT read or write OTP requests
-    // Only backend Cloud Functions can manage OTP docs
-    match /otpRequests/{otpRequestId} {
-      allow read, write: if false; // Deny all client access
+
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Helper function to check if user is admin (safe)
+    function isAdmin() {
+      return isAuthenticated()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
 
     // ==================== USERS ====================
     match /users/{userId} {
-      // Users can read their own data
-      allow read: if request.auth != null && request.auth.uid == userId;
-      
-      // Users can create their own document (during signup after auth is created)
-      allow create: if request.auth != null && request.auth.uid == userId;
-      
-      // Users can update their own data (except role)
-      allow update: if request.auth != null 
-        && request.auth.uid == userId
-        && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role']);
+      allow read: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+      allow create: if isAuthenticated() && request.auth.uid == userId;
+      allow update: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+      allow delete: if isAdmin();
     }
 
-    // ==================== USER STATS ====================
-    match /userStats/{userId} {
-      // Users can read their own stats
-      allow read: if request.auth != null && request.auth.uid == userId;
-      
-      // Only backend can write stats (via Cloud Functions)
-      allow write: if false;
+    // ==================== QUESTIONS ====================
+    match /questions/{questionId} {
+      // Authenticated users can read questions
+      allow read: if isAuthenticated();
+
+      // Only admins can create, update, or delete questions
+      allow create, update, delete: if isAdmin();
     }
 
     // ==================== ATTEMPTS ====================
     match /attempts/{attemptId} {
-      // Users can read their own attempts
-      allow read: if request.auth != null && request.auth.uid == resource.data.userId;
-      
-      // Users can create their own attempts
-      allow create: if request.auth != null 
-        && request.auth.uid == request.resource.data.userId;
-      
-      // Users cannot update or delete attempts
-      allow update, delete: if false;
+      allow read: if isAuthenticated() && (request.auth.uid == resource.data.userId || isAdmin());
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isAuthenticated() && (request.auth.uid == resource.data.userId || isAdmin());
     }
 
-    // ==================== POINT TRANSACTIONS ====================
-    match /pointTransactions/{transactionId} {
-      // Users can read their own transactions
-      allow read: if request.auth != null && request.auth.uid == resource.data.userId;
-      
-      // Only backend can create transactions
-      allow write: if false;
+    // ==================== RESULTS ====================
+    match /results/{resultId} {
+      allow read: if isAuthenticated() && (request.auth.uid == resource.data.uid || isAdmin());
+      allow create: if isAuthenticated() && request.resource.data.uid == request.auth.uid;
+      allow update, delete: if isAuthenticated() && (request.auth.uid == resource.data.uid || isAdmin());
     }
 
-    // ==================== LOGS ====================
-    match /logs/{logId} {
-      // Only backend can read/write logs
-      allow read, write: if false;
+    // ==================== USERSTATS (🔧 MODIFIED FOR LEADERBOARD) ====================
+    match /userStats/{uid} {
+      // ✅ Any logged-in user can read stats (for leaderboard)
+      allow read: if isAuthenticated();
+
+      // Users can create their own stats
+      allow create: if isAuthenticated() && request.auth.uid == uid;
+
+      // Users update their own stats, admins update all
+      allow update: if isAuthenticated() && (request.auth.uid == uid || isAdmin());
+
+      // Only admins can delete stats
+      allow delete: if isAdmin();
     }
 
-    // ==================== HELPER FUNCTIONS ====================
-    // Get user stats document
-    function getUserStats() {
-      return get(/databases/$(database)/documents/userStats/$(request.auth.uid)).data;
+    // ==================== SCORES ====================
+    match /scores/{uid} {
+      allow read: if isAuthenticated() && (request.auth.uid == uid || isAdmin());
+      allow create: if isAuthenticated() && request.auth.uid == uid;
+      allow update: if isAuthenticated() && (request.auth.uid == uid || isAdmin());
+      allow delete: if isAdmin();
     }
 
-    // Check if user can access a quiz level
-    function canAccessQuizLevel(level) {
-      // Easy: always accessible if authenticated
-      if (level == "easy") {
-        return true;
-      }
-      
-      let userStats = getUserStats();
-      
-      // Medium: requires bestScoreEasy >= 60
-      if (level == "medium") {
-        return userStats.bestScoreEasy != null && userStats.bestScoreEasy >= 60;
-      }
-      
-      // Hard: requires bestScoreMedium >= 60
-      if (level == "hard") {
-        return userStats.bestScoreMedium != null && userStats.bestScoreMedium >= 60;
-      }
-      
-      return false;
+    // ==================== POINTTRANSACTIONS ====================
+    match /pointTransactions/{txId} {
+      allow read: if isAuthenticated() && (request.auth.uid == resource.data.userId || isAdmin());
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isAdmin();
     }
 
-    // Check if user is admin
-    function isAdmin() {
-      let userDoc = get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
-      return userDoc != null && userDoc.role == "admin";
-    }
-
-    // ==================== QUIZZES (LEVEL-GATED) ====================
-    match /quizzes/{quizId} {
-      // Read: Only authenticated users, and only if they have access to the quiz's level
-      // OR if user is admin (admins can read all quizzes)
-      allow read: if request.auth != null 
-        && (canAccessQuizLevel(resource.data.level) || isAdmin());
-      
-      // Write: Only backend (Cloud Functions) or admins
-      allow write: if isAdmin() || false; // Admins can write, clients cannot
-    }
-
-    // ==================== ADMIN COLLECTIONS ====================
-    // Deny all client access to admin collections
-    match /admin/{document=**} {
-      allow read, write: if false;
+    // ==================== USERPROGRESS ====================
+    match /userProgress/{uid} {
+      // Users can read/write only their own progress, admins can read all
+      allow read: if isAuthenticated() && (request.auth.uid == uid || isAdmin());
+      allow create, update: if isAuthenticated() && request.auth.uid == uid;
+      allow delete: if isAdmin();
     }
   }
 }
-

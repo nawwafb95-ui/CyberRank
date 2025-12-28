@@ -9,14 +9,14 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
       rel="stylesheet"
     />
 
     <link rel="stylesheet" href="/css/base.css" />
     <link rel="stylesheet" href="/css/components.css" />
     <link rel="stylesheet" href="/css/pages.css" />
-    <link rel="stylesheet" href="/css/pages/question.css" />
+    <link rel="stylesheet" href="/css/question.css" />
     <link rel="stylesheet" href="/css/sidebar.css" />
 
     <!-- Favicon -->
@@ -25,17 +25,91 @@
 
   <body data-page="question">
     <main class="question-layout">
-      <div class="question-timer" id="timer">00:00</div>
+      <!-- Header: Level Badge + Progress + Timer -->
+      <header class="question-header">
+        <div class="question-header-left">
+          <span class="level-badge" id="level-badge">Easy</span>
+          <span class="question-progress" id="question-progress">
+            Question <span id="current-question">1</span> of <span id="total-questions">?</span>
+          </span>
+        </div>
+        <div class="question-timer" id="timer">
+          <span class="timer-icon">⏱</span>
+          <span class="timer-text" id="timer-text">00:00</span>
+        </div>
+      </header>
 
+      <!-- Main Question Card -->
       <section class="question-card card">
-        <div id="question-text" class="question-text">Loading question…</div>
-
-        <div class="question-actions">
-          <button class="btn primary" id="btn-next">Next</button>
-          <button class="btn" id="btn-skip">Skip</button>
+        <!-- Loading State -->
+        <div id="loading-state" class="loading-state">
+          <div class="spinner"></div>
+          <p>Loading question...</p>
         </div>
 
-        <div id="ai-feedback" class="ai-feedback"></div>
+        <!-- Question Content (hidden initially) -->
+        <div id="question-content" class="question-content" style="display: none;">
+          <!-- Optional Image Card -->
+          <div id="question-image-container" class="question-image-container" style="display: none;">
+            <img id="question-image" class="question-image" alt="Question image" />
+          </div>
+
+          <!-- Question Title/Text -->
+          <div class="question-title-section">
+            <h2 id="question-title" class="question-title">Question Title</h2>
+            <div id="question-text" class="question-text"></div>
+            <div id="scenario-text" class="scenario-text" style="display: none;"></div>
+          </div>
+
+          <!-- Answer Area -->
+          <div class="answer-area">
+            <!-- MCQ/True-False Options (Radio buttons) -->
+            <div id="radio-options" class="radio-options" style="display: none;" role="radiogroup">
+              <!-- Options will be dynamically generated -->
+            </div>
+
+            <!-- Short Answer Input -->
+            <div id="short-answer-container" class="short-answer-container" style="display: none;">
+              <input 
+                type="text" 
+                id="short-answer-input" 
+                class="short-answer-input" 
+                placeholder="Type your answer here..."
+                autocomplete="off"
+                aria-label="Answer input"
+              />
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="question-actions">
+            <button class="btn btn-primary" id="btn-submit" disabled>
+              <span class="btn-text">Submit</span>
+            </button>
+            <button class="btn btn-secondary" id="btn-next" style="display: none;">
+              <span class="btn-text">Next Question</span>
+            </button>
+          </div>
+
+          <!-- Feedback Panel -->
+          <div id="feedback-panel" class="feedback-panel" style="display: none;">
+            <div class="feedback-header">
+              <span id="feedback-status" class="feedback-status"></span>
+            </div>
+            <div id="feedback-content" class="feedback-content">
+              <div id="score-breakdown" class="score-breakdown"></div>
+              <div id="explanation" class="explanation" style="display: none;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Error State -->
+        <div id="error-state" class="error-state" style="display: none;">
+          <p id="error-message">An error occurred. Please try again.</p>
+          <button class="btn btn-primary" onclick="window.location.href='/challenges'">
+            Back to Challenges
+          </button>
+        </div>
       </section>
     </main>
 

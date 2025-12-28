@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
     buttonClicked = true;
 
     // Navigate to challenges page
-    const challengesPath = typeof window.getPath === 'function' ? window.getPath('challenges') : '/html/challenges.html';
+    const challengesPath = typeof window.getPath === 'function' ? window.getPath('challenges') : '/challenges';
     window.location.href = challengesPath;
   };
 
@@ -92,7 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const leaderboardBtn = document.getElementById("leaderboard-btn");
   if (leaderboardBtn) {
     leaderboardBtn.addEventListener("click", () => {
-      const leaderboardPath = typeof window.getPath === 'function' ? window.getPath('leaderboard') : '/html/leaderboard.html';
+      const leaderboardPath = typeof window.getPath === 'function' ? window.getPath('leaderboard') : '/leaderboard';
       window.location.href = leaderboardPath;
     });
   }

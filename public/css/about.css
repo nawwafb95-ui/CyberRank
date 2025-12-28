@@ -4,13 +4,9 @@ html, body {
   height: 100%;
 }
 
+/* Safer lock (avoids fixed-body jump issues on mobile/iOS) */
 body[data-page="about"] {
-  position: fixed;
-  inset: 0;
-  width: 100%;
-  height: 100svh;
-  height: 100dvh;
-
+  min-height: 100dvh;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -52,10 +48,12 @@ body[data-page="about"] main.container {
 }
 
 .flip-card-inner {
+  position: relative;           /* ✅ FIX: required for absolute faces */
   width: 100%;
   height: 100%;
   transition: transform 0.7s ease;
   transform-style: preserve-3d;
+  will-change: transform;       /* ✅ performance */
 }
 
 .flip-card.flipped .flip-card-inner {
@@ -73,6 +71,7 @@ body[data-page="about"] main.container {
   justify-content: center;
   padding: 32px 24px;
   backface-visibility: hidden;
+  -webkit-backface-visibility: hidden; /* ✅ better Safari support */
   background: var(--card, rgba(15, 23, 42, 0.95));
   border: 2px solid var(--border, rgba(148, 163, 184, 0.2));
 }
@@ -157,14 +156,13 @@ body[data-page="about"] main.container {
   z-index: 2;
 }
 
-/* ===== FORCE ACCENTS (ensure colors appear) ===== */
+/* ===== FORCE ACCENTS ===== */
 
 .flip-card-front::before,
 .flip-card-back::before {
   opacity: 1 !important;
 }
 
-/* make borders visible */
 .flip-card-front,
 .flip-card-back {
   border-width: 2px !important;
@@ -236,36 +234,6 @@ body[data-page="about"] main.container {
   filter: brightness(1.05);
 }
 
-.flip-card[data-card="what-is"].flipped .flip-card-front,
-.flip-card[data-card="what-is"].flipped .flip-card-back {
-  border-color: rgba(0,163,255,.8) !important;
-  box-shadow: 0 0 45px rgba(0,163,255,.45), 0 8px 32px var(--shadow, rgba(0,0,0,.5)) !important;
-}
-
-.flip-card[data-card="mission"].flipped .flip-card-front,
-.flip-card[data-card="mission"].flipped .flip-card-back {
-  border-color: rgba(0,229,255,.8) !important;
-  box-shadow: 0 0 45px rgba(0,229,255,.45), 0 8px 32px var(--shadow, rgba(0,0,0,.5)) !important;
-}
-
-.flip-card[data-card="vision"].flipped .flip-card-front,
-.flip-card[data-card="vision"].flipped .flip-card-back {
-  border-color: rgba(138,92,255,.8) !important;
-  box-shadow: 0 0 45px rgba(138,92,255,.45), 0 8px 32px var(--shadow, rgba(0,0,0,.5)) !important;
-}
-
-.flip-card[data-card="why"].flipped .flip-card-front,
-.flip-card[data-card="why"].flipped .flip-card-back {
-  border-color: rgba(255,176,32,.85) !important;
-  box-shadow: 0 0 45px rgba(255,176,32,.45), 0 8px 32px var(--shadow, rgba(0,0,0,.5)) !important;
-}
-
-.flip-card[data-card="next"].flipped .flip-card-front,
-.flip-card[data-card="next"].flipped .flip-card-back {
-  border-color: rgba(57,255,136,.8) !important;
-  box-shadow: 0 0 45px rgba(57,255,136,.45), 0 8px 32px var(--shadow, rgba(0,0,0,.5)) !important;
-}
-
 /* ===== SOCIAL MEDIA LINKS ===== */
 
 .social-links-container {
@@ -311,25 +279,6 @@ body[data-page="about"] main.container {
 
 .social-link:hover svg {
   transform: scale(1.1);
-}
-
-.social-link:active {
-  transform: translateY(-1px) scale(1.02);
-  box-shadow: 0 0 20px rgba(57,255,136,.3), 0 3px 10px rgba(0,0,0,.3);
-}
-
-/* LinkedIn specific hover glow */
-.social-link-linkedin:hover {
-  border-color: rgba(0,163,255,.85);
-  box-shadow: 0 0 30px rgba(0,163,255,.5), 0 6px 20px rgba(0,0,0,.4);
-  color: #00A3FF;
-}
-
-/* Instagram specific hover glow */
-.social-link-instagram:hover {
-  border-color: rgba(138,92,255,.85);
-  box-shadow: 0 0 30px rgba(138,92,255,.5), 0 6px 20px rgba(0,0,0,.4);
-  color: #8A5CFF;
 }
 
 /* ===== POSITIONS ===== */

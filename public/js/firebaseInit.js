@@ -15,9 +15,18 @@ import {
   browserLocalPersistence
 } from 'https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js';
 
+// Optional: import connectAuthEmulator if you want to enable Auth emulator
+// import { connectAuthEmulator } from 'https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js';
+
 import {
-  getFirestore
+  getFirestore,
+  connectFirestoreEmulator
 } from 'https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js';
+
+import {
+  getFunctions,
+  connectFunctionsEmulator
+} from 'https://www.gstatic.com/firebasejs/11.0.2/firebase-functions.js';
 
 import { firebaseConfig } from './firebaseConfig.js';
 
@@ -25,6 +34,25 @@ import { firebaseConfig } from './firebaseConfig.js';
 const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+const functions = getFunctions(app);
+
+// Connect to Firebase emulators if running locally
+if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+  try {
+    // Firestore emulator
+    connectFirestoreEmulator(db, "127.0.0.1", 8082);
+    
+    // Functions emulator
+    connectFunctionsEmulator(functions, "127.0.0.1", 5002);
+    
+    // Auth emulator (optional - uncomment to enable)
+    // connectAuthEmulator(auth, "http://127.0.0.1:9099");
+    
+    console.log('[firebaseInit] Connected to Firebase emulators');
+  } catch (error) {
+    console.warn('[firebaseInit] Emulator connection skipped:', error?.message || error);
+  }
+}
 
 // Set persistence
 setPersistence(auth, browserLocalPersistence).catch(console.warn);
@@ -113,9 +141,10 @@ function isAuthReady() {
   return authReady;
 }
 
-// Export auth, db, and app instances
+// Export auth, db, functions, and app instances
 window.auth = auth;
 window.db = db;
+window.functions = functions;
 window.firebaseApp = app;
 
 // Export helpers
@@ -124,5 +153,5 @@ window.getCurrentAuthUser = getCurrentAuthUser;
 window.isAuthReady = isAuthReady;
 
 // Export for ES modules
-export { app, auth, db, waitForAuthReady, getCurrentAuthUser, isAuthReady };
+export { app, auth, db, functions, waitForAuthReady, getCurrentAuthUser, isAuthReady };
 
