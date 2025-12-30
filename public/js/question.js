@@ -18,6 +18,14 @@ import {
   increment
 } from 'https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js';
 
+// ==================== CONSTANTS ====================
+
+const MARKS_BY_TYPE = {
+  'mcq': 5,
+  'short': 7,
+  'tf': 3
+};
+
 // ==================== STATE ====================
 
 const STATE = {
@@ -29,8 +37,16 @@ const STATE = {
   timerInterval: null,
   timerStartTime: null,
   timerTarget: 120,
+  timerRemaining: 120,
+  timeUpTriggered: false,
+  timeExpired: false,
+  timedOut: false,
   isSubmitted: false,
-  selectedAnswer: null
+  selectedAnswer: null,
+  sessionResults: [],
+  skippedIds: new Set(),
+  isReviewPhase: false,
+  reviewQueue: []
 };
 
 // Will be initialized after DOMContentLoaded
@@ -82,11 +98,89 @@ function clearProgress() {
 
 // ==================== TIMER ====================
 
-function startTimer() {
-  if (STATE.timerInterval) clearInterval(STATE.timerInterval);
+/**
+ * Handler function called when timer reaches 0
+ */
+function onTimeUp() {
+  console.log('[Timer] Time expired');
+  stopTimer();
+  
+  // Mark time as expired and timed out
+  STATE.timeExpired = true;
+  STATE.timedOut = true;
+  
+  // Auto-submit if not already submitted
+  if (!STATE.isSubmitted && STATE.currentQuestion) {
+    // If user hasn't selected an answer, set empty string to allow submission
+    if (!STATE.selectedAnswer) {
+      STATE.selectedAnswer = '';
+    }
+    handleSubmit();
+  }
+}
+
+/**
+ * Get fallback timer duration based on question difficulty level
+ * @param {string} difficulty - Question difficulty (easy, medium, hard)
+ * @returns {number} Fallback duration in seconds
+ */
+function getFallbackTimerDuration(difficulty) {
+  const normalizedDifficulty = String(difficulty || 'medium').toLowerCase().trim();
+  const fallbackDurations = {
+    easy: 120,
+    medium: 240,
+    hard: 360
+  };
+  return fallbackDurations[normalizedDifficulty] || 240;
+}
+
+/**
+ * Start countdown timer from a specific duration (in seconds)
+ * Reads duration from Firestore per question with fallback to difficulty-based defaults
+ * @param {number|null} timeLimitSeconds - Duration from Firestore (null if missing/invalid)
+ * @param {string} difficulty - Question difficulty for fallback
+ */
+function startTimerFromDB(timeLimitSeconds, difficulty) {
+  // Clear any existing timer
+  if (STATE.timerInterval) {
+    clearInterval(STATE.timerInterval);
+    STATE.timerInterval = null;
+  }
+
+  // Reset time up flags for new question
+  STATE.timeUpTriggered = false;
+  STATE.timeExpired = false;
+
+  // Determine timer duration: use timeLimitSeconds if valid, otherwise fallback
+  let durationSeconds;
+  if (timeLimitSeconds !== null && timeLimitSeconds !== undefined && timeLimitSeconds > 0) {
+    durationSeconds = Math.floor(Number(timeLimitSeconds));
+    console.log(`[Timer] Using timeLimitSeconds from Firestore: ${durationSeconds}s`);
+  } else {
+    durationSeconds = getFallbackTimerDuration(difficulty);
+    console.log(`[Timer] Using fallback duration: ${durationSeconds}s for difficulty: ${difficulty}`);
+  }
+
+  // Initialize timer state
+  STATE.timerTarget = durationSeconds;
   STATE.timerStartTime = Date.now();
-  STATE.timerInterval = setInterval(updateTimer, 250);
+  STATE.timerRemaining = durationSeconds;
+
+  // Start interval (update every 1 second)
+  STATE.timerInterval = setInterval(() => {
+    updateTimer();
+  }, 1000);
+
+  // Initial update
   updateTimer();
+}
+
+function startTimer() {
+  // Legacy function - now uses startTimerFromDB
+  // This maintains backward compatibility
+  const difficulty = STATE.currentQuestion?.difficulty || STATE.level || 'medium';
+  const timeLimitSeconds = STATE.currentQuestion?.timeLimitSeconds;
+  startTimerFromDB(timeLimitSeconds, difficulty);
 }
 
 function stopTimer() {
@@ -101,6 +195,7 @@ function updateTimer() {
 
   const elapsed = Math.floor((Date.now() - STATE.timerStartTime) / 1000);
   const remaining = Math.max(0, STATE.timerTarget - elapsed);
+  STATE.timerRemaining = remaining;
 
   const minutes = Math.floor(remaining / 60);
   const seconds = remaining % 60;
@@ -111,8 +206,16 @@ function updateTimer() {
     if (remaining <= 30 && remaining > 0) timerEl.classList.add('timer-warning');
     else timerEl.classList.remove('timer-warning');
 
-    if (remaining === 0) timerEl.classList.add('timer-expired');
-    else timerEl.classList.remove('timer-expired');
+    if (remaining === 0) {
+      timerEl.classList.add('timer-expired');
+      // Trigger time up handler only once
+      if (!STATE.timeUpTriggered) {
+        STATE.timeUpTriggered = true;
+        onTimeUp();
+      }
+    } else {
+      timerEl.classList.remove('timer-expired');
+    }
   }
 }
 
@@ -221,9 +324,19 @@ async function loadQuestionSet(level) {
       return a.id.localeCompare(b.id);
     });
 
-    const questionIds = questionsWithOrder.map((x) => x.id);
+    const allQuestionIds = questionsWithOrder.map((x) => x.id);
 
-    const data = { level: normalizedLevel, questionIds, totalQuestions: questionIds.length };
+    // Fisher-Yates shuffle algorithm
+    const shuffledIds = [...allQuestionIds];
+    for (let i = shuffledIds.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffledIds[i], shuffledIds[j]] = [shuffledIds[j], shuffledIds[i]];
+    }
+
+    // Take first 10 IDs
+    const questionIds = shuffledIds.slice(0, 10);
+
+    const data = { level: normalizedLevel, questionIds, totalQuestions: 10 };
 
     STATE.questionSet = data;
     STATE.questionIds = questionIds;
@@ -264,6 +377,15 @@ async function loadQuestion(questionId) {
 
   const type = data.type || (options.length > 0 ? 'mcq' : 'short');
 
+  // Extract timeLimitSeconds from Firestore, safely convert to Number
+  let timeLimitSeconds = null;
+  if (data.timeLimitSeconds !== undefined && data.timeLimitSeconds !== null) {
+    const parsed = Number(data.timeLimitSeconds);
+    if (!isNaN(parsed) && parsed > 0) {
+      timeLimitSeconds = Math.floor(parsed);
+    }
+  }
+
   return {
     id: questionId,
     title,
@@ -273,7 +395,8 @@ async function loadQuestion(questionId) {
     imageUrl: data.imageUrl || null,
     scenario: data.scenario || null,
     difficulty: (data.difficulty || data.level || STATE.level || 'medium'),
-    correctAnswer
+    correctAnswer,
+    timeLimitSeconds
   };
 }
 
@@ -345,10 +468,15 @@ function renderQuestion(question) {
   STATE.currentQuestion = question;
   STATE.isSubmitted = false;
   STATE.selectedAnswer = null;
+  STATE.timeExpired = false;
+  STATE.timedOut = false;
 
-  const difficultyTargets = { easy: 120, medium: 240, hard: 360 };
-  const normalizedDifficulty = String(question.difficulty || 'medium').toLowerCase().trim();
-  STATE.timerTarget = difficultyTargets[normalizedDifficulty] || 240;
+  // Stop any existing timer before starting a new one
+  stopTimer();
+
+  // Start timer using timeLimitSeconds from Firestore with fallback
+  const difficulty = question.difficulty || STATE.level || 'medium';
+  startTimerFromDB(question.timeLimitSeconds, difficulty);
 
   if (elements.questionTitle) elements.questionTitle.textContent = question.title || 'Question';
 
@@ -381,6 +509,9 @@ function renderQuestion(question) {
     elements.btnSubmit.style.display = 'block';
     const txt = elements.btnSubmit.querySelector('.btn-text');
     if (txt) txt.textContent = 'Submit';
+  }
+  if (elements.btnSkip) {
+    elements.btnSkip.style.display = STATE.isReviewPhase ? 'none' : 'block';
   }
   if (elements.btnNext) elements.btnNext.style.display = 'none';
   if (elements.feedbackPanel) elements.feedbackPanel.style.display = 'none';
@@ -447,27 +578,60 @@ async function updateUserStats(finalScore) {
   }
 
   try {
+    // Get username from users collection or fallback to auth displayName/email
+    let username = 'User';
+    try {
+      const userDocRef = doc(db, 'users', user.uid);
+      const userDocSnap = await getDoc(userDocRef);
+      if (userDocSnap.exists()) {
+        const userData = userDocSnap.data();
+        username = userData.username || user.displayName || user.email?.split('@')[0] || 'User';
+      } else {
+        username = user.displayName || user.email?.split('@')[0] || 'User';
+      }
+    } catch (e) {
+      // Fallback if users collection read fails
+      username = user.displayName || user.email?.split('@')[0] || 'User';
+    }
+
     const userStatsRef = doc(db, 'userStats', user.uid);
     const userStatsSnap = await getDoc(userStatsRef);
 
     if (userStatsSnap.exists()) {
-      // Document exists, use atomic increment
+      // Document exists, update with increments and max
+      const existingData = userStatsSnap.data();
+      const previousBestScore = existingData.bestScore || 0;
+      const newBestScore = Math.max(previousBestScore, finalScore);
+
       await updateDoc(userStatsRef, {
         points: increment(finalScore),
         xp: increment(finalScore),
-        updatedAt: serverTimestamp()
+        totalScore: increment(finalScore),
+        totalAttempts: increment(1),
+        bestScore: newBestScore,
+        lastAttemptAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+        // Update username if it changed (e.g., user updated their profile)
+        username: username,
+        userId: user.uid
       });
     } else {
       // Document doesn't exist, create it with initial values
       await setDoc(userStatsRef, {
+        userId: user.uid,
+        username: username,
         points: finalScore,
         xp: finalScore,
+        totalScore: finalScore,
+        totalAttempts: 1,
+        bestScore: finalScore,
+        lastAttemptAt: serverTimestamp(),
         level: 1,
         updatedAt: serverTimestamp()
       });
     }
 
-    console.log(`[Question] Updated user stats: +${finalScore} points`);
+    console.log(`[Question] Updated user stats: +${finalScore} points, totalScore incremented, totalAttempts incremented`);
     return true;
   } catch (error) {
     console.warn('[Question] Failed to update user stats:', error);
@@ -476,7 +640,8 @@ async function updateUserStats(finalScore) {
 }
 
 async function handleSubmit() {
-  if (STATE.isSubmitted || !STATE.selectedAnswer) return;
+  // Allow submission if time expired (even without answer), otherwise require answer
+  if (STATE.isSubmitted || (!STATE.timeExpired && !STATE.selectedAnswer)) return;
 
   STATE.isSubmitted = true;
   stopTimer();
@@ -500,27 +665,48 @@ async function handleSubmit() {
       isCorrect = true; // demo
     }
 
-    const baseScore = isCorrect ? 10 : 0;
-    const timeBonus = isCorrect && elapsed < 60 ? Math.max(0, 60 - elapsed) : 0;
-    const finalScore = baseScore + timeBonus;
+    // If timed out, treat as incorrect and skip counting/scoring
+    if (STATE.timedOut) {
+      isCorrect = false;
+      saveProgress();
+      await handleNext();
+      return;
+    }
 
-    showFeedback({
-      isCorrect,
-      baseScore,
+    // Calculate marks based on question type
+    const questionType = STATE.currentQuestion?.type || 'mcq';
+    const marks = MARKS_BY_TYPE[questionType] || 5;
+    const baseEarned = isCorrect ? marks : 0;
+    
+    // Calculate time bonus: ALWAYS 0 for review phase or skipped questions
+    const isSkippedQuestion = STATE.skippedIds.has(STATE.currentQuestion.id);
+    const timeBonus = (STATE.isReviewPhase || isSkippedQuestion) 
+      ? 0 
+      : (isCorrect && elapsed < 60 ? Math.max(0, 60 - elapsed) : 0);
+    const totalEarned = baseEarned + Math.floor(timeBonus);
+
+    // If this was a skipped question being answered, remove it from skippedIds
+    if (isSkippedQuestion) {
+      STATE.skippedIds.delete(STATE.currentQuestion.id);
+    }
+
+    // Store result in sessionResults
+    STATE.sessionResults.push({
+      id: STATE.currentQuestion.id,
+      type: questionType,
+      marks: marks,
+      isCorrect: isCorrect,
+      baseEarned: baseEarned,
       timeBonus: Math.floor(timeBonus),
-      finalScore,
-      explanation: isCorrect ? 'Correct!' : 'Incorrect. Keep practicing!'
+      totalEarned: totalEarned
     });
 
-    // Update user stats with points (non-blocking)
-    updateUserStats(finalScore).catch(err => {
-      console.warn('[Question] Stats update failed (non-critical):', err);
-    });
-
-    if (elements.btnNext) elements.btnNext.style.display = 'block';
-    if (elements.btnSubmit) elements.btnSubmit.style.display = 'none';
-
+    // Do NOT show feedback - immediately move to next question
+    // Update user stats with points (non-blocking) - will be updated with total at end
     saveProgress();
+
+    // Move to next question immediately
+    await handleNext();
   } catch (e) {
     showError(e?.message || 'Failed to process answer.');
     STATE.isSubmitted = false;
@@ -531,6 +717,19 @@ async function handleSubmit() {
       if (txt) txt.textContent = 'Submit';
     }
   }
+}
+
+// ==================== SKIP ====================
+
+async function handleSkip() {
+  if (!STATE.currentQuestion || STATE.isSubmitted) return;
+
+  // Save the current question ID in skippedIds
+  STATE.skippedIds.add(STATE.currentQuestion.id);
+
+  // Do NOT evaluate answer, do NOT award points
+  // Immediately move to the next question
+  await handleNext();
 }
 
 // ==================== NAV ====================
@@ -580,11 +779,51 @@ async function markLevelCompleted(level, totalQuestions) {
 }
 
 async function showCompletion() {
+  // Calculate final totals
+  const baseTotal = STATE.sessionResults.reduce((sum, r) => sum + r.baseEarned, 0);
+  const bonusTotal = STATE.sessionResults.reduce((sum, r) => sum + r.timeBonus, 0);
+  const totalEarned = STATE.sessionResults.reduce((sum, r) => sum + r.totalEarned, 0);
+  const totalPossible = STATE.sessionResults.reduce((sum, r) => sum + r.marks, 0);
+  const percent = totalPossible > 0 ? Math.round((totalEarned / totalPossible) * 100) : 0;
+
+  // Update user stats with total score (non-blocking)
+  updateUserStats(totalEarned).catch(err => {
+    console.warn('[Question] Stats update failed (non-critical):', err);
+  });
+
   if (elements.content) {
+    // Build breakdown list HTML
+    const breakdownHtml = STATE.sessionResults.map(result => 
+      `● ${result.marks} marks`
+    ).join('<br>');
+
     elements.content.innerHTML = `
       <div class="completion-message">
-        <h2>🎉 Level Complete!</h2>
-        <p>You've completed all questions in the ${STATE.level} level.</p>
+        <h2>🎉 Quiz Complete!</h2>
+        <div class="final-results">
+          <div class="score-summary">
+            <div class="score-item">
+              <span class="score-label">Base Total:</span>
+              <span class="score-value">${baseTotal} pts</span>
+            </div>
+            <div class="score-item">
+              <span class="score-label">Time Bonus:</span>
+              <span class="score-value">+${bonusTotal} pts</span>
+            </div>
+            <div class="score-item total">
+              <span class="score-label">Total Earned:</span>
+              <span class="score-value">${totalEarned} / ${totalPossible} pts</span>
+            </div>
+            <div class="score-item total">
+              <span class="score-label">Percentage:</span>
+              <span class="score-value">${percent}%</span>
+            </div>
+          </div>
+          <div class="breakdown-section">
+            <h3>Question Breakdown:</h3>
+            <div class="breakdown-list">${breakdownHtml}</div>
+          </div>
+        </div>
         <button class="btn btn-primary" id="completion-btn">
           Continue
         </button>
@@ -601,39 +840,66 @@ async function showCompletion() {
           console.warn('[Question] Failed to save completion, but continuing anyway');
         }
 
-        // Redirect based on level
-        if (STATE.level === 'easy') {
-          window.location.href = '/question?level=medium&q=1';
-        } else if (STATE.level === 'medium') {
-          window.location.href = '/question?level=hard&q=1';
-        } else if (STATE.level === 'hard') {
-          window.location.href = '/challenges?message=' + encodeURIComponent('🎉 Congratulations! You\'ve completed all levels!');
-        } else {
-          window.location.href = '/challenges';
-        }
+        // Always redirect to /challenges with completion message
+        const levelName = STATE.level ? STATE.level.toUpperCase() : 'LEVEL';
+        const message = `Level ${levelName} completed! 🎉`;
+        window.location.href = '/challenges?message=' + encodeURIComponent(message);
       });
     }
   }
   clearProgress();
 }
 
+function startSkippedReview() {
+  if (STATE.skippedIds.size === 0) {
+    return false;
+  }
+
+  // Enter review phase
+  STATE.isReviewPhase = true;
+  STATE.reviewQueue = Array.from(STATE.skippedIds);
+  STATE.currentQuestionIndex = 0;
+
+  console.log('[Question] Entering review phase with', STATE.reviewQueue.length, 'skipped questions');
+  return true;
+}
+
 async function loadCurrentQuestion() {
-  if (STATE.currentQuestionIndex >= STATE.questionIds.length) {
-    await showCompletion();
-    return;
+  let qid;
+  let questionNumber;
+  let totalQuestions;
+
+  if (STATE.isReviewPhase) {
+    // In review phase, load from reviewQueue
+    if (STATE.currentQuestionIndex >= STATE.reviewQueue.length) {
+      await showCompletion();
+      return;
+    }
+    qid = STATE.reviewQueue[STATE.currentQuestionIndex];
+    questionNumber = STATE.currentQuestionIndex + 1;
+    totalQuestions = STATE.reviewQueue.length;
+  } else {
+    // Normal phase, load from questionIds
+    if (STATE.currentQuestionIndex >= STATE.questionIds.length) {
+      await showCompletion();
+      return;
+    }
+    qid = STATE.questionIds[STATE.currentQuestionIndex];
+    questionNumber = STATE.currentQuestionIndex + 1;
+    totalQuestions = STATE.questionIds.length;
   }
 
   try {
     showLoading();
 
-    const qid = STATE.questionIds[STATE.currentQuestionIndex];
     const question = await loadQuestion(qid);
     renderQuestion(question);
 
-    if (elements.currentQuestion) elements.currentQuestion.textContent = STATE.currentQuestionIndex + 1;
+    if (elements.currentQuestion) elements.currentQuestion.textContent = questionNumber;
+    if (elements.totalQuestions && STATE.isReviewPhase) elements.totalQuestions.textContent = totalQuestions;
 
     const newUrl = new URL(window.location);
-    newUrl.searchParams.set('q', STATE.currentQuestionIndex + 1);
+    newUrl.searchParams.set('q', questionNumber);
     window.history.replaceState({}, '', newUrl);
 
     hideLoading();
@@ -643,12 +909,31 @@ async function loadCurrentQuestion() {
 }
 
 async function handleNext() {
-  STATE.currentQuestionIndex++;
-  if (STATE.currentQuestionIndex >= STATE.questionIds.length) {
-    await showCompletion();
-    return;
+  if (STATE.isReviewPhase) {
+    // In review phase, move to next skipped question
+    STATE.currentQuestionIndex++;
+    if (STATE.currentQuestionIndex >= STATE.reviewQueue.length) {
+      // Review phase complete, show completion
+      await showCompletion();
+      return;
+    }
+    loadCurrentQuestion();
+  } else {
+    // Normal phase, move to next question
+    STATE.currentQuestionIndex++;
+    if (STATE.currentQuestionIndex >= STATE.questionIds.length) {
+      // Normal questions finished, check if we need review phase
+      if (startSkippedReview()) {
+        // Entered review phase, load first skipped question
+        loadCurrentQuestion();
+      } else {
+        // No skipped questions, show completion
+        await showCompletion();
+      }
+      return;
+    }
+    loadCurrentQuestion();
   }
-  loadCurrentQuestion();
 }
 
 // ==================== INIT ====================
@@ -674,6 +959,7 @@ function initElements() {
   elements.shortAnswerInput = document.getElementById('short-answer-input');
 
   elements.btnSubmit = document.getElementById('btn-submit');
+  elements.btnSkip = document.getElementById('btn-skip');
   elements.btnNext = document.getElementById('btn-next');
 
   elements.feedbackPanel = document.getElementById('feedback-panel');
@@ -682,6 +968,7 @@ function initElements() {
   elements.explanation = document.getElementById('explanation');
 
   if (elements.btnSubmit) elements.btnSubmit.addEventListener('click', handleSubmit);
+  if (elements.btnSkip) elements.btnSkip.addEventListener('click', handleSkip);
   if (elements.btnNext) elements.btnNext.addEventListener('click', handleNext);
 }
 
@@ -735,6 +1022,15 @@ async function initialize() {
   try {
     showLoading();
 
+    // Reset session results and skip state for new quiz session
+    STATE.sessionResults = [];
+    STATE.skippedIds = new Set();
+    STATE.isReviewPhase = false;
+    STATE.reviewQueue = [];
+
+    // Clear any existing progress to ensure fresh random attempt
+    clearProgress();
+
     const set = await loadQuestionSet(STATE.level);
     STATE.questionIds = set.questionIds;
 
@@ -744,17 +1040,8 @@ async function initialize() {
       const n = parseInt(questionParam, 10);
       STATE.currentQuestionIndex = (!isNaN(n) && n >= 1 && n <= set.totalQuestions) ? (n - 1) : 0;
     } else {
-      const saved = loadProgress();
-      if (
-        saved &&
-        saved.questionIds &&
-        JSON.stringify(saved.questionIds) === JSON.stringify(STATE.questionIds) &&
-        saved.level === STATE.level
-      ) {
-        STATE.currentQuestionIndex = saved.questionIndex || 0;
-      } else {
-        STATE.currentQuestionIndex = 0;
-      }
+      // Always start fresh - no progress restore for new attempts
+      STATE.currentQuestionIndex = 0;
     }
 
     await loadCurrentQuestion();
